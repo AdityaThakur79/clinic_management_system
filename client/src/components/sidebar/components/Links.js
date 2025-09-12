@@ -1,34 +1,53 @@
 /* eslint-disable */
-import React, { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import React, { useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 // chakra imports
-import { 
-  Box, 
-  Flex, 
-  HStack, 
-  Text, 
-  useColorModeValue, 
+import {
+  Box,
+  Flex,
+  HStack,
+  Text,
+  useColorModeValue,
   Collapse,
   IconButton,
-  VStack
-} from "@chakra-ui/react";
-import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons";
+  VStack,
+} from '@chakra-ui/react';
+import { ChevronDownIcon, ChevronRightIcon } from '@chakra-ui/icons';
 
 export function SidebarLinks(props) {
   //   Chakra color mode
   let location = useLocation();
-  let activeColor = useColorModeValue("#3AC0E7", "white");
+  let activeColor = useColorModeValue('#3AC0E7', 'white');
   let inactiveColor = useColorModeValue(
-    "secondaryGray.600",
-    "secondaryGray.600"
+    'secondaryGray.600',
+    'secondaryGray.600',
   );
-  let activeIcon = useColorModeValue("#3AC0E7", "white");
-  let textColor = useColorModeValue("secondaryGray.500", "white");
-  let brandColor = useColorModeValue("#3AC0E7", "brand.400");
-  let submenuBg = useColorModeValue("gray.50", "gray.700");
+  let activeIcon = useColorModeValue('#3AC0E7', 'white');
+  let textColor = useColorModeValue('secondaryGray.500', 'white');
+  let brandColor = useColorModeValue('#3AC0E7', 'brand.400');
+  let submenuBg = useColorModeValue('gray.50', 'gray.700');
 
-  const { routes } = props;
+  const {
+    routes,
+    isCollapsed = false,
+    setIsCollapsed,
+    activeParentIndex,
+    setActiveParentIndex,
+  } = props;
   const [expandedItems, setExpandedItems] = useState({});
+
+  const renderRouteIcon = (icon) => {
+    if (!icon) return null;
+    if (React.isValidElement(icon)) {
+      const desiredSize = isCollapsed ? '26px' : icon.props.width || '20px';
+      const desiredHeight = isCollapsed ? '26px' : icon.props.height || '20px';
+      return React.cloneElement(icon, {
+        width: desiredSize,
+        height: desiredHeight,
+      });
+    }
+    return icon;
+  };
 
   // verifies if routeName is the one active (in browser input)
   const activeRoute = (routeName) => {
@@ -38,15 +57,22 @@ export function SidebarLinks(props) {
   // Check if any child route is active
   const hasActiveChild = (children) => {
     if (!children) return false;
-    return children.some(child => activeRoute(child.path.toLowerCase()));
+    return children.some((child) => activeRoute(child.path.toLowerCase()));
   };
 
   // Toggle expanded state
   const toggleExpanded = (index) => {
-    setExpandedItems(prev => ({
+    setExpandedItems((prev) => ({
       ...prev,
-      [index]: !prev[index]
+      [index]: !prev[index],
     }));
+    if (setActiveParentIndex) {
+      setActiveParentIndex(index);
+    }
+    // Expand sidebar when user interacts with a parent
+    if (setIsCollapsed) {
+      setIsCollapsed(false);
+    }
   };
 
   // this function creates the links from the secondary accordions (for example auth -> sign-in -> default)
@@ -62,25 +88,26 @@ export function SidebarLinks(props) {
         return (
           <React.Fragment key={index}>
             <Text
-              fontSize={"md"}
+              fontSize={'md'}
               color={activeColor}
-              fontWeight='bold'
-              mx='auto'
+              fontWeight="bold"
+              mx="auto"
               ps={{
-                sm: "10px",
-                xl: "16px",
+                sm: '10px',
+                xl: '16px',
               }}
-              pt='18px'
-              pb='12px'>
+              pt="18px"
+              pb="12px"
+            >
               {route.name}
             </Text>
             {createLinks(route.items)}
           </React.Fragment>
         );
       } else if (
-        route.layout === "/admin" ||
-        route.layout === "/auth" ||
-        route.layout === "/rtl"
+        route.layout === '/admin' ||
+        route.layout === '/auth' ||
+        route.layout === '/rtl'
       ) {
         // Main menu item with children (collapsible)
         if (hasChildren) {
@@ -95,83 +122,123 @@ export function SidebarLinks(props) {
                 mx="4px"
                 py="8px"
                 px="10px"
-                bg={isMainRouteActive || isChildActive ? submenuBg : "transparent"}
+                bg={
+                  isMainRouteActive || isChildActive ? submenuBg : 'transparent'
+                }
               >
-                <HStack spacing="26px" py='5px' ps='10px'>
-                  <Flex w='100%' alignItems='center' justifyContent='center'>
+                <HStack
+                  spacing={isCollapsed ? '0' : '26px'}
+                  py="5px"
+                  ps={isCollapsed ? '6px' : '10px'}
+                  pe={isCollapsed ? '24px' : '10px'}
+                >
+                  <Flex
+                    w="100%"
+                    alignItems="center"
+                    justifyContent={isCollapsed ? 'center' : 'center'}
+                  >
                     <Box
                       color={
                         isMainRouteActive || isChildActive
                           ? activeIcon
                           : textColor
                       }
-                      me='18px'>
-                      {route.icon}
-                    </Box>
-                    <Text
-                      me='auto'
-                      color={
-                        isMainRouteActive || isChildActive
-                          ? activeColor
-                          : textColor
-                      }
-                      fontWeight={
-                        isMainRouteActive || isChildActive
-                          ? "bold"
-                          : "normal"
-                      }>
-                      {route.name}
-                    </Text>
-                    <IconButton
-                      aria-label="Toggle submenu"
-                      icon={isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
-                      size="sm"
-                      variant="ghost"
-                      color={textColor}
-                    />
-                  </Flex>
-                </HStack>
-              </Box>
-              
-              <Collapse in={isExpanded} animateOpacity>
-                <VStack spacing="0" align="stretch" pl="20px" pr="10px">
-                  {visibleChildren.map((child, childIndex) => (
-                    <NavLink 
-                      key={childIndex} 
-                      to={child.layout + child.path}
-                      style={{ textDecoration: 'none' }}
+                      me={isCollapsed ? '0' : '18px'}
                     >
-                      <Box
-                        _hover={{ bg: submenuBg }}
-                        borderRadius="6px"
-                        py="10px"
-                        px="10px"
-                        mt="4px"
-                        bg={activeRoute(child.path.toLowerCase()) ? submenuBg : "transparent"}
-                        borderLeft={activeRoute(child.path.toLowerCase()) ? "3px solid" : "3px solid transparent"}
-                        borderLeftColor={activeRoute(child.path.toLowerCase()) ? brandColor : "transparent"}
-                      >
+                      {renderRouteIcon(route.icon)}
+                    </Box>
+                    {!isCollapsed && (
+                      <>
                         <Text
-                          fontSize="sm"
+                          me="auto"
                           color={
-                            activeRoute(child.path.toLowerCase())
+                            isMainRouteActive || isChildActive
                               ? activeColor
                               : textColor
                           }
                           fontWeight={
-                            activeRoute(child.path.toLowerCase())
-                              ? "bold"
-                              : "normal"
+                            isMainRouteActive || isChildActive
+                              ? 'bold'
+                              : 'normal'
                           }
-                          pl="20px"
                         >
-                          {child.name}
+                          {route.name}
                         </Text>
-                      </Box>
-                    </NavLink>
-                  ))}
-                </VStack>
-              </Collapse>
+                        <IconButton
+                          aria-label="Toggle submenu"
+                          icon={
+                            isExpanded ? (
+                              <ChevronDownIcon />
+                            ) : (
+                              <ChevronRightIcon />
+                            )
+                          }
+                          size="sm"
+                          variant="ghost"
+                          color={textColor}
+                        />
+                      </>
+                    )}
+                  </Flex>
+                </HStack>
+              </Box>
+              {!isCollapsed && (
+                <Collapse in={isExpanded} animateOpacity>
+                  <VStack spacing="0" align="stretch" pl="20px" pr="10px">
+                    {visibleChildren.map((child, childIndex) => (
+                      <NavLink
+                        key={childIndex}
+                        to={child.layout + child.path}
+                        style={{ textDecoration: 'none' }}
+                        onClick={() => {
+                          // Auto-collapse when navigating to child
+                          if (setIsCollapsed) setIsCollapsed(true);
+                        }}
+                      >
+                        <Box
+                          _hover={{ bg: submenuBg }}
+                          borderRadius="6px"
+                          py="10px"
+                          px="10px"
+                          mt="4px"
+                          bg={
+                            activeRoute(child.path.toLowerCase())
+                              ? submenuBg
+                              : 'transparent'
+                          }
+                          borderLeft={
+                            activeRoute(child.path.toLowerCase())
+                              ? '3px solid'
+                              : '3px solid transparent'
+                          }
+                          borderLeftColor={
+                            activeRoute(child.path.toLowerCase())
+                              ? brandColor
+                              : 'transparent'
+                          }
+                        >
+                          <Text
+                            fontSize="sm"
+                            color={
+                              activeRoute(child.path.toLowerCase())
+                                ? activeColor
+                                : textColor
+                            }
+                            fontWeight={
+                              activeRoute(child.path.toLowerCase())
+                                ? 'bold'
+                                : 'normal'
+                            }
+                            pl="20px"
+                          >
+                            {child.name}
+                          </Text>
+                        </Box>
+                      </NavLink>
+                    ))}
+                  </VStack>
+                </Collapse>
+              )}
             </Box>
           );
         } else {
@@ -179,71 +246,111 @@ export function SidebarLinks(props) {
           return (
             <NavLink key={index} to={route.layout + route.path}>
               {route.icon ? (
-                <Box>
+                <Box
+                  mx="4px"
+                  py="8px"
+                  px="10px"
+                  borderRadius="8px"
+                  _hover={{ bg: submenuBg }}
+                  bg={
+                    activeRoute(route.path.toLowerCase())
+                      ? submenuBg
+                      : 'transparent'
+                  }
+                >
                   <HStack
                     spacing={
-                      activeRoute(route.path.toLowerCase()) ? "22px" : "26px"
+                      isCollapsed
+                        ? '0'
+                        : activeRoute(route.path.toLowerCase())
+                        ? '22px'
+                        : '26px'
                     }
-                    py='5px'
-                    ps='10px'>
-                    <Flex w='100%' alignItems='center' justifyContent='center'>
+                    py="5px"
+                    ps={isCollapsed ? '8px' : '10px'}
+                    pe={isCollapsed ? '16px' : '10px'}
+                  >
+                    <Flex
+                      w="100%"
+                      alignItems="center"
+                      justifyContent={isCollapsed ? 'center' : 'center'}
+                    >
                       <Box
                         color={
                           activeRoute(route.path.toLowerCase())
                             ? activeIcon
                             : textColor
                         }
-                        me='18px'>
-                        {route.icon}
+                        me={isCollapsed ? '0' : '18px'}
+                      >
+                        {renderRouteIcon(route.icon)}
                       </Box>
-                      <Text
-                        me='auto'
-                        color={
-                          activeRoute(route.path.toLowerCase())
-                            ? activeColor
-                            : textColor
-                        }
-                        fontWeight={
-                          activeRoute(route.path.toLowerCase())
-                            ? "bold"
-                            : "normal"
-                        }>
-                        {route.name}
-                      </Text>
+                      {!isCollapsed && (
+                        <Text
+                          me="auto"
+                          color={
+                            activeRoute(route.path.toLowerCase())
+                              ? activeColor
+                              : textColor
+                          }
+                          fontWeight={
+                            activeRoute(route.path.toLowerCase())
+                              ? 'bold'
+                              : 'normal'
+                          }
+                        >
+                          {route.name}
+                        </Text>
+                      )}
                     </Flex>
-                    <Box
-                      h='36px'
-                      w='4px'
-                      bg={
-                        activeRoute(route.path.toLowerCase())
-                          ? brandColor
-                          : "transparent"
-                      }
-                      borderRadius='5px'
-                    />
+                    {!isCollapsed && (
+                      <Box
+                        h="36px"
+                        w="4px"
+                        bg={
+                          activeRoute(route.path.toLowerCase())
+                            ? brandColor
+                            : 'transparent'
+                        }
+                        borderRadius="5px"
+                      />
+                    )}
                   </HStack>
                 </Box>
               ) : (
                 <Box>
                   <HStack
                     spacing={
-                      activeRoute(route.path.toLowerCase()) ? "22px" : "26px"
+                      isCollapsed
+                        ? '0'
+                        : activeRoute(route.path.toLowerCase())
+                        ? '22px'
+                        : '26px'
                     }
-                    py='5px'
-                    ps='10px'>
-                    <Text
-                      me='auto'
-                      color={
-                        activeRoute(route.path.toLowerCase())
-                          ? activeColor
-                          : inactiveColor
-                      }
-                      fontWeight={
-                        activeRoute(route.path.toLowerCase()) ? "bold" : "normal"
-                      }>
-                      {route.name}
-                    </Text>
-                    <Box h='36px' w='4px' bg='brand.400' borderRadius='5px' />
+                    py="5px"
+                    ps={isCollapsed ? '6px' : '10px'}
+                    pe={isCollapsed ? '24px' : '10px'}
+                  >
+                    {!isCollapsed && (
+                      <Text
+                        me="auto"
+                        color={
+                          activeRoute(route.path.toLowerCase())
+                            ? activeColor
+                            : inactiveColor
+                        }
+                        fontWeight={
+                          activeRoute(route.path.toLowerCase())
+                            ? 'bold'
+                            : 'normal'
+                        }
+                      >
+                        {route.name}
+                      </Text>
+                    )}
+                    {!isCollapsed && (
+                      <Box h="36px" w="4px" bg="brand.400" borderRadius="5px" />
+                    )}
                   </HStack>
                 </Box>
               )}
