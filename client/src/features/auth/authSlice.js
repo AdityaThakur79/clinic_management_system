@@ -93,6 +93,7 @@ const authSlice = createSlice({
 
 export const { userLoggedIn, userLoggedOut, employeeLoggedIn, employeeLoggedOut } = authSlice.actions;
 
+export const selectUser = (state) => state.auth.user;
 export const selectUserRole = (state) => state.auth.user?.role;
 export const selectEmployeeRole = (state) => state.auth.employee?.role;
 export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;

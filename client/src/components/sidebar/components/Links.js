@@ -51,7 +51,8 @@ export function SidebarLinks(props) {
 
   // this function creates the links from the secondary accordions (for example auth -> sign-in -> default)
   const createLinks = (routes) => {
-    return routes.map((route, index) => {
+    const visibleRoutes = (routes || []).filter((r) => !r.hidden);
+    return visibleRoutes.map((route, index) => {
       const isExpanded = expandedItems[index];
       const hasChildren = route.children && route.children.length > 0;
       const isChildActive = hasActiveChild(route.children);
@@ -83,6 +84,7 @@ export function SidebarLinks(props) {
       ) {
         // Main menu item with children (collapsible)
         if (hasChildren) {
+          const visibleChildren = route.children.filter((c) => !c.hidden);
           return (
             <Box key={index} mb="4px">
               <Box
@@ -133,7 +135,7 @@ export function SidebarLinks(props) {
               
               <Collapse in={isExpanded} animateOpacity>
                 <VStack spacing="0" align="stretch" pl="20px" pr="10px">
-                  {route.children.map((child, childIndex) => (
+                  {visibleChildren.map((child, childIndex) => (
                     <NavLink 
                       key={childIndex} 
                       to={child.layout + child.path}

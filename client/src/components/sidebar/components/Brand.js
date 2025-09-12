@@ -6,7 +6,7 @@ import { Button, Flex, useColorModeValue } from "@chakra-ui/react";
 // Custom components
 import { HorizonLogo } from "components/icons/Icons";
 import { HSeparator } from "components/separator/Separator";
-import logo from "assets/img/aartiket_logo.jpeg"
+import logo from "assets/img/aartiket_logo-removebg-preview.png"
 import { Link } from "react-router-dom";
 export function SidebarBrand() {
   //   Chakra color mode

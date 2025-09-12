@@ -1,50 +1,92 @@
 // Chakra imports
-import { Portal, Box, useDisclosure } from '@chakra-ui/react';
+import { Portal, Box, useDisclosure, Spinner, Center } from '@chakra-ui/react';
 import Footer from '../../components/footer/FooterAdmin.js';
 // Layout components
 import Navbar from '../../components/navbar/NavbarAdmin.js';
 import Sidebar from '../../components/sidebar/Sidebar.js';
 import { SidebarContext } from '../../contexts/SidebarContext';
-import React, { useState } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectIsAuthenticated, selectUser } from '../../features/auth/authSlice';
+import { useLoadUserQuery } from '../../features/api/authApi';
+import { useRBAC } from '../../hooks/useRBAC';
 import routes from '../../routes.js';
+import { adminRoutes } from '../../config/routes';
 
 // Custom Chakra theme
 export default function Dashboard(props) {
   const { ...rest } = props;
+  const location = useLocation();
+  const dispatch = useDispatch();
+  
+  // Authentication state
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const user = useSelector(selectUser);
+  
+  // Load user data on component mount
+  const { data: userData, isLoading: userLoading } = useLoadUserQuery(undefined, {
+    skip: isAuthenticated, // Skip if already authenticated
+  });
+  
+  // RBAC hook for filtered routes
+  const { filteredRoutes, isLoading: rbacLoading } = useRBAC();
+  
   // states and functions
   const [fixed] = useState(false);
   const [toggleSidebar, setToggleSidebar] = useState(false);
+  
+  // Move useDisclosure before any early returns
+  const { onOpen } = useDisclosure();
+  
+  // Check authentication on mount
+  useEffect(() => {
+    // Authentication check is handled by the redirect below
+  }, [isAuthenticated, userLoading]);
+  
+  // Show loading spinner while checking authentication or RBAC
+  if (userLoading || rbacLoading) {
+    return (
+      <Center h="100vh">
+        <Spinner size="xl" />
+      </Center>
+    );
+  }
+  
+  // Redirect to sign-in if not authenticated
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/auth/sign-in" replace />;
+  }
   // functions for changing the states from components
   const getRoute = () => {
-    return window.location.pathname !== '/admin/full-screen-maps';
+    return location.pathname !== '/admin/full-screen-maps';
   };
-  const getActiveRoute = (routes) => {
+  const getActiveRoute = (routesToCheck) => {
     let activeRoute = 'Clinic Management System';
-    const currentPath = window.location.pathname;
+    const currentPath = location.pathname;
     
-    for (let i = 0; i < routes.length; i++) {
-      if (routes[i].collapse) {
-        let collapseActiveRoute = getActiveRoute(routes[i].items);
+    for (let i = 0; i < routesToCheck.length; i++) {
+      if (routesToCheck[i].collapse) {
+        let collapseActiveRoute = getActiveRoute(routesToCheck[i].items);
         if (collapseActiveRoute !== 'Clinic Management System') {
           return collapseActiveRoute;
         }
-      } else if (routes[i].category) {
-        let categoryActiveRoute = getActiveRoute(routes[i].items);
+      } else if (routesToCheck[i].category) {
+        let categoryActiveRoute = getActiveRoute(routesToCheck[i].items);
         if (categoryActiveRoute !== 'Clinic Management System') {
           return categoryActiveRoute;
         }
       } else {
         // Check main route
-        if (currentPath === routes[i].layout + routes[i].path) {
-          return routes[i].name;
+        if (currentPath === routesToCheck[i].layout + routesToCheck[i].path) {
+          return routesToCheck[i].name;
         }
         
         // Check children routes
-        if (routes[i].children) {
-          for (let j = 0; j < routes[i].children.length; j++) {
-            if (currentPath === routes[i].children[j].layout + routes[i].children[j].path) {
-              return routes[i].children[j].name;
+        if (routesToCheck[i].children) {
+          for (let j = 0; j < routesToCheck[i].children.length; j++) {
+            if (currentPath === routesToCheck[i].children[j].layout + routesToCheck[i].children[j].path) {
+              return routesToCheck[i].children[j].name;
             }
           }
         }
@@ -52,34 +94,31 @@ export default function Dashboard(props) {
     }
     return activeRoute;
   };
-  const getActiveNavbar = (routes) => {
+  const getActiveNavbar = (routesToCheck) => {
     let activeNavbar = false;
-    for (let i = 0; i < routes.length; i++) {
-      if (routes[i].collapse) {
-        let collapseActiveNavbar = getActiveNavbar(routes[i].items);
+    const currentPath = location.pathname;
+    for (let i = 0; i < routesToCheck.length; i++) {
+      if (routesToCheck[i].collapse) {
+        let collapseActiveNavbar = getActiveNavbar(routesToCheck[i].items);
         if (collapseActiveNavbar !== activeNavbar) {
           return collapseActiveNavbar;
         }
-      } else if (routes[i].category) {
-        let categoryActiveNavbar = getActiveNavbar(routes[i].items);
+      } else if (routesToCheck[i].category) {
+        let categoryActiveNavbar = getActiveNavbar(routesToCheck[i].items);
         if (categoryActiveNavbar !== activeNavbar) {
           return categoryActiveNavbar;
         }
       } else {
         // Check main route
-        if (
-          window.location.href.indexOf(routes[i].layout + routes[i].path) !== -1
-        ) {
-          return routes[i].secondary;
+        if (currentPath === routesToCheck[i].layout + routesToCheck[i].path) {
+          return routesToCheck[i].secondary;
         }
         
         // Check children routes
-        if (routes[i].children) {
-          for (let j = 0; j < routes[i].children.length; j++) {
-            if (
-              window.location.href.indexOf(routes[i].children[j].layout + routes[i].children[j].path) !== -1
-            ) {
-              return routes[i].children[j].secondary;
+        if (routesToCheck[i].children) {
+          for (let j = 0; j < routesToCheck[i].children.length; j++) {
+            if (currentPath === routesToCheck[i].children[j].layout + routesToCheck[i].children[j].path) {
+              return routesToCheck[i].children[j].secondary;
             }
           }
         }
@@ -87,34 +126,31 @@ export default function Dashboard(props) {
     }
     return activeNavbar;
   };
-  const getActiveNavbarText = (routes) => {
+  const getActiveNavbarText = (routesToCheck) => {
     let activeNavbar = false;
-    for (let i = 0; i < routes.length; i++) {
-      if (routes[i].collapse) {
-        let collapseActiveNavbar = getActiveNavbarText(routes[i].items);
+    const currentPath = location.pathname;
+    for (let i = 0; i < routesToCheck.length; i++) {
+      if (routesToCheck[i].collapse) {
+        let collapseActiveNavbar = getActiveNavbarText(routesToCheck[i].items);
         if (collapseActiveNavbar !== activeNavbar) {
           return collapseActiveNavbar;
         }
-      } else if (routes[i].category) {
-        let categoryActiveNavbar = getActiveNavbarText(routes[i].items);
+      } else if (routesToCheck[i].category) {
+        let categoryActiveNavbar = getActiveNavbarText(routesToCheck[i].items);
         if (categoryActiveNavbar !== activeNavbar) {
           return categoryActiveNavbar;
         }
       } else {
         // Check main route
-        if (
-          window.location.href.indexOf(routes[i].layout + routes[i].path) !== -1
-        ) {
-          return routes[i].messageNavbar;
+        if (currentPath === routesToCheck[i].layout + routesToCheck[i].path) {
+          return routesToCheck[i].messageNavbar;
         }
         
         // Check children routes
-        if (routes[i].children) {
-          for (let j = 0; j < routes[i].children.length; j++) {
-            if (
-              window.location.href.indexOf(routes[i].children[j].layout + routes[i].children[j].path) !== -1
-            ) {
-              return routes[i].children[j].messageNavbar;
+        if (routesToCheck[i].children) {
+          for (let j = 0; j < routesToCheck[i].children.length; j++) {
+            if (currentPath === routesToCheck[i].children[j].layout + routesToCheck[i].children[j].path) {
+              return routesToCheck[i].children[j].messageNavbar;
             }
           }
         }
@@ -122,8 +158,8 @@ export default function Dashboard(props) {
     }
     return activeNavbar;
   };
-  const getRoutes = (routes) => {
-    return routes.map((route, key) => {
+  const getRoutes = (routesToCheck) => {
+    return routesToCheck.map((route, key) => {
       if (route.layout === '/admin') {
         // Handle main route
         const mainRoute = (
@@ -149,8 +185,6 @@ export default function Dashboard(props) {
     }).flat().filter(Boolean);
   };
   document.documentElement.dir = 'ltr';
-  const { onOpen } = useDisclosure();
-  document.documentElement.dir = 'ltr';
   return (
     <Box>
       <Box>
@@ -160,7 +194,7 @@ export default function Dashboard(props) {
             setToggleSidebar,
           }}
         >
-          <Sidebar routes={routes} display="none" {...rest} />
+          <Sidebar routes={filteredRoutes} display="none" {...rest} />
           <Box
             float="right"
             minHeight="100vh"
@@ -180,10 +214,11 @@ export default function Dashboard(props) {
                 <Navbar
                   onOpen={onOpen}
                   logoText={'Aartiket Hearing and Speech Care'}
-                  brandText={getActiveRoute(routes)}
-                  secondary={getActiveNavbar(routes)}
-                  message={getActiveNavbarText(routes)}
+                  brandText={getActiveRoute(filteredRoutes)}
+                  secondary={getActiveNavbar(filteredRoutes)}
+                  message={getActiveNavbarText(filteredRoutes)}
                   fixed={fixed}
+                  routes={filteredRoutes}
                   {...rest}
                 />
               </Box>
@@ -198,7 +233,18 @@ export default function Dashboard(props) {
                 pt="50px"
               >
                 <Routes>
-                  {getRoutes(routes)}
+                  {/* Filtered routes based on user role */}
+                  {getRoutes(filteredRoutes)}
+                  
+                  {/* New centralized admin routes */}
+                  {adminRoutes.map((route) => (
+                    <Route 
+                      key={route.path} 
+                      path={route.path.replace('/admin', '')} 
+                      element={route.element} 
+                    />
+                  ))}
+                  
                   <Route
                     path="/"
                     element={<Navigate to="/admin/dashboard" replace />}

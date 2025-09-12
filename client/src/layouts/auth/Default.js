@@ -8,7 +8,7 @@ import FixedPlugin from "components/fixedPlugin/FixedPlugin";
 import { NavLink } from "react-router-dom";
 // Assets
 import { FaChevronLeft } from "react-icons/fa";
-
+import signup_banner from "../../assets/img/signup_banner.png"
 function AuthIllustration(props) {
   const { children, illustrationBackground } = props;
   // Chakra color mode
@@ -61,7 +61,7 @@ function AuthIllustration(props) {
           position='absolute'
           right='0px'>
           <Flex
-            bg={`url(${illustrationBackground})`}
+            bg={`url(${signup_banner})`}
             justify='center'
             align='end'
             w='100%'

@@ -34,7 +34,6 @@ import {
 // Admin Imports (keeping original for reference)
 import MainDashboard from './views/admin/default';
 import NFTMarketplace from './views/admin/marketplace';
-import Profile from './views/admin/profile';
 import DataTables from './views/admin/dataTables';
 import RTL from './views/admin/rtl';
 
@@ -42,6 +41,26 @@ import RTL from './views/admin/rtl';
 import SignInCentered from './views/auth/signIn';
 import SignUpCentered from './views/auth/signUp/index';
 import AddBranch from './views/admin/Branches/AddBranch';
+import Branches from './views/admin/Branches/Branches';
+import AllDoctors from './views/admin/Doctors/AllDoctors';
+import AddDoctor from './views/admin/Doctors/AddDoctor';
+import AllBranchAdmins from './views/admin/BranchAdmin/AllBranchAdmins';
+import AddBranchAdmin from './views/admin/BranchAdmin/AddBranchAdmin';
+import UpdateBranch from './views/admin/Branches/UpdateBranch';
+import Profile from './views/admin/profile/Profile';
+import Services from './views/admin/Services/Services';
+import AddService from './views/admin/Services/AddService';
+import UpdateService from './views/admin/Services/UpdateService';
+import AllReferredDoctors from './views/admin/ReferredDoctors/AllReferredDoctors';
+import AddReferredDoctor from './views/admin/ReferredDoctors/AddReferredDoctor';
+import UpdateReferredDoctor from './views/admin/ReferredDoctors/UpdateReferredDoctor';
+import AllAppointments from './views/admin/Appointments/AllAppointments';
+import TodayAppointments from './views/admin/Appointments/TodayAppointments';
+import AddAppointment from './views/admin/Appointments/AddAppointment';
+import CalendarView from './views/admin/Appointments/CalendarView';
+import AllPatients from './views/admin/Patients/AllPatients';
+import AddPatient from './views/admin/Patients/AddPatient';
+import UpdatePatient from './views/admin/Patients/UpdatePatient';
 
 // NEW CLINIC MANAGEMENT ROUTES
 const routes = [
@@ -52,50 +71,83 @@ const routes = [
     path: '/dashboard',
     icon: <Icon as={MdDashboard} width="20px" height="20px" color="inherit" />,
     component: <MainDashboard />, // Using existing dashboard component
+    roles: ['superAdmin', 'branchAdmin', 'doctor'],
     children: [
       {
         name: 'Overview',
         layout: '/admin',
         path: '/dashboard/overview',
         component: <MainDashboard />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
       },
       {
         name: "Today's Appointments",
         layout: '/admin',
         path: '/dashboard/today-appointments',
-        component: <MainDashboard />,
+        component: <TodayAppointments />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
       },
       {
         name: "Today's Reminders",
         layout: '/admin',
         path: '/dashboard/today-reminders',
         component: <MainDashboard />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
       },
     ],
   },
 
-  // Branches Section
+  // Branches Section (Only for Super Admin)
   {
     name: 'Branches',
     layout: '/admin',
     path: '/branches',
     icon: <Icon as={MdBusiness} width="20px" height="20px" color="inherit" />,
-    component: <DataTables />, // Using existing data tables component
+    component: <DataTables />, 
+    roles: ['superAdmin'],
     children: [
       {
         name: 'All Branches',
         layout: '/admin',
         path: '/branches/all',
-        component: <DataTables />,
+        component: <Branches />,
+        roles: ['superAdmin'],
       },
       {
         name: 'Add Branch',
         layout: '/admin',
         path: '/branches/add',
         component: <AddBranch />,
+        roles: ['superAdmin'],
       },
     ],
   },
+
+    // Admins Section (Only for Super Admin)
+    {
+      name: 'Admins',
+      layout: '/admin',
+      path: '/admins',
+      icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
+      component: <DataTables />,
+      roles: ['superAdmin'],
+      children: [
+        {
+          name: 'All Admins',
+          layout: '/admin',
+          path: '/admins/all',
+          component: <AllBranchAdmins />,
+          roles: ['superAdmin'],
+        },
+        {
+          name: 'Add Admin',
+          layout: '/admin',
+          path: '/admins/add',
+          component: <AddBranchAdmin />,
+          roles: ['superAdmin'],
+        },
+      ],
+    },
 
   // Doctors Section
   {
@@ -104,76 +156,96 @@ const routes = [
     path: '/doctors',
     icon: <Icon as={MdLocalHospital} width="20px" height="20px" color="inherit" />,
     component: <DataTables />,
+    roles: ['superAdmin', 'branchAdmin'],
     children: [
       {
         name: 'All Doctors',
         layout: '/admin',
         path: '/doctors/all',
-        component: <DataTables />,
+        component: <AllDoctors />,
+        roles: ['superAdmin', 'branchAdmin'],
       },
       {
         name: 'Add Doctor',
         layout: '/admin',
         path: '/doctors/add',
-        component: <DataTables />,
+        component: <AddDoctor />,
+        roles: ['superAdmin', 'branchAdmin'],
       },
-      {
-        name: 'Doctor Reports',
-        layout: '/admin',
-        path: '/doctors/reports',
-        component: <DataTables />,
-      },
+      // {
+      //   name: 'Doctor Reports',
+      //   layout: '/admin',
+      //   path: '/doctors/reports',
+      //   component: <DataTables />,
+      // },
     ],
   },
 
-  // Admins Section
-  {
-    name: 'Admins',
+
+   // Services Section
+   {
+    name: 'Services',
     layout: '/admin',
-    path: '/admins',
+    path: '/services',
     icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
     component: <DataTables />,
+    roles: ['superAdmin'],
     children: [
       {
-        name: 'All Admins',
+        name: 'All Services',
         layout: '/admin',
-        path: '/admins/all',
-        component: <DataTables />,
+        path: '/services/all',
+        component: <Services />,
+        roles: ['superAdmin'],
       },
       {
-        name: 'Add Admin',
+        name: 'Add Service',
         layout: '/admin',
-        path: '/admins/add',
-        component: <DataTables />,
+        path: '/service/add',
+        component: <AddService />,
+        roles: ['superAdmin'],
       },
+      {
+        name: 'Update Service',
+        layout: '/admin',
+        path: '/service/update',
+        component: <UpdateService />,
+        roles: ['superAdmin'],
+        hidden: true,
+      },
+      
     ],
   },
-
   // Patients Section
   {
     name: 'Patients',
     layout: '/admin',
     path: '/patients',
     icon: <Icon as={MdPeople} width="20px" height="20px" color="inherit" />,
-    component: <DataTables />,
+    component: <AllPatients />,
+    roles: ['superAdmin', 'branchAdmin', 'doctor'],
     children: [
       {
-        name: 'Patient Database',
+        name: 'Patients',
         layout: '/admin',
         path: '/patients/database',
-        component: <DataTables />,
-      },
-      {
-        name: 'Search Patient',
-        layout: '/admin',
-        path: '/patients/search',
-        component: <DataTables />,
+        component: <AllPatients />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
       },
       {
         name: 'Add Patient',
         layout: '/admin',
         path: '/patients/add',
-        component: <DataTables />,
+        component: <AddPatient />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
+      },
+      {
+        name: 'Update Patient',
+        layout: '/admin',
+        path: '/patients/update',
+        component: <UpdatePatient />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
+        hidden: true,
       },
     ],
   },
@@ -185,59 +257,68 @@ const routes = [
     path: '/appointments',
     icon: <Icon as={MdEvent} width="20px" height="20px" color="inherit" />,
     component: <DataTables />,
+    roles: ['superAdmin', 'branchAdmin', 'doctor'],
     children: [
       {
         name: 'All Appointments',
         layout: '/admin',
         path: '/appointments/all',
-        component: <DataTables />,
+        component: <AllAppointments />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
       },
       {
         name: 'Create Appointment',
         layout: '/admin',
         path: '/appointments/create',
-        component: <DataTables />,
+        component: <AddAppointment />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
       },
       {
         name: 'Calendar View',
         layout: '/admin',
         path: '/appointments/calendar',
-        component: <DataTables />,
+        component: <CalendarView />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
       },
     ],
   },
 
   // Billing & Services Section
   {
-    name: 'Billing & Services',
+    name: 'Billing',
     layout: '/admin',
     path: '/billing',
     icon: <Icon as={MdPayment} width="20px" height="20px" color="inherit" />,
     component: <DataTables />,
+    roles: ['superAdmin', 'branchAdmin', 'doctor'],
     children: [
       {
         name: 'Bills (Pending / Completed)',
         layout: '/admin',
         path: '/billing/bills',
         component: <DataTables />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
       },
       {
         name: 'Add Bill',
         layout: '/admin',
         path: '/billing/add-bill',
         component: <DataTables />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
       },
       {
         name: 'Services List',
         layout: '/admin',
         path: '/billing/services',
         component: <DataTables />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
       },
       {
         name: 'Add Service',
         layout: '/admin',
         path: '/billing/add-service',
         component: <DataTables />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
       },
     ],
   },
@@ -248,25 +329,37 @@ const routes = [
     layout: '/admin',
     path: '/referred-doctors',
     icon: <Icon as={MdAssignment} width="20px" height="20px" color="inherit" />,
-    component: <DataTables />,
+    component: <AllReferredDoctors />,
+    roles: ['superAdmin', 'branchAdmin'],
     children: [
       {
         name: 'All Referred Doctors',
         layout: '/admin',
         path: '/referred-doctors/all',
-        component: <DataTables />,
+        component: <AllReferredDoctors />,
+        roles: ['superAdmin', 'branchAdmin'],
       },
       {
         name: 'Add Referred Doctor',
         layout: '/admin',
         path: '/referred-doctors/add',
-        component: <DataTables />,
+        component: <AddReferredDoctor />,
+        roles: ['superAdmin', 'branchAdmin'],
       },
+      // {
+      //   name: 'Referral Reports',
+      //   layout: '/admin',
+      //   path: '/referred-doctors/reports',
+      //   component: <DataTables />,
+      //   roles: ['superAdmin', 'branchAdmin'],
+      // },
       {
-        name: 'Referral Reports',
+        name: 'Update Referred Doctor',
         layout: '/admin',
-        path: '/referred-doctors/reports',
-        component: <DataTables />,
+        path: '/referred-doctors/update',
+        component: <UpdateReferredDoctor />,
+        roles: ['superAdmin', 'branchAdmin'],
+        hidden: true,
       },
     ],
   },
@@ -278,24 +371,28 @@ const routes = [
     path: '/inventory',
     icon: <Icon as={MdLocalPharmacy} width="20px" height="20px" color="inherit" />,
     component: <DataTables />,
+    roles: ['superAdmin', 'branchAdmin'],
     children: [
       {
         name: 'Inventory List',
         layout: '/admin',
         path: '/inventory/list',
         component: <DataTables />,
+        roles: ['superAdmin', 'branchAdmin'],
       },
       {
         name: 'Add Inventory Item',
         layout: '/admin',
         path: '/inventory/add',
         component: <DataTables />,
+        roles: ['superAdmin', 'branchAdmin'],
       },
       {
         name: 'Low Stock Alerts',
         layout: '/admin',
         path: '/inventory/alerts',
         component: <DataTables />,
+        roles: ['superAdmin', 'branchAdmin'],
       },
     ],
   },
@@ -307,24 +404,28 @@ const routes = [
     path: '/reports',
     icon: <Icon as={MdAssessment} width="20px" height="20px" color="inherit" />,
     component: <DataTables />,
+    roles: ['superAdmin', 'branchAdmin'],
     children: [
       {
         name: 'Branch-wise Report',
         layout: '/admin',
         path: '/reports/branch-wise',
         component: <DataTables />,
+        roles: ['superAdmin', 'branchAdmin'],
       },
       {
         name: 'Doctor-wise Report',
         layout: '/admin',
         path: '/reports/doctor-wise',
         component: <DataTables />,
+        roles: ['superAdmin', 'branchAdmin'],
       },
       {
         name: 'Referral Report',
         layout: '/admin',
         path: '/reports/referral',
         component: <DataTables />,
+        roles: ['superAdmin', 'branchAdmin'],
       },
     ],
   },
@@ -336,122 +437,79 @@ const routes = [
     path: '/reminders',
     icon: <Icon as={MdNotifications} width="20px" height="20px" color="inherit" />,
     component: <DataTables />,
+    roles: ['superAdmin', 'branchAdmin', 'doctor'],
     children: [
       {
         name: 'Appointment Reminders',
         layout: '/admin',
         path: '/reminders/appointments',
         component: <DataTables />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
       },
       {
         name: 'Follow-up Reminders',
         layout: '/admin',
         path: '/reminders/follow-up',
         component: <DataTables />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
       },
     ],
   },
 
-  // Settings Section
-  // {
-  //   name: 'Settings',
-  //   layout: '/admin',
-  //   path: '/settings',
-  //   icon: <Icon as={MdSettings} width="20px" height="20px" color="inherit" />,
-  //   component: <Profile />, // Using existing profile component
-  //   children: [
-  //     {
-  //       name: 'Profile & Security',
-  //       layout: '/admin',
-  //       path: '/settings/profile',
-  //       component: <Profile />,
-  //     },
-  //     {
-  //       name: 'Notification Templates',
-  //       layout: '/admin',
-  //       path: '/settings/notifications',
-  //       component: <Profile />,
-  //     },
-  //     {
-  //       name: 'System Settings',
-  //       layout: '/admin',
-  //       path: '/settings/system',
-  //       component: <Profile />,
-  //     },
-  //   ],
-  // },
 
-      // Auth Section
-    {
-      name: 'Sign In',
-      layout: '/auth',
-      path: '/sign-in',
-      icon: <Icon as={MdLock} width="20px" height="20px" color="inherit" />,
-      component: <SignInCentered />,
-    },
-    {
-      name: 'Register',
-      layout: '/auth',
-      path: '/sign-up',
-      icon: <Icon as={MdLock} width="20px" height="20px" color="inherit" />,
-      component: <SignUpCentered />,
-    },
-];
-
-/* 
-ORIGINAL ROUTES (COMMENTED FOR REFERENCE)
-const originalRoutes = [
-  {
-    name: 'Main Dashboard',
-    layout: '/admin',
-    path: '/default',
-    icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
-    component: <MainDashboard />,
-  },
-  {
-    name: 'NFT Marketplace',
-    layout: '/admin',
-    path: '/nft-marketplace',
-    icon: (
-      <Icon
-        as={MdOutlineShoppingCart}
-        width="20px"
-        height="20px"
-        color="inherit"
-      />
-    ),
-    component: <NFTMarketplace />,
-    secondary: true,
-  },
-  {
-    name: 'Data Tables',
-    layout: '/admin',
-    icon: <Icon as={MdBarChart} width="20px" height="20px" color="inherit" />,
-    path: '/data-tables',
-    component: <DataTables />,
-  },
+  // Profile Section
   {
     name: 'Profile',
     layout: '/admin',
     path: '/profile',
     icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
     component: <Profile />,
+    roles: ['superAdmin', 'branchAdmin', 'doctor'],
+   
   },
+  
+  // Auth Section (restore for sign-in/sign-up pages)
   {
     name: 'Sign In',
     layout: '/auth',
     path: '/sign-in',
     icon: <Icon as={MdLock} width="20px" height="20px" color="inherit" />,
     component: <SignInCentered />,
+    hidden: true,
   },
-  {
-    name: 'RTL Admin',
-    layout: '/rtl',
-    path: '/rtl-default',
-    icon: <Icon as={MdHome} width="20px" height="20px" color="inherit" />,
-    component: <RTL />,
-  },
+  
 ];
-*/
+
+// Function to get filtered routes based on user role
+export const getRoutesByRole = (userRole) => {
+  if (!userRole) return [];
+
+  return routes.filter(route => {
+    // Auth routes are always available
+    if (route.layout === '/auth') return true;
+    
+    // Check if route has roles property
+    if (route.roles) {
+      return route.roles.includes(userRole);
+    }
+    
+    // Default: allow all routes for superAdmin
+    return userRole === 'superAdmin';
+  }).map(route => {
+    // Filter children routes as well
+    if (route.children) {
+      return {
+        ...route,
+        children: route.children.filter(child => {
+          if (child.roles) {
+            return child.roles.includes(userRole);
+          }
+          return userRole === 'superAdmin';
+        })
+      };
+    }
+    return route;
+  });
+};
 
 export default routes;

@@ -11,6 +11,7 @@ export default function AdminNavbar(props) {
 	const isAuthenticated = useSelector(selectIsAuthenticated);
 	const user = useSelector(state => state.auth.user);
 	const userRole = user?.role; // Extract role from user object
+	const { routes = [] } = props;
 
 	useEffect(() => {
 		window.addEventListener('scroll', changeNavbar);
@@ -147,6 +148,7 @@ export default function AdminNavbar(props) {
 							secondary={props.secondary}
 							fixed={props.fixed}
 							scrolled={scrolled}
+							routes={routes}
 						/>
 					</HStack>
 				</Box>

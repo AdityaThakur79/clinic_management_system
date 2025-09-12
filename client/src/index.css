@@ -1,1 +1,382 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+
+* {
+    font-family: Outfit;
+}
+
+
+.active hr {
+    @apply block
+}
+
+@media (max-width:740px) {
+    .active  p{
+       @apply text-white bg-[#2BA8D1]
+    }
+}
+
+::-webkit-scrollbar {
+    @apply hidden
+}
+
+section{
+  padding:40px 0 ;
+}
+/* feature  */
+.Feautes {
+  padding-top: 0;
+}
+
+.Feautes.index2,
+.Feautes.testimonial-page {
+  padding-top: 100px;
+}
+
+.single-features {
+  padding: 10px 20px;
+}
+
+ @media(min-width:992px) {
+  .single-features::before {
+  content: "";
+  position: absolute;
+  right: -72px;
+  top: 60px;
+  width: 118px;
+  border-bottom: 3px dotted #043152;
+}
+ }
+
+.single-features.last::before {
+  display: none;
+}
+
+.signle-icon i,
+.signle-icon svg {
+  font-size: 50px;
+  color: #1a76d1;
+  height: 100px;
+  width: 100px;
+  line-height: 100px;
+  text-align: center;
+  border: 1px solid #dddddd;
+  border-radius: 100%;
+  transition: all 0.4s ease;
+}
+
+.single-features:hover .signle-icon i,
+.single-features:hover .signle-icon svg {
+  background: #043152;
+  color: #fff;
+  border-color: transparent;
+}
+
+
+/* Why choose us */
+.why-choose-us-icon {
+  color: #5AA89B;
+
+}
+
+.whyChooseUs {
+  background-color: #043152;
+  opacity: 1;
+}
+
+.whyChooseUs-para {
+  color: white;
+  font-weight: 700;
+}
+
+
+
+.why-choose-us-icon {
+  transition: all 1s;
+}
+
+.whyChooseUsCard:hover .why-choose-us-icon {
+  color: #F26423;
+}
+
+/* Services */
+
+section.services .container .service-para {
+  font-size: 17px;
+  text-transform: uppercase;
+}
+
+section.services .container .service-para span {
+  color: #043152;
+}
+
+section.services .container .right-service-heading {
+  font-size: 24px;
+  font-weight: 500;
+}
+
+@media (min-width:767px) {
+  section.services .container .right-service-heading {
+    font-size: 32px;
+    font-weight: 500;
+  }
+}
+
+section.services .container .right-service-heading span {
+  color: #043152;
+}
+
+section.services .container .service-cards {
+  margin-top: 20px;
+}
+
+@media (min-width: 1024px) {
+  section.services .container .service-cards {
+    margin-top: 60px;
+  }
+}
+
+section.services .container .service-cards figure {
+  height: 260px;
+}
+
+section.services .container .service-cards figure img {
+  border-radius: 14px;
+  width: 100%;
+  height: 100%;
+}
+
+
+.hover\:shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.hover\:shine::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background-image: linear-gradient(
+    to right, 
+    transparent 0%, 
+    rgba(43, 168, 209, 0.3) 30%,
+    rgba(58, 192, 231, 0.5) 50%,
+    rgba(43, 168, 209, 0.3) 70%,
+    transparent 100%
+  );
+  transform: skewX(-8deg) translateX(-180%);
+  transition: transform 0.8s ease-in-out;
+}
+
+.hover\:shine:hover::after {
+  transform: skewX(-8deg) translateX(275%);
+}
+
+/* Testimonial */
+
+/* Testimonials */
+.testimonial {
+  position: relative;
+  overflow: hidden;
+}
+
+.testimonial::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgb(222, 222, 222);
+  opacity: 0.1;
+  z-index: -1;
+}
+
+.splide-track {
+  padding: 20px 0;
+}
+
+.testimonial-card {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease-in-out;
+  border-radius: 14px;
+}
+
+.testimonial-card:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  background-color:   #043152;
+}
+
+.testimonial-card:hover .testimonial-star {
+  color: white
+}
+
+.testimonial-card:hover .testimonial-quotes {
+  background-color: white;
+  color: #043152
+}
+
+.testimonial-card:hover p {
+  color: white !important;
+}
+
+.testimonial-card:hover h4 {
+  color: white !important;
+}
+
+
+.testimonial-quotes {
+  background-color: #043152;
+  border-radius: 50%;
+  color: white;
+  font-size: 34px;
+  margin-bottom: 10px;
+}
+
+.testimonial-star {
+  color: #043152;
+  font-size: 24px;
+}
+
+.testimonial-name {
+  border-top: 1px solid rgb(226, 226, 226);
+  padding: 10px 0 0 0;
+}
+
+
+/* CTA */
+.floating-btn {
+  background-color: #002552;
+  border-radius: 50%;
+  padding: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99;
+  aspect-ratio: 1/1;
+  width: 50px;
+  height: 50px;
+  padding: 14px;
+}
+
+@media (min-width: 480px) {
+  .floating-btn {
+    width: 35px;
+    height: 35px;
+    padding: 10px;
+
+  }
+}
+
+.floating-buttons-wrapper {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 100000;
+}
+
+@media (min-width: 768px) {
+  .floating-buttons-wrapper {
+    right: 20px;
+    bottom: 20px;
+    gap: 15px;
+  }
+}
+
+.floating-buttons-wrapper .floating-btn {
+  background: linear-gradient(135deg, #043152 0%, #032a42 100%);
+  border-radius: 50%;
+  padding: 7px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99;
+  aspect-ratio: 1/1;
+  width: 35px;
+  height: 35px;
+  padding: 10px;
+  box-shadow: 0 4px 15px rgba(4, 49, 82, 0.3);
+  transition: all 0.3s ease;
+}
+
+@media (min-width: 576px) {
+  .floating-buttons-wrapper .floating-btn {
+    width: 50px;
+    height: 50px;
+    padding: 14px;
+  }
+}
+
+.floating-buttons-wrapper .floating-btn span {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+}
+
+.floating-buttons-wrapper .floating-btn span svg {
+  height: 100%;
+  width: 100%;
+  stroke: #fff;
+}
+
+.floating-buttons-wrapper .floating-btn._whatsapp {
+  background: linear-gradient(135deg, #5AA89B 0%, #4a8a7d 100%);
+  padding: 8px;
+  box-shadow: 0 4px 15px rgba(90, 168, 155, 0.3);
+}
+
+@media (min-width: 576px) {
+  .floating-buttons-wrapper .floating-btn._whatsapp {
+    padding: 12px;
+  }
+}
+
+@keyframes green-wave {
+  0% {
+    box-shadow: 0 0 0 0 rgba(90, 168, 155, 0.7);
+  }
+
+  100% {
+    box-shadow: 0 0 0 15px rgba(90, 168, 155, 0);
+  }
+}
+
+.green-wave {
+  animation: green-wave 1s linear infinite;
+}
+
+@keyframes phone-wave {
+  0% {
+    box-shadow: 0 0 0 0 rgba(4, 49, 82, 0.7);
+  }
+
+  100% {
+    box-shadow: 0 0 0 15px rgba(4, 49, 82, 0);
+  }
+}
+
+.phone-wave {
+  animation: phone-wave 1s linear infinite;
+}
+
+/* Lenis smooth scroll */
+@import url('https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.34/dist/lenis.min.css');
+
+/* init via tiny inline script using global Lenis from CDN */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+
+/* Scroll to top on route change hook via location hash trick */
+#scroll-top-anchor { position: fixed; inset: 0 -9999px auto auto; visibility: hidden; }

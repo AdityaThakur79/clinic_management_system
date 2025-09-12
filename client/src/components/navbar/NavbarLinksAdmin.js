@@ -25,14 +25,14 @@ import navImage from 'assets/img/layout/Navbar.png';
 import { MdNotificationsNone, MdInfoOutline } from 'react-icons/md';
 import { IoMdMoon, IoMdSunny } from 'react-icons/io';
 import { FaEthereum } from 'react-icons/fa';
-import routes from 'routes';
+// import routes from 'routes'; // Now passed as prop
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@chakra-ui/react';
 import { useLogoutUserMutation } from 'features/api/authApi';
 import { useDispatch, useSelector } from 'react-redux';
 import { userLoggedOut } from 'features/auth/authSlice';
 export default function HeaderLinks(props) {
-  const { secondary } = props;
+  const { secondary, routes = [] } = props;
   const { colorMode, toggleColorMode } = useColorMode();
   const navigate = useNavigate();
   const toast = useToast();
@@ -292,7 +292,8 @@ export default function HeaderLinks(props) {
           <Avatar
             _hover={{ cursor: 'pointer' }}
             color="white"
-            name={user.name}
+            name={user?.name}
+            src={user?.photoUrl || user?.image || undefined}
             bg="#11047A"
             size="sm"
             w="40px"
@@ -319,7 +320,12 @@ export default function HeaderLinks(props) {
               fontWeight="700"
               color={textColor}
             >
-              👋&nbsp; Hey, {user.name}
+              👋&nbsp; Hey, {user?.name}
+              {user?.role ? (
+                <Text display="block" fontSize="xs" fontWeight="600" color={textColorBrand} mt="2px">
+                  {user.role}
+                </Text>
+              ) : null}
             </Text>
           </Flex>
           <Flex flexDirection="column" p="10px">
@@ -328,6 +334,7 @@ export default function HeaderLinks(props) {
               _focus={{ bg: 'none' }}
               borderRadius="8px"
               px="14px"
+              onClick={() => navigate('/admin/profile')}
             >
               <Text fontSize="sm">Profile Settings</Text>
             </MenuItem>

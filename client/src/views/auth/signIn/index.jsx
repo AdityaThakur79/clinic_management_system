@@ -264,6 +264,7 @@ function SignIn() {
                 fontSize='sm'
                 fontWeight='500'
                 w='100%'
+                color={"#ffffff"}
                 bg="#3AC0E7"
                 h='50'
                 mb='24px'
@@ -273,7 +274,7 @@ function SignIn() {
               </Button>
             </FormControl>
           </form>
-          <Flex
+          {/* <Flex
             flexDirection='column'
             justifyContent='center'
             alignItems='start'
@@ -291,7 +292,7 @@ function SignIn() {
                 </Text>
               </NavLink>
             </Text>
-          </Flex>
+          </Flex> */}
         </Flex>
       </Flex>
     </DefaultAuth>
