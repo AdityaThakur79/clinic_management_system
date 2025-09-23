@@ -36,7 +36,7 @@ const EnhancedCompleteAppointment = () => {
 
   const [completeAppointment, { isLoading: isCompleting }] = useCompleteAppointmentMutation();
   const [updateCompletedAppointment, { isLoading: isUpdating }] = useUpdateCompletedAppointmentMutation();
-  const { data: reminderQuery } = useGetAllRemindersQuery({ appointmentId: id, page: 1, limit: 1 });
+  const { data: reminderQuery, refetch: refetchReminders } = useGetAllRemindersQuery({ appointmentId: id, page: 1, limit: 1 });
   const [updateReminder] = useUpdateReminderMutation();
   const [createReminderMutation] = useCreateReminderMutation();
   const [createReminder, { isLoading: isCreatingReminder }] = useCreateReminderMutation();
@@ -460,13 +460,19 @@ const EnhancedCompleteAppointment = () => {
         };
         try {
           const existing = reminderQuery?.reminders?.[0];
+          // Defensive: ensure required fields are present
+          if (!payload.reminderDate || !payload.reminderTime) {
+            throw new Error('Reminder date/time missing');
+          }
           if (existing) {
             await updateReminder({ id: existing._id, ...payload }).unwrap();
           } else {
             await createReminderMutation(payload).unwrap();
           }
+          await refetchReminders();
         } catch (e) {
           console.error('Saving reminder failed', e);
+          toast({ title: 'Reminder not saved', description: e?.data?.message || e?.message || 'Please try again from the appointment page', status: 'warning', duration: 4000, isClosable: true });
         }
       }
 

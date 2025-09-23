@@ -20,6 +20,7 @@ import UpdateDoctor from '../views/admin/Doctors/UpdateDoctor';
 import DoctorDetailPage from '../views/User/Components/DoctorDetailPage';
 import Doctors from '../views/User/Pages/Doctors';
 import ServiceDetail from '../views/User/ServiceDetail';
+import ForgotPassword from '../views/auth/forgotPassword/index';
 
 // Public Routes (No authentication required)
 export const publicRoutes = [
@@ -63,6 +64,12 @@ export const publicRoutes = [
     path: '/service/:slug',
     element: <ServiceDetail />,
     name: 'Service Detail',
+    showInNav: false,
+  },
+  {
+    path: '/auth/forgot-password',
+    element: <ForgotPassword />,
+    name: 'Forgot Password',
     showInNav: false,
   },
 ];

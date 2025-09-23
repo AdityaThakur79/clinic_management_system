@@ -167,18 +167,50 @@ export const createAppointment = async (req, res) => {
 
           const subject = `Appointment Confirmed - ${populatedAppointment?.doctorId?.name} - ${formatDate(populatedAppointment?.date)} ${populatedAppointment?.timeSlot}`;
           const html = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color:#2BA8D1; margin-bottom: 8px;">Appointment Confirmed</h2>
-              <p style="margin:0 0 12px 0; color:#333;">Your appointment has been booked successfully.</p>
-              <div style="border:1px solid #e5e7eb; border-radius:8px; padding:12px;">
-                <p style="margin:6px 0;"><strong>Doctor:</strong> ${populatedAppointment?.doctorId?.name}</p>
-                <p style="margin:6px 0;"><strong>Date:</strong> ${formatDate(populatedAppointment?.date)}</p>
-                <p style="margin:6px 0;"><strong>Time:</strong> ${populatedAppointment?.timeSlot}</p>
-                <p style="margin:6px 0;"><strong>Branch:</strong> ${populatedAppointment?.branchId?.branchName || populatedBranch?.branchName}</p>
-                <p style="margin:6px 0;"><strong>Address:</strong> ${populatedAppointment?.branchId?.address || populatedBranch?.address}</p>
+            <!doctype html>
+            <html>
+            <head>
+              <meta charset="utf-8"/>
+              <meta name="viewport" content="width=device-width, initial-scale=1"/>
+              <title>Appointment Confirmed</title>
+              <style>
+                body{margin:0;background:#f5fbff;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;color:#0C2F4D}
+                .container{max-width:640px;margin:0 auto;padding:24px}
+                .card{background:#fff;border-radius:16px;box-shadow:0 10px 25px rgba(12,47,77,.08);overflow:hidden}
+                .header{background:linear-gradient(135deg,#2BA8D1,#3AC0E7);color:#fff;padding:28px;text-align:center}
+                .title{margin:0;font-size:22px}
+                .sub{margin:6px 0 0 0;opacity:.95}
+                .content{padding:24px}
+                .row{display:flex;justify-content:space-between;gap:12px;margin:8px 0}
+                .label{font-weight:600;color:#2BA8D1}
+                .val{color:#0C2F4D}
+                .cta{display:inline-block;margin-top:16px;background:#2BA8D1;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;box-shadow:0 6px 16px rgba(43,168,209,.35)}
+                .footer{text-align:center;color:#42607a;font-size:12px;padding:18px}
+                @media (max-width:480px){.row{flex-direction:column;align-items:flex-start}}
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="card">
+                  <div class="header">
+                    <h1 class="title">Appointment Confirmed</h1>
+                    <p class="sub">Your visit has been scheduled successfully</p>
+                  </div>
+                  <div class="content">
+                    <div class="row"><span class="label">Doctor</span><span class="val">${populatedAppointment?.doctorId?.name}</span></div>
+                    <div class="row"><span class="label">Date</span><span class="val">${formatDate(populatedAppointment?.date)}</span></div>
+                    <div class="row"><span class="label">Time</span><span class="val">${populatedAppointment?.timeSlot}</span></div>
+                    <div class="row"><span class="label">Branch</span><span class="val">${populatedAppointment?.branchId?.branchName || populatedBranch?.branchName}</span></div>
+                    <div class="row"><span class="label">Address</span><span class="val">${populatedAppointment?.branchId?.address || populatedBranch?.address}</span></div>
+                    <a class="cta" href="https://maps.google.com/?q=${encodeURIComponent(populatedAppointment?.branchId?.address || populatedBranch?.address || '')}" target="_blank" rel="noreferrer">Open in Maps</a>
+                  </div>
+                  <div class="footer">
+                    <div>Need help? Call <a href="tel:+917977483031" style="color:#2BA8D1;text-decoration:none">+91 79774 83031</a> or email <a href="mailto:aartiketspeechandhearing@gmail.com" style="color:#2BA8D1;text-decoration:none">aartiketspeechandhearing@gmail.com</a></div>
+                  </div>
+                </div>
               </div>
-              <p style="color:#666; font-size:12px; margin-top:12px;">If you have any questions, please contact the clinic.</p>
-            </div>
+            </body>
+            </html>
           `;
 
           await Promise.all(toSend.map(({ to }) => sendEmail({ to, subject, html })));

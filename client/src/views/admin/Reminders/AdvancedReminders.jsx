@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Box, Button, HStack, Text, useColorModeValue, Card, CardBody, CardHeader, VStack, useToast, SimpleGrid, Badge, Divider, Icon, Flex, Spinner, Center, Alert, AlertIcon, AlertTitle, AlertDescription, Heading, Table, Thead, Tbody, Tr, Th, Td, TableContainer, Input, Select, Textarea, NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper, FormControl, FormLabel, Switch, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton, useDisclosure, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Tooltip, Grid, GridItem, Stat, StatLabel, StatNumber, StatHelpText, StatArrow, InputGroup, InputLeftElement, InputRightElement
 } from '@chakra-ui/react';
-import { useGetTodayRemindersQuery, useCreateReminderMutation, useUpdateReminderMutation, useDeleteReminderMutation, useMarkReminderCompletedMutation } from '../../../features/api/reminders';
+import { useGetAllRemindersQuery, useCreateReminderMutation, useUpdateReminderMutation, useDeleteReminderMutation, useMarkReminderCompletedMutation } from '../../../features/api/reminders';
 import { useSelector } from 'react-redux';
 import { MdAdd, MdEdit, MdDelete, MdCheck, MdAccessTime, MdCalendarToday, MdNotifications, MdFilterList, MdViewList, MdViewModule, MdRefresh, MdSearch, MdSort, MdMoreVert, MdWarning, MdInfo, MdError, MdClose } from 'react-icons/md';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
@@ -16,7 +16,7 @@ const AdvancedReminders = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [view, setView] = useState('calendar'); // 'calendar', 'list', 'grid'
   const [filter, setFilter] = useState('all'); // 'all', 'today', 'upcoming', 'overdue', 'completed'
-  const [sortBy, setSortBy] = useState('dueDate'); // 'dueDate', 'priority', 'title', 'status'
+  const [sortBy, setSortBy] = useState('createdAt'); // 'createdAt', 'dueDate', 'priority', 'title', 'status'
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedReminder, setSelectedReminder] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -26,7 +26,7 @@ const AdvancedReminders = () => {
     isLoading,
     error,
     refetch
-  } = useGetTodayRemindersQuery();
+  } = useGetAllRemindersQuery({ page: 1, limit: 500, sortBy: 'createdAt', sortOrder: 'desc' });
 
   const [createReminder, { isLoading: isCreating }] = useCreateReminderMutation();
   const [updateReminder, { isLoading: isUpdating }] = useUpdateReminderMutation();
@@ -103,6 +103,8 @@ const AdvancedReminders = () => {
     return matchesSearch && matchesFilter;
   }).sort((a, b) => {
     switch (sortBy) {
+      case 'createdAt':
+        return new Date(b.createdAt) - new Date(a.createdAt); // newest first
       case 'priority':
         const priorityOrder = { high: 3, medium: 2, low: 1 };
         return priorityOrder[b.priority] - priorityOrder[a.priority];
@@ -171,6 +173,7 @@ const AdvancedReminders = () => {
       });
       resetForm();
       onClose();
+      refetch();
     } catch (error) {
       toast({
         title: 'Error',
@@ -194,6 +197,7 @@ const AdvancedReminders = () => {
       });
       resetForm();
       onClose();
+      refetch();
     } catch (error) {
       toast({
         title: 'Error',
@@ -215,6 +219,7 @@ const AdvancedReminders = () => {
         duration: 3000,
         isClosable: true,
       });
+      refetch();
     } catch (error) {
       toast({
         title: 'Error',
@@ -236,6 +241,7 @@ const AdvancedReminders = () => {
         duration: 3000,
         isClosable: true,
       });
+      refetch();
     } catch (error) {
       toast({
         title: 'Error',
@@ -336,6 +342,8 @@ const AdvancedReminders = () => {
     );
   }
 
+  const upcomingCount = reminders.filter(r => new Date(r.reminderDate || r.dueDate) > new Date() && r.status !== 'completed').length;
+
   return (
     <Box pt={{ base: '130px', md: '80px', xl: '80px' }} p={6}>
       {/* Header */}
@@ -357,6 +365,19 @@ const AdvancedReminders = () => {
           >
             Add Reminder
           </Button>
+        </HStack>
+
+        <HStack spacing={4} align="center">
+          <Badge colorScheme="blue" borderRadius="md" px={3} py={1}>
+            Upcoming: {upcomingCount}
+          </Badge>
+          <Select size="sm" value={sortBy} onChange={(e) => setSortBy(e.target.value)} width="180px">
+            <option value="createdAt">Sort: Created At</option>
+            <option value="dueDate">Sort: Due Date</option>
+            <option value="priority">Sort: Priority</option>
+            <option value="title">Sort: Title</option>
+            <option value="status">Sort: Status</option>
+          </Select>
         </HStack>
       </Flex>
 
@@ -440,7 +461,8 @@ const AdvancedReminders = () => {
 
             <FormControl>
               <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} borderRadius="md">
-                <option value="dueDate">Sort by Date</option>
+                <option value="createdAt">Sort by Created At</option>
+                <option value="dueDate">Sort by Due Date</option>
                 <option value="priority">Sort by Priority</option>
                 <option value="title">Sort by Title</option>
                 <option value="status">Sort by Status</option>

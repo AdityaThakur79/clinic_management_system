@@ -22,11 +22,12 @@ export const remindersApi = createApi({
         endDate = '',
         branchId = '',
         doctorId = '',
+        appointmentId = '',
         sortBy = '',
         sortOrder = 'desc',
       }) => ({
         url: '/',
-        params: { page, limit, search, type, status, priority, startDate, endDate, branchId, doctorId, sortBy, sortOrder },
+        params: { page, limit, search, type, status, priority, startDate, endDate, branchId, doctorId, appointmentId, sortBy, sortOrder },
       }),
       providesTags: ['Reminder'],
     }),

@@ -246,6 +246,13 @@ const DoctorDetailPage = () => {
     if (doctor) {
       generateTimeSlots(doctor);
     }
+    // Fallback: if no slots after generation, attempt one auto-refetch (guards random backend delays)
+    if (doctor && availableSlots.every(day => day.length === 0)) {
+      const t = setTimeout(() => {
+        refetchAvailability();
+      }, 500);
+      return () => clearTimeout(t);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [availabilityData, selectedDateISO]);
 
