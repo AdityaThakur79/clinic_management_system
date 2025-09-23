@@ -148,64 +148,7 @@ export default function HeaderLinks(props) {
         </Text>
       </Flex>
       <SidebarResponsive routes={routes} />
-      <Menu>
-        <MenuButton p="0px">
-          <Icon
-            mt="6px"
-            as={MdNotificationsNone}
-            color={navbarIcon}
-            w="18px"
-            h="18px"
-            me="10px"
-          />
-        </MenuButton>
-        <MenuList
-          boxShadow={shadow}
-          p="20px"
-          borderRadius="20px"
-          bg={menuBg}
-          border="none"
-          mt="22px"
-          me={{ base: '30px', md: 'unset' }}
-          minW={{ base: 'unset', md: '400px', xl: '450px' }}
-          maxW={{ base: '360px', md: 'unset' }}
-        >
-          <Flex w="100%" mb="20px">
-            <Text fontSize="md" fontWeight="600" color={textColor}>
-              Notifications
-            </Text>
-            <Text
-              fontSize="sm"
-              fontWeight="500"
-              color={textColorBrand}
-              ms="auto"
-              cursor="pointer"
-            >
-              Mark all read
-            </Text>
-          </Flex>
-          <Flex flexDirection="column">
-            <MenuItem
-              _hover={{ bg: 'none' }}
-              _focus={{ bg: 'none' }}
-              px="0"
-              borderRadius="8px"
-              mb="10px"
-            >
-              <ItemContent info="Horizon UI Dashboard PRO" />
-            </MenuItem>
-            <MenuItem
-              _hover={{ bg: 'none' }}
-              _focus={{ bg: 'none' }}
-              px="0"
-              borderRadius="8px"
-              mb="10px"
-            >
-              <ItemContent info="Horizon Design System Free" />
-            </MenuItem>
-          </Flex>
-        </MenuList>
-      </Menu>
+      {/* Notifications removed per request */}
 
       {/* <Menu>
         <MenuButton p="0px">

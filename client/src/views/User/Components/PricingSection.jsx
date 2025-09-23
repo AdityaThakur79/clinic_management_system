@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { FaIndianRupeeSign } from "react-icons/fa6";
 import { assets } from "../../../assets/assets";
 import {
@@ -12,6 +12,30 @@ import {
 } from "@chakra-ui/react";
 
 const PricingSection = () => {
+  const [isVisible, setIsVisible] = React.useState({});
+
+  // Intersection Observer for reveal animations
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(prev => ({
+              ...prev,
+              [entry.target.id]: true
+            }));
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+    );
+
+    const elements = document.querySelectorAll('[data-animate]');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <Box
       as="section"
@@ -31,7 +55,15 @@ const PricingSection = () => {
           gap={12}
         >
           {/* Left Content */}
-          <Box w={{ base: "100%", lg: "50%" }} textAlign={{ base: "center", lg: "left" }}>
+          <Box 
+            w={{ base: "100%", lg: "50%" }} 
+            textAlign={{ base: "center", lg: "left" }}
+            data-animate
+            id="pricing-left-content"
+            opacity={isVisible['pricing-left-content'] ? 1 : 0}
+            transform={isVisible['pricing-left-content'] ? 'translateX(0)' : 'translateX(-50px)'}
+            transition="all 0.8s ease-out"
+          >
             <Heading
               as="h2"
               fontSize={{ base: "2xl", md: "3xl", lg: "4xl" }}
@@ -118,7 +150,15 @@ const PricingSection = () => {
           </Box>
 
           {/* Right Image */}
-          <Box w={{ base: "100%", lg: "50%" }}>
+          <Box 
+            w={{ base: "100%", lg: "50%" }}
+            data-animate
+            id="pricing-right-image"
+            opacity={isVisible['pricing-right-image'] ? 1 : 0}
+            transform={isVisible['pricing-right-image'] ? 'translateX(0)' : 'translateX(50px)'}
+            transition="all 0.8s ease-out"
+            transitionDelay="0.2s"
+          >
             <Box position="relative">
               <Image
                 src={assets.audiologist2}

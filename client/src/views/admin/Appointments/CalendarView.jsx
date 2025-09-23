@@ -8,7 +8,7 @@ import {
 } from '@chakra-ui/react';
 import { useGetAllAppointmentsQuery } from '../../../features/api/appointments';
 import { useGetAllBranchesQuery } from '../../../features/api/branchApi';
-import { useGetAllDoctorsMutation } from '../../../features/api/doctor';
+import { useGetAllDoctorsMutation, useGetDoctorsByBranchMutation } from '../../../features/api/doctor';
 import { MdEvent, MdToday, MdArrowBack, MdArrowForward, MdAdd, MdFilterList, MdRefresh } from 'react-icons/md';
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { useSelector } from 'react-redux';
@@ -43,9 +43,12 @@ const CalendarView = () => {
   });
 
   const { data: branchesData } = useGetAllBranchesQuery({ page: 1, limit: 100, search: '' });
-  const [getAllDoctors, { data: doctorsData }] = useGetAllDoctorsMutation();
+  const [getAllDoctors] = useGetAllDoctorsMutation();
+  const [getDoctorsByBranch] = useGetDoctorsByBranchMutation();
+  const [doctors, setDoctors] = useState([]);
 
   const { isOpen: isModalOpen, onOpen: onModalOpen, onClose: onModalClose } = useDisclosure();
+  const { isOpen: isDayListOpen, onOpen: onDayListOpen, onClose: onDayListClose } = useDisclosure();
 
   const cardBg = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
@@ -53,10 +56,33 @@ const CalendarView = () => {
   const inactiveBg = useColorModeValue('gray.50', 'gray.900');
   const hoverBg = useColorModeValue('gray.100', 'gray.700');
 
-  // Fetch doctors data on component mount
+  // Fetch doctors list, filtered by branch when applicable
   useEffect(() => {
-    getAllDoctors({ page: 1, limit: 100, search: '' });
-  }, [getAllDoctors]);
+    const selectedBranchId = (userRole === 'branchAdmin' || userRole === 'doctor')
+      ? userBranchId
+      : (branchFilter === 'all' ? '' : branchFilter);
+
+    const fetchDoctors = async () => {
+      try {
+        if (selectedBranchId) {
+          const res = await getDoctorsByBranch({ page: 1, limit: 100, branchId: selectedBranchId }).unwrap();
+          setDoctors(res?.data?.doctors || res?.doctors || []);
+        } else {
+          const res = await getAllDoctors({ page: 1, limit: 100, search: '' }).unwrap();
+          setDoctors(res?.data?.doctors || res?.doctors || []);
+        }
+      } catch (e) {
+        setDoctors([]);
+      }
+    };
+
+    fetchDoctors();
+  }, [getAllDoctors, getDoctorsByBranch, branchFilter, userRole, userBranchId]);
+
+  // Reset doctor filter when branch changes to avoid stale doctor selection
+  useEffect(() => {
+    setDoctorFilter('all');
+  }, [branchFilter]);
 
   // Calendar navigation
   const navigateMonth = (direction) => {
@@ -84,13 +110,18 @@ const CalendarView = () => {
   };
 
   // Get appointments for a specific date
+  const isSameLocalDay = (a, b) => (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+
   const getAppointmentsForDate = (date) => {
     if (!appointmentsData?.appointments) return [];
-    
-    const dateStr = date.toISOString().split('T')[0];
-    return appointmentsData.appointments.filter(appointment => {
-      const appointmentDate = new Date(appointment.date).toISOString().split('T')[0];
-      return appointmentDate === dateStr;
+    const target = new Date(date);
+    return appointmentsData.appointments.filter((appointment) => {
+      const d = new Date(appointment.date);
+      return isSameLocalDay(d, target);
     });
   };
 
@@ -99,13 +130,13 @@ const CalendarView = () => {
     if (!appointmentsData?.appointments) return [];
     
     const startOfWeek = new Date(currentDate);
-    startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
     startOfWeek.setHours(0, 0, 0, 0);
-    
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
     endOfWeek.setHours(23, 59, 59, 999);
-    
+
     return appointmentsData.appointments.filter(appointment => {
       const appointmentDate = new Date(appointment.date);
       return appointmentDate >= startOfWeek && appointmentDate <= endOfWeek;
@@ -162,10 +193,9 @@ const CalendarView = () => {
   // Handle date click
   const handleDateClick = (date) => {
     setSelectedDate(date);
-    const appointments = getAppointmentsForDate(date);
-    if (appointments.length > 0) {
-      setSelectedAppointment(appointments[0]);
-      onModalOpen();
+    const dayApts = getAppointmentsForDate(date);
+    if (dayApts.length > 0) {
+      onDayListOpen();
     }
   };
 
@@ -217,30 +247,43 @@ const CalendarView = () => {
                     {day.getDate()}
                   </Text>
                   
-                  <VStack spacing={1} align="stretch" maxH="80px" overflow="hidden">
-                    {appointments.slice(0, 3).map((appointment, idx) => (
-                      <Badge
-                        key={idx}
-                        colorScheme={getStatusColor(appointment.status)}
-                        fontSize="xs"
-                        p={1}
-                        borderRadius="md"
-                        cursor="pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAppointmentClick(appointment);
-                        }}
-                        _hover={{ transform: 'scale(1.05)' }}
-                      >
-                        {formatTime(appointment.timeSlot)} - {appointment.patientId?.name}
-                      </Badge>
-                    ))}
+                  <Box position="relative" minH="84px" overflow="hidden" pr={2}>
+                    <VStack spacing={1} align="stretch">
+                      {appointments.slice(0, 3).map((appointment, idx) => (
+                        <Badge
+                          key={idx}
+                          colorScheme={getStatusColor(appointment.status)}
+                          fontSize="xs"
+                          p={1}
+                          borderRadius="md"
+                          cursor="pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAppointmentClick(appointment);
+                          }}
+                          _hover={{ transform: 'scale(1.05)' }}
+                        >
+                          {formatTime(appointment.timeSlot)} - {appointment.patientId?.name}
+                        </Badge>
+                      ))}
+                    </VStack>
                     {appointments.length > 3 && (
-                      <Text fontSize="xs" color="gray.500">
+                      <Text
+                        fontSize="xs"
+                        color="blue.500"
+                        cursor="pointer"
+                        position="absolute"
+                        bottom={0}
+                        right={0}
+                        bg={isCurrentMonth ? cardBg : inactiveBg}
+                        pl={1}
+                        onClick={(e) => { e.stopPropagation(); handleDateClick(day); }}
+                        _hover={{ textDecoration: 'underline' }}
+                      >
                         +{appointments.length - 3} more
                       </Text>
                     )}
-                  </VStack>
+                  </Box>
                 </VStack>
               </GridItem>
             );
@@ -265,7 +308,9 @@ const CalendarView = () => {
     const timeSlots = [];
     for (let hour = 9; hour <= 17; hour++) {
       timeSlots.push(`${hour.toString().padStart(2, '0')}:00`);
+      timeSlots.push(`${hour.toString().padStart(2, '0')}:15`);
       timeSlots.push(`${hour.toString().padStart(2, '0')}:30`);
+      timeSlots.push(`${hour.toString().padStart(2, '0')}:45`);
     }
 
     return (
@@ -306,8 +351,8 @@ const CalendarView = () => {
               </GridItem>
               
               {weekDays.map((day, dayIndex) => {
-                const appointments = getAppointmentsForDate(day).filter(
-                  apt => apt.timeSlot === timeSlot
+            const appointments = getAppointmentsForDate(day).filter(
+                  apt => (apt.timeSlot || '').startsWith(timeSlot)
                 );
                 
                 return (
@@ -348,11 +393,13 @@ const CalendarView = () => {
 
   // Render day view
   const renderDayView = () => {
-    const appointments = getAppointmentsForDate(currentDate);
+    const dayAppointments = getAppointmentsForDate(currentDate);
     const timeSlots = [];
     for (let hour = 9; hour <= 17; hour++) {
       timeSlots.push(`${hour.toString().padStart(2, '0')}:00`);
+      timeSlots.push(`${hour.toString().padStart(2, '0')}:15`);
       timeSlots.push(`${hour.toString().padStart(2, '0')}:30`);
+      timeSlots.push(`${hour.toString().padStart(2, '0')}:45`);
     }
 
     return (
@@ -372,7 +419,7 @@ const CalendarView = () => {
         {/* Day Body */}
         <Box maxH="600px" overflowY="auto">
           {timeSlots.map((timeSlot, index) => {
-            const appointments = appointments.filter(apt => apt.timeSlot === timeSlot);
+            const slotAppointments = dayAppointments.filter(apt => (apt.timeSlot || '').startsWith(timeSlot));
             
             return (
               <Box
@@ -389,7 +436,7 @@ const CalendarView = () => {
                   </Text>
                   
                   <VStack spacing={2} align="stretch" flex={1}>
-                    {appointments.map((appointment, aptIndex) => (
+                    {slotAppointments.map((appointment, aptIndex) => (
                       <Card
                         key={aptIndex}
                         size="sm"
@@ -513,7 +560,7 @@ const CalendarView = () => {
                   size="sm"
                 >
                   <option value="all">All Doctors</option>
-                  {doctorsData?.data?.doctors?.map(doctor => (
+                  {doctors?.map(doctor => (
                     <option key={doctor._id} value={doctor._id}>{doctor.name}</option>
                   ))}
                 </Select>
@@ -542,6 +589,12 @@ const CalendarView = () => {
                   onClick={() => setCurrentDate(new Date())}
                   leftIcon={<MdToday />}
                   size="sm"
+                  _hover={{ 
+                    bg: "#2BA8D1", 
+                    color: "white",
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 10px 25px rgba(43, 168, 209, 0.3)"
+                  }}
                 >
                   Today
                 </Button>

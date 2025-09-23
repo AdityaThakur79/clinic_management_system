@@ -40,10 +40,16 @@
     MdLanguage,
     MdCalendarToday,
   } from "react-icons/md";
-  import { useGetAllBranchesQuery } from "../../../features/api/branchApi";
+  import { useGetAllBranchesQuery, useGetBranchByIdMutation } from "../../../features/api/branchApi";
   import { useCreateDoctorMutation } from "../../../features/api/doctor";
+  import { useNavigate } from 'react-router-dom';
+  import { useSelector } from 'react-redux';
+  import { skipToken } from '@reduxjs/toolkit/query';
 
   const AddDoctor = () => {
+    const user = useSelector((s) => s.auth.user);
+    const userBranchId = user?.branch?._id || user?.branch || '';
+    const isScopedToBranch = !!userBranchId && (user?.role === 'branchAdmin' || user?.role === 'doctor');
     const [formData, setFormData] = useState({
       name: "",
       email: "",
@@ -70,21 +76,32 @@
 
     const toast = useToast();
     const [createDoctor, { isLoading: isSubmitting }] = useCreateDoctorMutation();
+    const navigate = useNavigate();
 
-    const { data: branchesData, isLoading: branchesLoading } = useGetAllBranchesQuery({
-      page: 1,
-      limit: 100,
-      search: "",
-    });
+    const { data: branchesData, isLoading: branchesLoading } = useGetAllBranchesQuery(
+      isScopedToBranch ? skipToken : { page: 1, limit: 100, search: "" }
+    );
+    const [getBranchById] = useGetBranchByIdMutation();
 
     const cardBg = useColorModeValue("white", "gray.800");
     const borderColor = useColorModeValue("gray.200", "gray.600");
 
     useEffect(() => {
-      if (branchesData?.branches) {
-        setBranches(branchesData.branches);
-      }
-    }, [branchesData]);
+      const init = async () => {
+        if (isScopedToBranch) {
+          setFormData(prev => ({ ...prev, branch: userBranchId }));
+          try {
+            const res = await getBranchById({ id: userBranchId }).unwrap();
+            if (res?.branch) setSelectedBranch(res.branch);
+          } catch (e) {
+            // ignore; still allow submission with id
+          }
+        } else if (branchesData?.branches) {
+          setBranches(branchesData.branches);
+        }
+      };
+      init();
+    }, [branchesData, isScopedToBranch, userBranchId, getBranchById]);
 
     const handleInputChange = (e) => {
       const { name, value } = e.target;
@@ -326,6 +343,10 @@
         setSelectedBranch(null);
         setProfilePhoto(null);
         setBannerImage(null);
+
+        setTimeout(() => {
+          navigate('/admin/doctors/all');
+        }, 1000);
       } catch (error) {
         console.error("Error creating doctor:", error);
         toast({
@@ -479,35 +500,44 @@
                     </FormControl>
                   </SimpleGrid>
 
-                  <FormControl isInvalid={errors.branch}>
-                    <FormLabel fontWeight="600" color="gray.700" mb={2}>
-                      Branch *
-                    </FormLabel>
-                    <Select
-                      name="branch"
-                      value={formData.branch}
-                      onChange={handleBranchChange}
-                      placeholder={branchesLoading ? "Loading branches..." : "Select branch"}
-                      isDisabled={branchesLoading}
-                      borderRadius="lg"
-                      border="2px solid"
-                      borderColor="gray.200"
-                      _focus={{
-                        borderColor: "#2BA8D1",
-                        boxShadow: "0 0 0 3px rgba(43, 168, 209, 0.1)",
-                      }}
-                      _hover={{ borderColor: "gray.300" }}
-                      h="48px"
-                      fontSize="md"
-                    >
-                      {branches.map((branch) => (
-                        <option key={branch._id} value={branch._id}>
-                          {branch.branchName}
-                        </option>
-                      ))}
-                    </Select>
-                    <FormErrorMessage>{errors.branch}</FormErrorMessage>
-                  </FormControl>
+                  {isScopedToBranch ? (
+                    <FormControl>
+                      <FormLabel fontWeight="600" color="gray.700" mb={2}>
+                        Branch
+                      </FormLabel>
+                      <Input value={selectedBranch?.branchName || user?.branch?.branchName || 'Current Branch'} isReadOnly placeholder="Branch" />
+                    </FormControl>
+                  ) : (
+                    <FormControl isInvalid={errors.branch}>
+                      <FormLabel fontWeight="600" color="gray.700" mb={2}>
+                        Branch *
+                      </FormLabel>
+                      <Select
+                        name="branch"
+                        value={formData.branch}
+                        onChange={handleBranchChange}
+                        placeholder={branchesLoading ? "Loading branches..." : "Select branch"}
+                        isDisabled={branchesLoading}
+                        borderRadius="lg"
+                        border="2px solid"
+                        borderColor="gray.200"
+                        _focus={{
+                          borderColor: "#2BA8D1",
+                          boxShadow: "0 0 0 3px rgba(43, 168, 209, 0.1)",
+                        }}
+                        _hover={{ borderColor: "gray.300" }}
+                        h="48px"
+                        fontSize="md"
+                      >
+                        {branches.map((branch) => (
+                          <option key={branch._id} value={branch._id}>
+                            {branch.branchName}
+                          </option>
+                        ))}
+                      </Select>
+                      <FormErrorMessage>{errors.branch}</FormErrorMessage>
+                    </FormControl>
+                  )}
 
                   {/* Selected Branch Info */}
                   {selectedBranch && (

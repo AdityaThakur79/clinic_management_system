@@ -20,7 +20,7 @@ const headers = [
   {
     title: 'Aartiket Speech & Hearing Care',
     subtitle:
-      'Premier audiology & speech therapy services in Ghatkopar, Mumbai - Your trusted hearing health partner',
+      'Comprehensive hearing tests, hearing aid trials & fitting, speech therapy — in Mumbai',
     image: assets.service_1,
     primaryColor: '#2BA8D1',
     secondaryColor: '#3AC0E7',
@@ -31,7 +31,7 @@ const headers = [
   {
     title: 'Expert Hearing Aid Solutions',
     subtitle:
-      'Professional hearing aid fitting, programming & specialized speech therapy for all ages in Ghatkopar',
+      'Professional hearing aid trials, fitting and programming for all ages — in Mumbai',
     image: assets.service_2,
     primaryColor: '#2BA8D1',
     secondaryColor: '#3AC0E7',
@@ -42,7 +42,7 @@ const headers = [
   {
     title: 'Comprehensive Speech Therapy',
     subtitle:
-      'Advanced speech therapy & hearing loss treatment serving Ghatkopar, Powai, Vikhroli, Bhandup & surrounding areas',
+      'Advanced speech therapy & hearing care for children and adults — across Mumbai',
     image: assets.service_10,
     primaryColor: '#2BA8D1',
     secondaryColor: '#3AC0E7',
@@ -53,7 +53,7 @@ const headers = [
   {
     title: 'Advanced Hearing Technology',
     subtitle:
-      'State-of-the-art In-The-Canal devices and microhearing solutions for discreet hearing enhancement in Ghatkopar',
+      'State‑of‑the‑art hearing technology, ITC devices and discreet solutions — in Mumbai',
     image: assets.image4,
     primaryColor: '#2BA8D1',
     secondaryColor: '#3AC0E7',
@@ -71,31 +71,7 @@ const HeroSection = () => {
 
   return (
     <Box as="section" pt={0} position="relative">
-      {/* Floating Elements Background */}
-      <Box
-        position="absolute"
-        top="10%"
-        left="5%"
-        w="100px"
-        h="100px"
-        borderRadius="full"
-        bg="rgba(43, 168, 209, 0.1)"
-        zIndex={2}
-        animation="float 6s ease-in-out infinite"
-        display={{ base: 'none', lg: 'block' }}
-      />
-      <Box
-        position="absolute"
-        bottom="20%"
-        right="8%"
-        w="60px"
-        h="60px"
-        borderRadius="full"
-        bg="rgba(58, 192, 231, 0.15)"
-        zIndex={2}
-        animation="float 4s ease-in-out infinite reverse"
-        display={{ base: 'none', lg: 'block' }}
-      />
+      {/* Floating Elements Background - removed per design request */}
 
       <style>
         {`
@@ -327,7 +303,7 @@ const HeroSection = () => {
                     {/* CTA Button */}
                     <Button
                       as={Link}
-                      to="/clinics"
+                      to="/doctors"
                       size={{ base: 'md', md: 'lg' }}
                       bg={`linear-gradient(135deg, ${item.primaryColor} 0%, ${item.secondaryColor} 100%)`}
                       color="white"

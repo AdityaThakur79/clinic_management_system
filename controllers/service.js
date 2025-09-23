@@ -2,14 +2,19 @@ import { Service } from "../models/services.js";
 
 export const createServiceController = async (req, res) => {
   try {
-    const { name, description = "", isActive = true } = req.body || {};
+    const { name, description = "", price = 0, category = "other", isActive = true } = req.body || {};
     if (!name) {
       return res.status(400).json({ success: false, message: "Name is required" });
+    }
+    if (price < 0) {
+      return res.status(400).json({ success: false, message: "Price cannot be negative" });
     }
 
     const doc = await Service.create({
       name: String(name).trim(),
       description,
+      price: parseFloat(price) || 0,
+      category,
       isActive: !!isActive,
     });
     return res.status(201).json({ success: true, service: doc });
@@ -69,10 +74,18 @@ export const updateServiceController = async (req, res) => {
     const { id, ...rest } = req.body || {};
     if (!id) return res.status(400).json({ success: false, message: "Service id is required" });
 
-    // Only allow fields that exist on the simplified model
+    // Only allow fields that exist on the model
     const update = {};
     if (typeof rest.name !== 'undefined') update.name = String(rest.name).trim();
     if (typeof rest.description !== 'undefined') update.description = rest.description;
+    if (typeof rest.price !== 'undefined') {
+      const price = parseFloat(rest.price);
+      if (price < 0) {
+        return res.status(400).json({ success: false, message: "Price cannot be negative" });
+      }
+      update.price = price;
+    }
+    if (typeof rest.category !== 'undefined') update.category = rest.category;
     if (typeof rest.isActive !== 'undefined') update.isActive = !!rest.isActive;
 
     const doc = await Service.findByIdAndUpdate(id, update, { new: true });

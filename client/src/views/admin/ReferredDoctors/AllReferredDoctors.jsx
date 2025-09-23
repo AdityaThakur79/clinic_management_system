@@ -5,17 +5,21 @@ import {
   useDisclosure, Drawer, DrawerBody, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerContent,
   DrawerCloseButton, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter,
   ModalCloseButton, useToast, Tooltip, InputGroup, InputLeftElement, Flex, Grid, Checkbox,
-  Spinner, Center, Alert, AlertIcon, AlertTitle, AlertDescription, Icon
+  Spinner, Center, Alert, AlertIcon, AlertTitle, AlertDescription, Icon, SimpleGrid,
+  Stat, StatLabel, StatNumber, StatHelpText, StatArrow
 } from '@chakra-ui/react';
 import { useListReferredDoctorsQuery, useDeleteReferredDoctorMutation } from '../../../features/api/referredDoctors';
+import { useGetAllBranchesQuery } from '../../../features/api/branchApi';
 import { DeleteIcon, EditIcon, SearchIcon, AddIcon, ChevronLeftIcon, ChevronRightIcon, ViewIcon, RepeatIcon, SettingsIcon, PhoneIcon, EmailIcon, CalendarIcon, InfoIcon } from '@chakra-ui/icons';
-import { MdAssignment, MdBusiness, MdPhone, MdEmail } from 'react-icons/md';
+import { MdAssignment, MdBusiness, MdPhone, MdEmail, MdAssessment } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 const AllReferredDoctors = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('createdAt');
+  const [branchFilter, setBranchFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('totalEarningsFromReferred');
   const [sortOrder, setSortOrder] = useState('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -25,14 +29,20 @@ const AllReferredDoctors = () => {
   const [referredDoctorToDelete, setReferredDoctorToDelete] = useState(null);
   const navigate = useNavigate();
 
+  // Get current user for role-based filtering
+  const user = useSelector((state) => state.auth.user);
+  const userRole = user?.role;
+  const userBranchId = user?.branch?._id || user?.branch || '';
+
   const { data, isFetching, refetch, error, isLoading } = useListReferredDoctorsQuery({ 
     page: currentPage, 
     limit: pageSize, 
     search: searchTerm,
-    status: statusFilter === 'all' ? '' : statusFilter,
+    branchId: (userRole === 'branchAdmin' || userRole === 'doctor') ? userBranchId : (branchFilter === 'all' ? '' : branchFilter),
     sortBy,
     sortOrder,
   });
+  const { data: branchesData } = useGetAllBranchesQuery({ page: 1, limit: 100, search: '' });
   const [deleteRefDoc, { isLoading: isDeleting }] = useDeleteReferredDoctorMutation();
 
   const cardBg = useColorModeValue('white', 'gray.800');
@@ -52,8 +62,7 @@ const AllReferredDoctors = () => {
   }, [searchTerm]);
 
   const handleViewReferredDoctor = (referredDoctor) => {
-    setSelectedReferredDoctor(referredDoctor);
-    onDrawerOpen();
+    navigate(`/admin/referred-doctors/${referredDoctor._id}/details`);
   };
 
   const handleDeleteClick = (referredDoctor) => {
@@ -63,7 +72,7 @@ const AllReferredDoctors = () => {
 
   const handleDelete = async (referredDoctorId) => {
     try {
-      await deleteRefDoc({ id: referredDoctorId }).unwrap();
+      await deleteRefDoc(referredDoctorId).unwrap();
       toast({
         title: 'Referred Doctor Deleted',
         description: 'Referred doctor has been successfully deleted.',
@@ -90,7 +99,7 @@ const AllReferredDoctors = () => {
     try {
       await Promise.all(
         selectedReferredDoctors.map(id => 
-          deleteRefDoc({ id }).unwrap()
+          deleteRefDoc(id).unwrap()
         )
       );
       toast({
@@ -190,6 +199,66 @@ const AllReferredDoctors = () => {
           </HStack>
         </Flex>
 
+        {/* Statistics Cards */}
+        <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
+          <Card>
+            <CardBody>
+              <Stat>
+                <StatLabel>Total Referred Doctors</StatLabel>
+                <StatNumber>{data?.pagination?.totalReferredDoctors || 0}</StatNumber>
+                <StatHelpText>
+                  <StatArrow type="increase" />
+                  Active referrals
+                </StatHelpText>
+              </Stat>
+            </CardBody>
+          </Card>
+          <Card>
+            <CardBody>
+              <Stat>
+                <StatLabel>Total Patients</StatLabel>
+                <StatNumber>
+                  {data?.referredDoctors?.reduce((sum, doc) => sum + doc.patientsReferredCount, 0) || 0}
+                </StatNumber>
+                <StatHelpText>
+                  <StatArrow type="increase" />
+                  Referred patients
+                </StatHelpText>
+              </Stat>
+            </CardBody>
+          </Card>
+          <Card>
+            <CardBody>
+              <Stat>
+                <StatLabel>Total Earnings</StatLabel>
+                <StatNumber>
+                  ₹{data?.referredDoctors?.reduce((sum, doc) => sum + doc.totalEarningsFromReferred, 0) || 0}
+                </StatNumber>
+                <StatHelpText>
+                  <StatArrow type="increase" />
+                  From referrals
+                </StatHelpText>
+              </Stat>
+            </CardBody>
+          </Card>
+          <Card>
+            <CardBody>
+              <Stat>
+                <StatLabel>Pending Amount</StatLabel>
+                <StatNumber>
+                  ₹{data?.referredDoctors?.reduce((sum, doc) => 
+                    sum + (doc.totalEarningsFromReferred - doc.totalPaidToDoctor), 0
+                  ) || 0}
+                </StatNumber>
+                <StatHelpText>
+                  <StatArrow type="decrease" />
+                  To be paid
+                </StatHelpText>
+              </Stat>
+            </CardBody>
+          </Card>
+        </SimpleGrid>
+
         {/* Search and Filters */}
         <Card bg={cardBg} borderColor={borderColor}>
           <CardBody>
@@ -238,7 +307,23 @@ const AllReferredDoctors = () => {
               {showFilters && (
                 <Box>
                   <Divider mb={4} />
-                  <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap={4}>
+                  <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap={4}>
+                    {userRole === 'superAdmin' && (
+                      <Box>
+                        <Text fontWeight="semibold" mb={2}>Branch</Text>
+                        <Select
+                          value={branchFilter}
+                          onChange={(e) => setBranchFilter(e.target.value)}
+                          borderRadius="lg"
+                        >
+                          <option value="all">All Branches</option>
+                          {branchesData?.branches?.map(branch => (
+                            <option key={branch._id} value={branch._id}>{branch.branchName}</option>
+                          ))}
+                        </Select>
+                      </Box>
+                    )}
+                    
                     <Box>
                       <Text fontWeight="semibold" mb={2}>Status</Text>
                       <Select
@@ -259,6 +344,8 @@ const AllReferredDoctors = () => {
                         onChange={(e) => setSortBy(e.target.value)}
                         borderRadius="lg"
                       >
+                        <option value="totalEarningsFromReferred">Total Earnings</option>
+                        <option value="patientsReferredCount">Patients Referred</option>
                         <option value="createdAt">Created Date</option>
                         <option value="name">Name</option>
                         <option value="clinicName">Clinic Name</option>
@@ -315,6 +402,13 @@ const AllReferredDoctors = () => {
                   <Text color="gray.600">Loading referred doctors...</Text>
                 </VStack>
               </Center>
+            ) : (data?.referredDoctors?.length || 0) === 0 ? (
+              <Center py={16} px={6}>
+                <Alert status="info" borderRadius="md" maxW="lg">
+                  <AlertIcon />
+                  <Text>No referred doctors found.</Text>
+                </Alert>
+              </Center>
             ) : (
               <TableContainer>
                 <Table variant="simple">
@@ -327,11 +421,13 @@ const AllReferredDoctors = () => {
                           onChange={(e) => handleSelectAll(e.target.checked)}
                         />
                       </Th>
-                      <Th>Name</Th>
-                      <Th>Clinic</Th>
+                      <Th>Doctor</Th>
                       <Th>Contact</Th>
+                      <Th>Specialization</Th>
+                      <Th>Patients</Th>
+                      <Th>Earnings</Th>
+                      <Th>Commission</Th>
                       <Th>Status</Th>
-                      <Th>Created</Th>
                       <Th>Actions</Th>
                     </Tr>
                   </Thead>
@@ -347,15 +443,49 @@ const AllReferredDoctors = () => {
                         <Td>
                           <VStack align="start" spacing={1}>
                             <Text fontWeight="semibold">{rd.name}</Text>
+                            <Text fontSize="sm" color="gray.600">{rd.clinicName || '-'}</Text>
                           </VStack>
                         </Td>
                         <Td>
-                          <Text fontSize="sm" noOfLines={2} maxW="200px">
-                            {rd.clinicName || '-'}
+                          <VStack align="start" spacing={1}>
+                            {rd.contact && (
+                              <HStack>
+                                <PhoneIcon boxSize={3} />
+                                <Text fontSize="sm">{rd.contact}</Text>
+                              </HStack>
+                            )}
+                            {rd.email && (
+                              <HStack>
+                                <EmailIcon boxSize={3} />
+                                <Text fontSize="sm">{rd.email}</Text>
+                              </HStack>
+                            )}
+                          </VStack>
+                        </Td>
+                        <Td>
+                          <Text fontSize="sm" noOfLines={2} maxW="150px">
+                            {rd.specialization || '-'}
                           </Text>
                         </Td>
                         <Td>
-                          <Text fontSize="sm">{rd.contact || '-'}</Text>
+                          <Text fontWeight="semibold" color="blue.600">
+                            {rd.patientsReferredCount}
+                          </Text>
+                        </Td>
+                        <Td>
+                          <VStack align="start" spacing={1}>
+                            <Text fontWeight="semibold" color="green.600">
+                              ₹{rd.totalEarningsFromReferred}
+                            </Text>
+                            <Text fontSize="xs" color="gray.600">
+                              Paid: ₹{rd.totalPaidToDoctor}
+                            </Text>
+                          </VStack>
+                        </Td>
+                        <Td>
+                          <Text fontSize="sm">
+                            {rd.commissionRate}%
+                          </Text>
                         </Td>
                         <Td>
                           <Badge
@@ -369,21 +499,17 @@ const AllReferredDoctors = () => {
                           </Badge>
                         </Td>
                         <Td>
-                          <Text fontSize="sm" color="gray.600">
-                            {formatDate(rd.createdAt)}
-                          </Text>
-                        </Td>
-                        <Td>
                           <HStack spacing={1}>
-                            <Tooltip label="View Details">
+                            <Tooltip label="View Analytics">
                               <IconButton
-                                icon={<ViewIcon />}
+                                icon={<Icon as={MdAssessment} />}
                                 size="sm"
                                 variant="ghost"
-                                colorScheme="blue"
-                                onClick={() => handleViewReferredDoctor(rd)}
+                                colorScheme="purple"
+                                onClick={() => navigate(`/admin/referred-doctors/${rd._id}/analytics`)}
                               />
                             </Tooltip>
+                            
                             <Tooltip label="Edit Referred Doctor">
                               <IconButton
                                 icon={<EditIcon />}
@@ -419,11 +545,13 @@ const AllReferredDoctors = () => {
                           onChange={(e) => handleSelectAll(e.target.checked)}
                         />
                       </Th>
-                      <Th>Name</Th>
-                      <Th>Clinic</Th>
+                      <Th>Doctor</Th>
                       <Th>Contact</Th>
+                      <Th>Specialization</Th>
+                      <Th>Patients</Th>
+                      <Th>Earnings</Th>
+                      <Th>Commission</Th>
                       <Th>Status</Th>
-                      <Th>Created</Th>
                       <Th>Actions</Th>
                     </Tr>
                   </Thead>

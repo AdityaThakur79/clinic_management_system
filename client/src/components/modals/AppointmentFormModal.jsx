@@ -23,13 +23,13 @@ import {
 } from '@chakra-ui/react';
 import { useCreateAppointmentMutation } from '../../features/api/appointments';
 import { useGetAllBranchesQuery } from '../../features/api/branchApi';
-import { useListReferredDoctorsQuery } from '../../features/api/referredDoctors';
 
 const AppointmentFormModal = ({
   isOpen,
   onClose,
   doctorId,
   branchId,
+  branchName,
   selectedDate,
   selectedTimeSlot,
   doctorName,
@@ -43,16 +43,15 @@ const AppointmentFormModal = ({
     gender: 'prefer_not_to_say',
     address: '',
     notes: '',
-    referredDoctorId: '',
   });
 
   const [createAppointment, { isLoading }] = useCreateAppointmentMutation();
   const { data: branchesData } = useGetAllBranchesQuery({ page: 1, limit: 100 });
-  const { data: refDocsData, refetch: refetchRefDocs } = useListReferredDoctorsQuery({ branchId });
   const toast = useToast();
 
   const bg = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const headerSubColor = useColorModeValue('gray.500', 'gray.400');
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -79,7 +78,6 @@ const AppointmentFormModal = ({
         date: selectedDate,
         timeSlot: selectedTimeSlot,
         notes: formData.notes,
-        referredDoctorId: formData.referredDoctorId || undefined,
         patient: {
           name: formData.name,
           email: formData.email,
@@ -109,7 +107,6 @@ const AppointmentFormModal = ({
         gender: 'prefer_not_to_say',
         address: '',
         notes: '',
-        referredDoctorId: '',
       });
     } catch (error) {
       console.error('Booking error:', error);
@@ -154,12 +151,12 @@ const AppointmentFormModal = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered>
       <ModalOverlay />
-      <ModalContent bg={bg} maxW="600px">
-        <ModalHeader>
-          <Text fontSize="xl" fontWeight="bold">
+      <ModalContent bg={bg} maxW="620px" borderRadius="xl" boxShadow="2xl" border="1px solid" borderColor={borderColor}>
+        <ModalHeader borderBottom="1px solid" borderColor={borderColor} pb={3}>
+          <Text fontSize="xl" fontWeight="bold" color="brand.600">
             Book Appointment
           </Text>
-          <Text fontSize="sm" color="gray.500" mt={1}>
+          <Text fontSize="sm" color={headerSubColor} mt={1}>
             with Dr. {doctorName}
           </Text>
         </ModalHeader>
@@ -167,17 +164,17 @@ const AppointmentFormModal = ({
         
         <form onSubmit={handleSubmit}>
           <ModalBody>
-            <VStack spacing={4}>
+            <VStack spacing={5} align="stretch">
               {/* Appointment Details */}
-              <Box w="full" p={4} bg="blue.50" borderRadius="md" border="1px solid" borderColor="blue.200">
-                <Text fontWeight="semibold" color="blue.700" mb={2}>
+              <Box w="full" p={4} bg="brand.50" borderRadius="lg" border="1px solid" borderColor="brand.200">
+                <Text fontWeight="semibold" color="brand.700" mb={2}>
                   Appointment Details
                 </Text>
                 <HStack spacing={4}>
-                  <Text fontSize="sm" color="gray.600">
+                  <Text fontSize="sm" color="gray.700">
                     <strong>Date:</strong> {formatDate(selectedDate)}
                   </Text>
-                  <Text fontSize="sm" color="gray.600">
+                  <Text fontSize="sm" color="gray.700">
                     <strong>Time:</strong> {selectedTimeSlot}
                   </Text>
                 </HStack>
@@ -186,7 +183,7 @@ const AppointmentFormModal = ({
               <Divider />
 
               {/* Patient Information */}
-              <Text fontWeight="semibold" color="gray.700" alignSelf="start">
+              <Text fontWeight="semibold" color="gray.800" alignSelf="start">
                 Patient Information
               </Text>
 
@@ -214,23 +211,16 @@ const AppointmentFormModal = ({
                 </FormControl>
               </HStack>
 
-              {/* Branch Selection */}
+              {/* Branch (default to doctor's branch) */}
               <FormControl isRequired>
                 <FormLabel fontSize="sm">Branch</FormLabel>
-                <Select
-                  value={branchId || ''}
-                  onChange={(e) => {
-                    // Not changing parent prop; instead inform user to pick correct doctor page if mismatched
-                    // Optionally, you could lift this state up to parent if needed
-                    handleInputChange('selectedBranchId', e.target.value);
-                  }}
+                <Input
+                  value={branchName || branchesData?.branches?.find(b => b._id === branchId)?.branchName || ''}
+                  isReadOnly
                   size="sm"
-                >
-                  <option value="" disabled>Select branch</option>
-                  {branchesData?.branches?.map((b) => (
-                    <option key={b._id} value={b._id}>{b.branchName}</option>
-                  ))}
-                </Select>
+                  bg={useColorModeValue('gray.50', 'gray.700')}
+                  borderColor={borderColor}
+                />
               </FormControl>
 
               <HStack spacing={4} w="full">
@@ -269,20 +259,7 @@ const AppointmentFormModal = ({
                     <option value="other">Other</option>
                   </Select>
                 </FormControl>
-                <FormControl>
-                  <FormLabel fontSize="sm">Referred Doctor</FormLabel>
-                  <Select
-                    value={formData.referredDoctorId}
-                    onChange={(e) => handleInputChange('referredDoctorId', e.target.value)}
-                    placeholder="Select referred doctor (optional)"
-                    size="sm"
-                  >
-                    <option value="">None</option>
-                    {refDocsData?.referredDoctors?.map((rd) => (
-                      <option key={rd._id} value={rd._id}>{rd.name}{rd.clinicName ? ` - ${rd.clinicName}` : ''}</option>
-                    ))}
-                  </Select>
-                </FormControl>
+                {/* Referred doctor field removed as requested */}
               </HStack>
 
               <FormControl>
@@ -308,14 +285,14 @@ const AppointmentFormModal = ({
             </VStack>
           </ModalBody>
 
-          <ModalFooter>
+          <ModalFooter borderTop="1px solid" borderColor={borderColor}>
             <HStack spacing={3}>
-              <Button variant="outline" onClick={onClose} size="sm">
+              <Button variant="outline" colorScheme="brand" onClick={onClose} size="sm">
                 Cancel
               </Button>
               <Button
                 type="submit"
-                colorScheme="blue"
+                colorScheme="brand"
                 isLoading={isLoading}
                 loadingText="Booking..."
                 size="sm"

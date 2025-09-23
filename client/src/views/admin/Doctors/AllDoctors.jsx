@@ -318,6 +318,13 @@ const AllDoctors = () => {
             {isLoading ? (
               <Center py={20}><VStack spacing={4}><Spinner size="xl" color="#2BA8D1" />
                 <Text color="gray.600">Loading doctors...</Text></VStack></Center>
+            ) : (doctors?.length || 0) === 0 ? (
+              <Center py={16} px={6}>
+                <Alert status="info" borderRadius="md" maxW="lg">
+                  <AlertIcon />
+                  <Text>No doctors found.</Text>
+                </Alert>
+              </Center>
             ) : (
               <TableContainer>
                 <Table variant="simple">

@@ -65,6 +65,34 @@ export const authApi = createApi({
         body: formData,
       }),
     }),
+    forgotPassword: builder.mutation({
+      query: (email) => ({
+        url: "forgot-password",
+        method: "POST",
+        body: { email },
+      }),
+    }),
+    verifyPasswordResetOTP: builder.mutation({
+      query: ({ email, otp }) => ({
+        url: "verify-password-reset-otp",
+        method: "POST",
+        body: { email, otp },
+      }),
+    }),
+    resetPassword: builder.mutation({
+      query: ({ email, otp, newPassword }) => ({
+        url: "reset-password",
+        method: "POST",
+        body: { email, otp, newPassword },
+      }),
+    }),
+    changePassword: builder.mutation({
+      query: ({ currentPassword, newPassword }) => ({
+        url: "change-password",
+        method: "PUT",
+        body: { currentPassword, newPassword },
+      }),
+    }),
   }),
 });
 
@@ -74,4 +102,8 @@ export const {
   useLogoutUserMutation,
   useLoadUserQuery,
   useUpdateUserMutation,
+  useForgotPasswordMutation,
+  useVerifyPasswordResetOTPMutation,
+  useResetPasswordMutation,
+  useChangePasswordMutation,
 } = authApi;

@@ -116,7 +116,7 @@ const Footer = () => {
                   { name: "Home", to: "/", icon: FaHome },
                   { name: "About Us", to: "/about", icon: FaUser },
                   { name: "Our Services", to: "/services", icon: FaCogs },
-                  { name: "Clinics Near You", to: "/clinics", icon: FaHospital },
+                  { name: "Book Appointment", to: "/doctors", icon: FaHospital },
                   { name: "Contact Us", to: "/contact", icon: FaAddressBook },
                 ].map((link) => (
                   <NavLink key={link.to} to={link.to}>
@@ -235,9 +235,18 @@ const Footer = () => {
                     <Text fontSize="sm" fontWeight="semibold" color="gray.600" mb={2}>
                       Location
                     </Text>
-                    <Text color="#0C2F4D" fontWeight="semibold" fontSize="md" mb={3}>
-                      Ghatkopar  
-                    </Text>
+                    <Link
+                      href="https://maps.app.goo.gl/h1ndJAoJP2DnAr7M7"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      color="#0C2F4D"
+                      fontWeight="semibold"
+                      fontSize="md"
+                      mb={3}
+                      _hover={{ color: '#2BA8D1' }}
+                    >
+                      Ghatkopar, Mumbai 
+                    </Link>
                     
                   </Box>
                 </HStack>
@@ -291,14 +300,14 @@ const Footer = () => {
       {/* Floating Action Buttons */}
       <Flex
         direction="column"
-        gap={4}
+        gap={{ base: 3, md: 4 }}
         pos="fixed"
-        bottom={6}
-        right={6}
+        bottom={{ base: 4, md: 6 }}
+        right={{ base: 4, md: 6 }}
         zIndex={50}
       >
         {/* Phone Button with Wave Effect */}
-        <Box position="relative">
+        <Box position="relative" w={{ base: '48px', md: '56px' }} h={{ base: '48px', md: '56px' }}>
           {/* Wave Animation */}
           <Box
             position="absolute"
@@ -339,7 +348,8 @@ const Footer = () => {
             href="tel:+918087766556"
             bg="linear-gradient(135deg, #2BA8D1, #3AC0E7)"
             color="white"
-            p={4}
+            w="100%"
+            h="100%"
             rounded="full"
             shadow="xl"
             transition="all 0.3s ease"
@@ -354,12 +364,12 @@ const Footer = () => {
             position="relative"
             zIndex={1}
           >
-            <Icon as={PhoneIcon} fontSize="lg" />
+            <Icon as={PhoneIcon} fontSize={{ base: 'md', md: 'lg' }} />
           </Link>
         </Box>
 
         {/* WhatsApp Button with Wave Effect */}
-        <Box position="relative">
+        <Box position="relative" w={{ base: '48px', md: '56px' }} h={{ base: '48px', md: '56px' }}>
           {/* Wave Animation */}
           <Box
             position="absolute"
@@ -402,7 +412,8 @@ const Footer = () => {
             rel="noopener noreferrer"
             bg="linear-gradient(135deg, #25D366, #128C7E)"
             color="white"
-            p={4}
+            w="100%"
+            h="100%"
             rounded="full"
             shadow="xl"
             transition="all 0.3s ease"
@@ -417,7 +428,7 @@ const Footer = () => {
             position="relative"
             zIndex={1}
           >
-            <Icon as={FaWhatsapp} fontSize="lg" />
+            <Icon as={FaWhatsapp} fontSize={{ base: 'md', md: 'lg' }} />
           </Link>
         </Box>
       </Flex>

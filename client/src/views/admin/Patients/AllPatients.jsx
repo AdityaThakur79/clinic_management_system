@@ -7,7 +7,7 @@ import {
   ModalCloseButton, useToast, Tooltip, InputGroup, InputLeftElement, Flex, Grid, Checkbox,
   Spinner, Center, Alert, AlertIcon, AlertTitle, AlertDescription, Icon, Avatar
 } from '@chakra-ui/react';
-import { useGetAllPatientsQuery, useDeletePatientMutation } from '../../../features/api/patients';
+import { useGetAllPatientsQuery, useDeletePatientMutation } from '../../../features/api/patientApi';
 import { useGetAllBranchesQuery } from '../../../features/api/branchApi';
 import { DeleteIcon, EditIcon, SearchIcon, AddIcon, ChevronLeftIcon, ChevronRightIcon, ViewIcon, RepeatIcon, SettingsIcon, PhoneIcon, EmailIcon, CalendarIcon, InfoIcon } from '@chakra-ui/icons';
 import { MdPerson, MdBusiness, MdPhone, MdEmail, MdLocationOn } from 'react-icons/md';
@@ -62,8 +62,7 @@ const AllPatients = () => {
   }, [searchTerm]);
 
   const handleViewPatient = (patient) => {
-    setSelectedPatient(patient);
-    onDrawerOpen();
+    navigate(`/admin/patients/${patient._id}/details`);
   };
 
   const handleDeleteClick = (patient) => {
@@ -300,6 +299,8 @@ const AllPatients = () => {
                       <Th>Patient</Th>
                       <Th>Contact</Th>
                       <Th>Age & Gender</Th>
+                      <Th>Plan Type</Th>
+                      <Th>Referred By</Th>
                       <Th>Branch</Th>
                       <Th>Created</Th>
                       <Th>Actions</Th>
@@ -333,6 +334,21 @@ const AllPatients = () => {
                             <Text fontSize="sm">{patient.age ? `${patient.age} years` : '-'}</Text>
                             <Text fontSize="sm" color="gray.600" textTransform="capitalize">{patient.gender || '-'}</Text>
                           </VStack>
+                        </Td>
+                        <Td>
+                          <Badge colorScheme={patient.plan?.type === 'wallet' ? 'blue' : 'green'} fontSize="xs">
+                            {patient.plan?.type || 'standard'}
+                          </Badge>
+                          {patient.plan?.type === 'wallet' && (
+                            <Text fontSize="xs" color="gray.600" mt={1}>
+                              ₹{patient.plan?.walletAmount || 0}
+                            </Text>
+                          )}
+                        </Td>
+                        <Td>
+                          <Text fontSize="sm" noOfLines={2} maxW="120px">
+                            {patient.referredBy || patient.referredDoctorId?.name || '-'}
+                          </Text>
                         </Td>
                         <Td>
                           <Text fontSize="sm" noOfLines={2} maxW="150px">
@@ -390,6 +406,8 @@ const AllPatients = () => {
                       <Th>Patient</Th>
                       <Th>Contact</Th>
                       <Th>Age & Gender</Th>
+                      <Th>Plan Type</Th>
+                      <Th>Referred By</Th>
                       <Th>Branch</Th>
                       <Th>Created</Th>
                       <Th>Actions</Th>

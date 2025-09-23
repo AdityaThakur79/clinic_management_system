@@ -5,15 +5,21 @@ import {
   useDisclosure, Drawer, DrawerBody, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerContent,
   DrawerCloseButton, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter,
   ModalCloseButton, useToast, Tooltip, InputGroup, InputLeftElement, Flex, Grid, Checkbox,
-  Spinner, Center, Alert, AlertIcon, AlertTitle, AlertDescription, Icon, Avatar
+  Spinner, Center, Alert, AlertIcon, AlertTitle, AlertDescription, Icon, Avatar, Tabs,
+  TabList, TabPanels, Tab, TabPanel, FormControl, FormLabel, Textarea, NumberInput,
+  NumberInputField, NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper,
+  SimpleGrid, Checkbox as ChakraCheckbox
 } from '@chakra-ui/react';
 import { useGetAllAppointmentsQuery, useUpdateAppointmentStatusMutation, useDeleteAppointmentMutation } from '../../../features/api/appointments';
+import { useCompleteAppointmentMutation } from '../../../features/api/patientApi';
 import { useGetAllBranchesQuery } from '../../../features/api/branchApi';
 import { useGetAllDoctorsMutation } from '../../../features/api/doctor';
-import { DeleteIcon, EditIcon, SearchIcon, AddIcon, ChevronLeftIcon, ChevronRightIcon, ViewIcon, RepeatIcon, SettingsIcon, PhoneIcon, EmailIcon, CalendarIcon, InfoIcon } from '@chakra-ui/icons';
+import { DeleteIcon, EditIcon, SearchIcon, AddIcon, ChevronLeftIcon, ChevronRightIcon, ViewIcon, RepeatIcon, SettingsIcon, PhoneIcon, EmailIcon, CalendarIcon, InfoIcon, CheckIcon, ReceiptIcon } from '@chakra-ui/icons';
+import { FaPen } from 'react-icons/fa';
 import { MdAssignment, MdBusiness, MdPhone, MdEmail, MdPerson, MdSchedule } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { FaReceipt } from 'react-icons/fa';
 
 const AllAppointments = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,6 +35,27 @@ const AllAppointments = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [appointmentToDelete, setAppointmentToDelete] = useState(null);
+  const [appointmentToComplete, setAppointmentToComplete] = useState(null);
+  const [prescriptionForm, setPrescriptionForm] = useState({
+    diagnosis: '',
+    symptoms: [],
+    medicines: [{ name: '', dosage: '', frequency: '', duration: '', instructions: '' }],
+    treatment: '',
+    followUpRequired: false,
+    followUpDate: '',
+    doctorNotes: '',
+    patientInstructions: ''
+  });
+  const [billForm, setBillForm] = useState({
+    consultationFee: 0,
+    treatmentFee: 0,
+    medicineFee: 0,
+    otherCharges: 0,
+    discount: 0,
+    tax: 0,
+    paymentMethod: 'cash',
+    notes: ''
+  });
   const navigate = useNavigate();
 
   // Get current user for role-based filtering
@@ -54,6 +81,7 @@ const AllAppointments = () => {
   const [getAllDoctors] = useGetAllDoctorsMutation();
   const [updateAppointmentStatus] = useUpdateAppointmentStatusMutation();
   const [deleteAppointment, { isLoading: isDeleting }] = useDeleteAppointmentMutation();
+  const [completeAppointment] = useCompleteAppointmentMutation();
 
   const cardBg = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
@@ -61,7 +89,27 @@ const AllAppointments = () => {
 
   const { isOpen: isDrawerOpen, onOpen: onDrawerOpen, onClose: onDrawerClose } = useDisclosure();
   const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure();
+  const { isOpen: isCompleteModalOpen, onOpen: onCompleteModalOpen, onClose: onCompleteModalClose } = useDisclosure();
   const toast = useToast();
+
+  // Brand button styles
+  const brandHover = {
+    _hover: {
+      bg: '#2BA8D1',
+      color: 'white',
+      transform: 'translateY(-2px)',
+      boxShadow: '0 10px 25px rgba(43,168,209,0.3)'
+    },
+    _active: { bg: '#2696ba', transform: 'translateY(0)' },
+    transition: 'all 0.15s ease'
+  };
+  const brandPrimary = {
+    bg: '#2BA8D1',
+    color: 'white',
+    _hover: { bg: '#2696ba', transform: 'translateY(-1px)', boxShadow: '0 8px 20px rgba(43,168,209,0.25)' },
+    _active: { bg: '#2187a6', transform: 'translateY(0)' },
+    transition: 'all 0.15s ease'
+  };
 
   // Handle search with debounce
   useEffect(() => {
@@ -98,6 +146,10 @@ const AllAppointments = () => {
   const handleDeleteClick = (appointment) => {
     setAppointmentToDelete(appointment);
     onDeleteModalOpen();
+  };
+
+  const handleCompleteAppointment = (appointment) => {
+    navigate(`/admin/appointments/${appointment._id}/enhanced-complete`);
   };
 
   const handleDelete = async () => {
@@ -164,6 +216,68 @@ const AllAppointments = () => {
     }
   };
 
+  // Form handlers for complete appointment
+  const handlePrescriptionChange = (field, value) => {
+    setPrescriptionForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleBillChange = (field, value) => {
+    setBillForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const addMedicine = () => {
+    setPrescriptionForm(prev => ({
+      ...prev,
+      medicines: [...prev.medicines, { name: '', dosage: '', frequency: '', duration: '', instructions: '' }]
+    }));
+  };
+
+  const removeMedicine = (index) => {
+    setPrescriptionForm(prev => ({
+      ...prev,
+      medicines: prev.medicines.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateMedicine = (index, field, value) => {
+    setPrescriptionForm(prev => ({
+      ...prev,
+      medicines: prev.medicines.map((medicine, i) => 
+        i === index ? { ...medicine, [field]: value } : medicine
+      )
+    }));
+  };
+
+  const handleCompleteAppointmentSubmit = async () => {
+    try {
+      await completeAppointment({
+        appointmentId: appointmentToComplete._id,
+        prescription: prescriptionForm,
+        bill: billForm
+      }).unwrap();
+      
+      toast({
+        title: 'Appointment Completed',
+        description: 'Appointment has been completed successfully.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      
+      onCompleteModalClose();
+      setAppointmentToComplete(null);
+      refetch();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error?.data?.message || 'Failed to complete appointment.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   // Get status color
   const getStatusColor = (status) => {
     switch (status) {
@@ -193,6 +307,16 @@ const AllAppointments = () => {
     return timeSlot;
   };
 
+  // Format amount (Rs) with Indian grouping
+  const formatAmount = (value) => {
+    const num = Number(value || 0);
+    const formatted = new Intl.NumberFormat('en-IN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(num);
+    return `Rs ${formatted}`;
+  };
+
   if (error) {
     return (
       <Box pt={{ base: '130px', md: '80px', xl: '80px' }}>
@@ -220,19 +344,14 @@ const AllAppointments = () => {
               leftIcon={<RepeatIcon />}
               onClick={() => refetch()}
               isLoading={isFetching}
-              _hover={{ 
-                bg: "#2BA8D1", 
-                color: "white",
-                transform: "translateY(-2px)",
-                boxShadow: "0 10px 25px rgba(43, 168, 209, 0.3)"
-              }}
+              {...brandHover}
             >
               Refresh
             </Button>
             <Button
-              variant="primary"
               leftIcon={<AddIcon />}
               onClick={() => navigate('/admin/appointments/create')}
+              {...brandPrimary}
             >
               Add Appointment
             </Button>
@@ -261,12 +380,7 @@ const AllAppointments = () => {
                   variant="outline"
                   leftIcon={<SettingsIcon />}
                   onClick={() => setShowFilters(!showFilters)}
-                  _hover={{ 
-                    bg: "#2BA8D1", 
-                    color: "white",
-                    transform: "translateY(-2px)",
-                    boxShadow: "0 10px 25px rgba(43, 168, 209, 0.3)"
-                  }}
+                  {...brandHover}
                 >
                   Filters
                 </Button>
@@ -399,6 +513,13 @@ const AllAppointments = () => {
                   <Text color="gray.600">Loading appointments...</Text>
                 </VStack>
               </Center>
+            ) : (data?.appointments?.length || 0) === 0 ? (
+              <Center py={20}>
+                <VStack spacing={3}>
+                  <Icon as={MdSchedule} w={12} h={12} color="gray.400" />
+                  <Text color="gray.600">No appointments found.</Text>
+                </VStack>
+              </Center>
             ) : (
               <TableContainer>
                 <Table variant="simple">
@@ -469,6 +590,39 @@ const AllAppointments = () => {
                         </Td>
                         <Td>
                           <HStack spacing={1}>
+                            {appointment.status === 'booked' && (
+                              <Tooltip label="Complete Appointment">
+                                <IconButton
+                                  icon={<CheckIcon />}
+                                  size="sm"
+                                  variant="ghost"
+                                  colorScheme="green"
+                                  onClick={() => handleCompleteAppointment(appointment)}
+                                />
+                              </Tooltip>
+                            )}
+                            {appointment.status === 'completed' && (
+                              <Tooltip label="View Bill">
+                                <IconButton
+                                  icon={<FaReceipt />}
+                                  size="sm"
+                                  variant="ghost"
+                                  colorScheme="purple"
+                                  onClick={() => navigate(`/admin/appointments/${appointment._id}/bill`)}
+                                />
+                              </Tooltip>
+                            )}
+                            {appointment.status === 'completed' && (
+                              <Tooltip label="Edit Completed Appointment">
+                                <IconButton
+                                  icon={<FaPen />}
+                                  size="sm"
+                                  variant="ghost"
+                                  colorScheme="orange"
+                                  onClick={() => navigate(`/admin/appointments/${appointment._id}/enhanced-complete?edit=true`)}
+                                />
+                              </Tooltip>
+                            )}
                             <Tooltip label="View Details">
                               <IconButton
                                 icon={<ViewIcon />}
@@ -533,6 +687,7 @@ const AllAppointments = () => {
                     leftIcon={<ChevronLeftIcon />}
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     isDisabled={currentPage === 1}
+                    {...brandHover}
                   >
                     Previous
                   </Button>
@@ -548,8 +703,8 @@ const AllAppointments = () => {
                           {index > 0 && array[index - 1] !== page - 1 && <Text>...</Text>}
                           <Button
                             size="sm"
-                            variant={page === currentPage ? "primary" : "outline"}
                             onClick={() => setCurrentPage(page)}
+                            {...(page === currentPage ? brandPrimary : brandHover)}
                           >
                             {page}
                           </Button>
@@ -564,6 +719,7 @@ const AllAppointments = () => {
                     rightIcon={<ChevronRightIcon />}
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(data.pagination.totalAppointments / pageSize)))}
                     isDisabled={currentPage === Math.ceil(data.pagination.totalAppointments / pageSize)}
+                    {...brandHover}
                   >
                     Next
                   </Button>
@@ -620,6 +776,12 @@ const AllAppointments = () => {
                         <Text fontSize="sm" color="gray.600" mb={1}>Email</Text>
                         <Text fontWeight="medium" color="blue.500">{selectedAppointment?.patientId?.email || '-'}</Text>
                       </Box>
+                      {selectedAppointment?.patientId?.address && (
+                        <Box>
+                          <Text fontSize="sm" color="gray.600" mb={1}>Address</Text>
+                          <Text fontWeight="medium">{selectedAppointment?.patientId?.address}</Text>
+                        </Box>
+                      )}
                     </VStack>
                   </CardBody>
                 </Card>
@@ -648,6 +810,18 @@ const AllAppointments = () => {
                         <Text fontSize="sm" color="gray.600" mb={1}>Date & Time</Text>
                         <Text fontWeight="medium">{formatDate(selectedAppointment?.date)} at {formatTime(selectedAppointment?.timeSlot)}</Text>
                       </Box>
+                      {selectedAppointment?.reason && (
+                        <Box>
+                          <Text fontSize="sm" color="gray.600" mb={1}>Reason</Text>
+                          <Text fontWeight="medium">{selectedAppointment?.reason}</Text>
+                        </Box>
+                      )}
+                      {selectedAppointment?.notes && (
+                        <Box>
+                          <Text fontSize="sm" color="gray.600" mb={1}>Notes</Text>
+                          <Text fontWeight="medium">{selectedAppointment?.notes}</Text>
+                        </Box>
+                      )}
                       {selectedAppointment?.referredDoctorId && (
                         <Box>
                           <Text fontSize="sm" color="gray.600" mb={1}>Referred By</Text>
@@ -705,6 +879,268 @@ const AllAppointments = () => {
                 isLoading={isDeleting}
               >
                 Delete
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* Complete Appointment Modal */}
+        <Modal isOpen={isCompleteModalOpen} onClose={onCompleteModalClose} size="6xl">
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Complete Appointment</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <Tabs>
+                <TabList>
+                  <Tab>Prescription</Tab>
+                  <Tab>Billing</Tab>
+                </TabList>
+                
+                <TabPanels>
+                  {/* Prescription Tab */}
+                  <TabPanel>
+                    <VStack spacing={4} align="stretch">
+                      <FormControl>
+                        <FormLabel>Diagnosis</FormLabel>
+                        <Input
+                          value={prescriptionForm.diagnosis}
+                          onChange={(e) => handlePrescriptionChange('diagnosis', e.target.value)}
+                          placeholder="Enter diagnosis"
+                        />
+                      </FormControl>
+                      
+                      <FormControl>
+                        <FormLabel>Treatment</FormLabel>
+                        <Textarea
+                          value={prescriptionForm.treatment}
+                          onChange={(e) => handlePrescriptionChange('treatment', e.target.value)}
+                          placeholder="Enter treatment details"
+                          rows={3}
+                        />
+                      </FormControl>
+                      
+                      <Box>
+                        <HStack justify="space-between" mb={3}>
+                          <Text fontWeight="semibold">Medicines</Text>
+                          <Button size="sm" onClick={addMedicine}>Add Medicine</Button>
+                        </HStack>
+                        <VStack spacing={3}>
+                          {prescriptionForm.medicines.map((medicine, index) => (
+                            <Card key={index}>
+                              <CardBody>
+                                <SimpleGrid columns={2} spacing={3}>
+                                  <FormControl>
+                                    <FormLabel>Medicine Name</FormLabel>
+                                    <Input
+                                      value={medicine.name}
+                                      onChange={(e) => updateMedicine(index, 'name', e.target.value)}
+                                      placeholder="Medicine name"
+                                    />
+                                  </FormControl>
+                                  <FormControl>
+                                    <FormLabel>Dosage</FormLabel>
+                                    <Input
+                                      value={medicine.dosage}
+                                      onChange={(e) => updateMedicine(index, 'dosage', e.target.value)}
+                                      placeholder="e.g., 500mg"
+                                    />
+                                  </FormControl>
+                                  <FormControl>
+                                    <FormLabel>Frequency</FormLabel>
+                                    <Input
+                                      value={medicine.frequency}
+                                      onChange={(e) => updateMedicine(index, 'frequency', e.target.value)}
+                                      placeholder="e.g., 3 times daily"
+                                    />
+                                  </FormControl>
+                                  <FormControl>
+                                    <FormLabel>Duration</FormLabel>
+                                    <Input
+                                      value={medicine.duration}
+                                      onChange={(e) => updateMedicine(index, 'duration', e.target.value)}
+                                      placeholder="e.g., 7 days"
+                                    />
+                                  </FormControl>
+                                </SimpleGrid>
+                                <FormControl mt={3}>
+                                  <FormLabel>Instructions</FormLabel>
+                                  <Textarea
+                                    value={medicine.instructions}
+                                    onChange={(e) => updateMedicine(index, 'instructions', e.target.value)}
+                                    placeholder="Special instructions"
+                                    rows={2}
+                                  />
+                                </FormControl>
+                                <Button
+                                  size="sm"
+                                  colorScheme="red"
+                                  variant="outline"
+                                  onClick={() => removeMedicine(index)}
+                                  mt={2}
+                                >
+                                  Remove
+                                </Button>
+                              </CardBody>
+                            </Card>
+                          ))}
+                        </VStack>
+                      </Box>
+                      
+                      <ChakraCheckbox
+                        isChecked={prescriptionForm.followUpRequired}
+                        onChange={(e) => handlePrescriptionChange('followUpRequired', e.target.checked)}
+                      >
+                        Follow-up required
+                      </ChakraCheckbox>
+                      
+                      {prescriptionForm.followUpRequired && (
+                        <FormControl>
+                          <FormLabel>Follow-up Date</FormLabel>
+                          <Input
+                            type="date"
+                            value={prescriptionForm.followUpDate}
+                            onChange={(e) => handlePrescriptionChange('followUpDate', e.target.value)}
+                          />
+                        </FormControl>
+                      )}
+                      
+                      <FormControl>
+                        <FormLabel>Doctor Notes</FormLabel>
+                        <Textarea
+                          value={prescriptionForm.doctorNotes}
+                          onChange={(e) => handlePrescriptionChange('doctorNotes', e.target.value)}
+                          placeholder="Additional notes"
+                          rows={3}
+                        />
+                      </FormControl>
+                    </VStack>
+                  </TabPanel>
+                  
+                  {/* Billing Tab */}
+                  <TabPanel>
+                    <VStack spacing={4} align="stretch">
+                      <SimpleGrid columns={2} spacing={4}>
+                        <FormControl>
+                          <FormLabel>Consultation Fee</FormLabel>
+                          <NumberInput
+                            value={billForm.consultationFee}
+                            onChange={(value) => handleBillChange('consultationFee', value)}
+                          >
+                            <NumberInputField />
+                            <NumberInputStepper>
+                              <NumberIncrementStepper />
+                              <NumberDecrementStepper />
+                            </NumberInputStepper>
+                          </NumberInput>
+                        </FormControl>
+                        
+                        <FormControl>
+                          <FormLabel>Treatment Fee</FormLabel>
+                          <NumberInput
+                            value={billForm.treatmentFee}
+                            onChange={(value) => handleBillChange('treatmentFee', value)}
+                          >
+                            <NumberInputField />
+                            <NumberInputStepper>
+                              <NumberIncrementStepper />
+                              <NumberDecrementStepper />
+                            </NumberInputStepper>
+                          </NumberInput>
+                        </FormControl>
+                        
+                        <FormControl>
+                          <FormLabel>Medicine Fee</FormLabel>
+                          <NumberInput
+                            value={billForm.medicineFee}
+                            onChange={(value) => handleBillChange('medicineFee', value)}
+                          >
+                            <NumberInputField />
+                            <NumberInputStepper>
+                              <NumberIncrementStepper />
+                              <NumberDecrementStepper />
+                            </NumberInputStepper>
+                          </NumberInput>
+                        </FormControl>
+                        
+                        <FormControl>
+                          <FormLabel>Other Charges</FormLabel>
+                          <NumberInput
+                            value={billForm.otherCharges}
+                            onChange={(value) => handleBillChange('otherCharges', value)}
+                          >
+                            <NumberInputField />
+                            <NumberInputStepper>
+                              <NumberIncrementStepper />
+                              <NumberDecrementStepper />
+                            </NumberInputStepper>
+                          </NumberInput>
+                        </FormControl>
+                        
+                        <FormControl>
+                          <FormLabel>Discount</FormLabel>
+                          <NumberInput
+                            value={billForm.discount}
+                            onChange={(value) => handleBillChange('discount', value)}
+                          >
+                            <NumberInputField />
+                            <NumberInputStepper>
+                              <NumberIncrementStepper />
+                              <NumberDecrementStepper />
+                            </NumberInputStepper>
+                          </NumberInput>
+                        </FormControl>
+                        
+                        <FormControl>
+                          <FormLabel>Tax</FormLabel>
+                          <NumberInput
+                            value={billForm.tax}
+                            onChange={(value) => handleBillChange('tax', value)}
+                          >
+                            <NumberInputField />
+                            <NumberInputStepper>
+                              <NumberIncrementStepper />
+                              <NumberDecrementStepper />
+                            </NumberInputStepper>
+                          </NumberInput>
+                        </FormControl>
+                      </SimpleGrid>
+                      
+                      <FormControl>
+                        <FormLabel>Payment Method</FormLabel>
+                        <Select
+                          value={billForm.paymentMethod}
+                          onChange={(e) => handleBillChange('paymentMethod', e.target.value)}
+                        >
+                          <option value="cash">Cash</option>
+                          <option value="card">Card</option>
+                          <option value="upi">UPI</option>
+                          <option value="netbanking">Net Banking</option>
+                          <option value="wallet">Wallet</option>
+                        </Select>
+                      </FormControl>
+                      
+                      <FormControl>
+                        <FormLabel>Notes</FormLabel>
+                        <Textarea
+                          value={billForm.notes}
+                          onChange={(e) => handleBillChange('notes', e.target.value)}
+                          placeholder="Billing notes"
+                          rows={3}
+                        />
+                      </FormControl>
+                    </VStack>
+                  </TabPanel>
+                </TabPanels>
+              </Tabs>
+            </ModalBody>
+            
+            <ModalFooter>
+              <Button variant="outline" mr={3} onClick={onCompleteModalClose}>
+                Cancel
+              </Button>
+              <Button colorScheme="green" onClick={handleCompleteAppointmentSubmit}>
+                Complete Appointment
               </Button>
             </ModalFooter>
           </ModalContent>

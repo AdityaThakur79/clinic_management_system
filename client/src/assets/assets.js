@@ -4,7 +4,6 @@ import group_profiles from "./group_profiles.png";
 import profile_pic from "./profile_pic.png";
 import contact_image from "./contact_image.png";
 import about_image from "./about_image.png";
-import logo from "./speakandhear-logo.png";
 import dropdown_icon from "./dropdown_icon.svg";
 import menu_icon from "./menu_icon.svg";
 import cross_icon from "./cross_icon.png";
@@ -70,6 +69,7 @@ import ear_moulds from "./custom_ear.webp"
 import battery2 from "./battery.png"
 import fitting from "./hearing_fitting.jpg"
 import aartiket_logo from "./aartiket_logo.png"
+import device_model from "./hearin_pieces.jpeg"
 export const assets = {
   aartiket_logo,
   ear_moulds,
@@ -89,7 +89,6 @@ export const assets = {
   appointment_img,
   header_img,
   group_profiles,
-  logo,
   chats_icon,
   verified_icon,
   info_icon,

@@ -15,6 +15,19 @@ const ServiceSchema = new mongoose.Schema(
       maxlength: 1000,
     },
 
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+    },
+
+    category: {
+      type: String,
+      enum: ['consultation', 'treatment', 'medicine', 'test', 'hearing_aid', 'other'],
+      default: 'other',
+    },
+
     isActive: {
       type: Boolean,
       default: true,

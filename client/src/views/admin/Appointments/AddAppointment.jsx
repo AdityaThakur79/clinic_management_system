@@ -3,9 +3,10 @@ import {
   Box, Button, HStack, Input, Select, Text, useColorModeValue, Card, CardBody, CardHeader, VStack, FormControl, FormLabel, Textarea, useToast
 } from '@chakra-ui/react';
 import { useCreateAppointmentMutation } from '../../../features/api/appointments';
-import { useGetAllBranchesQuery } from '../../../features/api/branchApi';
+import { useGetAllBranchesQuery, useGetBranchByIdMutation } from '../../../features/api/branchApi';
 import { useGetAllDoctorsMutation } from '../../../features/api/doctor';
 import { useListReferredDoctorsQuery } from '../../../features/api/referredDoctors';
+import { useGetAllPatientsQuery } from '../../../features/api/patientApi';
 import { MdSchedule } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -18,6 +19,7 @@ const AddAppointment = () => {
     timeSlot: '',
     notes: '',
     referredDoctorId: '',
+    patientId: '',
     patient: {
       name: '',
       age: '',
@@ -27,6 +29,7 @@ const AddAppointment = () => {
       address: '',
     }
   });
+  const [patientMode, setPatientMode] = useState('existing'); // 'existing' | 'new'
 
   const navigate = useNavigate();
   const toast = useToast();
@@ -39,8 +42,11 @@ const AddAppointment = () => {
   // API hooks
   const [createAppointment, { isLoading }] = useCreateAppointmentMutation();
   const { data: branchesData } = useGetAllBranchesQuery({ page: 1, limit: 100, search: '' });
+  const [getBranchById] = useGetBranchByIdMutation();
+  const [branchLabel, setBranchLabel] = useState('');
   const [getAllDoctors] = useGetAllDoctorsMutation();
   const { data: referredDoctorsData } = useListReferredDoctorsQuery({ page: 1, limit: 100, search: '' });
+  const { data: patientsData } = useGetAllPatientsQuery({ page: 1, limit: 1000, search: '' });
 
   const cardBg = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
@@ -72,16 +78,24 @@ const AddAppointment = () => {
   useEffect(() => {
     if (userRole === 'branchAdmin' || userRole === 'doctor') {
       setForm(prev => ({ ...prev, branchId: userBranchId }));
+      (async () => {
+        try {
+          const res = await getBranchById({ id: userBranchId }).unwrap();
+          if (res?.branch?.branchName) setBranchLabel(res.branch.branchName);
+        } catch (e) {}
+      })();
     }
-  }, [userRole, userBranchId]);
+  }, [userRole, userBranchId, getBranchById]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!form.branchId || !form.doctorId || !form.date || !form.timeSlot || !form.patient.name) {
+    const requiresNewPatientFields = patientMode === 'new' && !form.patient.name;
+    const requiresExistingPatient = patientMode === 'existing' && !form.patientId;
+    if (!form.branchId || !form.doctorId || !form.date || !form.timeSlot || requiresNewPatientFields || requiresExistingPatient) {
       toast({
         title: 'Error',
-        description: 'Please fill in all required fields.',
+        description: requiresExistingPatient ? 'Please select an existing patient.' : 'Please fill in all required fields.',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -90,7 +104,15 @@ const AddAppointment = () => {
     }
 
     try {
-      await createAppointment(form).unwrap();
+      const payload = { ...form };
+      if (patientMode === 'existing') {
+        // Use selected patientId and omit inline patient object
+        delete payload.patient;
+      } else {
+        // Creating new patient inline — remove patientId
+        delete payload.patientId;
+      }
+      await createAppointment(payload).unwrap();
       toast({
         title: 'Appointment Created',
         description: 'Appointment has been created successfully.',
@@ -138,8 +160,8 @@ const AddAppointment = () => {
           <CardBody>
             <form onSubmit={handleSubmit}>
               <VStack spacing={6} align="stretch">
-                {/* Branch Selection */}
-                {userRole === 'superAdmin' && (
+                {/* Branch Selection or Display depending on role */}
+                {userRole === 'superAdmin' ? (
                   <FormControl isRequired>
                     <FormLabel>Branch</FormLabel>
                     <Select
@@ -152,6 +174,11 @@ const AddAppointment = () => {
                         <option key={branch._id} value={branch._id}>{branch.branchName}</option>
                       ))}
                     </Select>
+                  </FormControl>
+                ) : (
+                  <FormControl>
+                    <FormLabel>Branch</FormLabel>
+                    <Input value={branchLabel || user?.branch?.branchName || 'Current Branch'} isReadOnly borderRadius="lg" />
                   </FormControl>
                 )}
 
@@ -208,10 +235,37 @@ const AddAppointment = () => {
                   </Select>
                 </FormControl>
 
-                {/* Patient Information */}
-                <Text fontSize="lg" fontWeight="semibold" color="gray.700">Patient Information</Text>
-                
-                <HStack spacing={4}>
+              {/* Patient Selection Mode */}
+              <Text fontSize="lg" fontWeight="semibold" color="gray.700">Patient</Text>
+              <HStack spacing={4}>
+                <FormControl maxW="220px">
+                  <FormLabel>Mode</FormLabel>
+                  <Select value={patientMode} onChange={(e)=> setPatientMode(e.target.value)} borderRadius="lg">
+                    <option value="existing">Existing Patient</option>
+                    <option value="new">New Patient</option>
+                  </Select>
+                </FormControl>
+                {patientMode === 'existing' && (
+                  <FormControl isRequired>
+                    <FormLabel>Select Patient</FormLabel>
+                    <Select
+                      value={form.patientId}
+                      onChange={(e) => handleChange('patientId', e.target.value)}
+                      placeholder="Select patient"
+                      borderRadius="lg"
+                    >
+                      {patientsData?.patients?.map(p => (
+                        <option key={p._id} value={p._id}>{p.name} - {p.contact}</option>
+                      ))}
+                    </Select>
+                  </FormControl>
+                )}
+              </HStack>
+
+              {/* New Patient Fields */}
+              {patientMode === 'new' && (
+              <>
+              <HStack spacing={4}>
                   <FormControl isRequired>
                     <FormLabel>Patient Name</FormLabel>
                     <Input
@@ -278,6 +332,8 @@ const AddAppointment = () => {
                     rows={3}
                   />
                 </FormControl>
+              </>
+              )}
 
                 <FormControl>
                   <FormLabel>Notes</FormLabel>

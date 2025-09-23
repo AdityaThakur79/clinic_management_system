@@ -5,7 +5,9 @@
 import Home from '../views/User/Pages/Home';
 import About from '../views/User/Pages/About';
 import Services from '../views/User/Pages/Services';
+import Contact from '../views/User/Pages/Contact';
 import AddBranch from '../views/admin/Branches/AddBranch';
+import EnquiriesAdmin from '../views/admin/Enquiries/EnquiriesAdmin';
 import Branches from '../views/admin/Branches/Branches';
 import UpdateBranch from '../views/admin/Branches/UpdateBranch';
 import AddBranchAdmin from '../views/admin/BranchAdmin/AddBranchAdmin';
@@ -17,6 +19,7 @@ import AllDoctors from '../views/admin/Doctors/AllDoctors';
 import UpdateDoctor from '../views/admin/Doctors/UpdateDoctor';
 import DoctorDetailPage from '../views/User/Components/DoctorDetailPage';
 import Doctors from '../views/User/Pages/Doctors';
+import ServiceDetail from '../views/User/ServiceDetail';
 
 // Public Routes (No authentication required)
 export const publicRoutes = [
@@ -39,6 +42,12 @@ export const publicRoutes = [
     showInNav: true,
   },
   {
+    path: '/contact',
+    element: <Contact />,
+    name: 'Contact',
+    showInNav: true,
+  },
+  {
     path: '/doctors',
     element: <Doctors />,
     name: 'Doctors',
@@ -48,6 +57,12 @@ export const publicRoutes = [
     path: '/doctor/:id',
     element: <DoctorDetailPage />,
     name: 'Doctor Detail',
+    showInNav: false,
+  },
+  {
+    path: '/service/:slug',
+    element: <ServiceDetail />,
+    name: 'Service Detail',
     showInNav: false,
   },
 ];
@@ -126,6 +141,13 @@ export const adminRoutes = [
     name: 'Button Showcase',
     showInSidebar: true,
     category: 'UI Components',
+  },
+  {
+    path: '/admin/enquiries',
+    element: <EnquiriesAdmin />,
+    name: 'Enquiries',
+    showInSidebar: true,
+    category: 'Customer Care',
   },
   
 ];

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Box,
   Container,
@@ -24,6 +24,29 @@ const About2 = () => {
   const headingColor = useColorModeValue('gray.800', 'white');
   const accentColor = '#2BA8D1';
   const secondaryColor = '#3AC0E7';
+  const [isVisible, setIsVisible] = React.useState({});
+
+  // Intersection Observer for reveal animations
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(prev => ({
+              ...prev,
+              [entry.target.id]: true
+            }));
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+    );
+
+    const elements = document.querySelectorAll('[data-animate]');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <Box
@@ -59,15 +82,23 @@ const About2 = () => {
           <GridItem order={{ base: 2, lg: 1 }}>
             <VStack align="start" spacing={6} pl={{ base: 0, lg: 8 }}>
               {/* Section Title */}
-              <Box position="relative" w="full">
+              <Box 
+                position="relative" 
+                w="full"
+                data-animate
+                id="about2-title"
+                opacity={isVisible['about2-title'] ? 1 : 0}
+                transform={isVisible['about2-title'] ? 'translateX(0)' : 'translateX(-50px)'}
+                transition="all 0.8s ease-out"
+              >
                 <Text
                   fontSize="lg"
-                  fontWeight="500"
+                  fontWeight="600"
                   color={accentColor}
                   mb={4}
                   position="relative"
                 >
-                  About Aartiket
+                  About Aartiket Speech & Hearing Care
                 </Text>
                 <Heading
                   as="h2"
@@ -82,37 +113,50 @@ const About2 = () => {
                     position: 'absolute',
                     left: '0px',
                     bottom: '0px',
-                    width: '50px',
-                    height: '3px',
-                    bg: 'gray.300',
+                    width: '60px',
+                    height: '4px',
+                    bg: accentColor,
+                    borderRadius: 'full',
                   }}
                 >
-                  We are leaders in{' '}
+                  Leaders in{' '}
                   <Box as="span" color={accentColor}>
-                    Speech & Hearing Care
-                  </Box>{' '}
-                  Since 2010
+                    Advanced Audiology & Speech Therapy
+                  </Box>
                 </Heading>
               </Box>
 
               {/* Description Text */}
               <Text
                 fontSize="md"
-                lineHeight="1.6"
+                lineHeight="1.75"
                 color={textColor}
                 fontWeight="400"
                 mb={6}
+                data-animate
+                id="about2-description"
+                opacity={isVisible['about2-description'] ? 1 : 0}
+                transform={isVisible['about2-description'] ? 'translateX(0)' : 'translateX(-30px)'}
+                transition="all 0.8s ease-out"
+                transitionDelay="0.2s"
               >
-                At Aartiket Speech & Hearing Care, we have been dedicated to
-                providing comprehensive hearing and speech solutions to our
-                community in Ghatkopar and beyond. Our experienced team of
-                audiologists and speech therapists work tirelessly to ensure
-                every patient receives personalized care and the best possible
-                outcomes for their hearing and communication needs.
+                We deliver comprehensive, patient‑first hearing and speech care across
+                Mumbai. From precision diagnostics and real‑ear verified fittings to
+                pediatric and adult speech therapy, our certified clinicians craft
+                personalized plans that improve clarity, comfort, and confidence.
               </Text>
 
               {/* Feature List */}
-              <List spacing={3} mb={8}>
+              <List 
+                spacing={3} 
+                mb={8}
+                data-animate
+                id="about2-features"
+                opacity={isVisible['about2-features'] ? 1 : 0}
+                transform={isVisible['about2-features'] ? 'translateX(0)' : 'translateX(-30px)'}
+                transition="all 0.8s ease-out"
+                transitionDelay="0.4s"
+              >
                 <ListItem
                   display="flex"
                   alignItems="flex-start"
@@ -129,7 +173,7 @@ const About2 = () => {
                     mt={0.5}
                     flexShrink={0}
                   />
-                  <Text>State-of-the-art hearing assessment equipment</Text>
+                  <Text>Advanced diagnostics: pure‑tone, speech & impedance testing</Text>
                 </ListItem>
                 <ListItem
                   display="flex"
@@ -147,7 +191,7 @@ const About2 = () => {
                     mt={0.5}
                     flexShrink={0}
                   />
-                  <Text>Experienced audiologists and speech therapists</Text>
+                  <Text>Real‑ear verified hearing aid fittings with ongoing care</Text>
                 </ListItem>
                 <ListItem
                   display="flex"
@@ -165,14 +209,32 @@ const About2 = () => {
                     mt={0.5}
                     flexShrink={0}
                   />
-                  <Text>Comprehensive warranty and ongoing support</Text>
+                  <Text>Pediatric & adult speech therapy with measurable outcomes</Text>
+                </ListItem>
+                <ListItem
+                  display="flex"
+                  alignItems="flex-start"
+                  fontSize="md"
+                  lineHeight="1.6"
+                  color={headingColor}
+                  fontWeight="400"
+                >
+                  <Icon
+                    as={FaCheckCircle}
+                    color={accentColor}
+                    fontSize="lg"
+                    mr={3}
+                    mt={0.5}
+                    flexShrink={0}
+                  />
+                  <Text>Partner hospitals across the Mumbai Metropolitan Region</Text>
                 </ListItem>
               </List>
 
               {/* CTA Button */}
               <Button
                 as="a"
-                href="#contact"
+                href="/contact"
                 bg={accentColor}
                 color="white"
                 fontSize="lg"
@@ -192,8 +254,14 @@ const About2 = () => {
                 _active={{
                   transform: 'translateY(0)',
                 }}
+                data-animate
+                id="about2-cta"
+                opacity={isVisible['about2-cta'] ? 1 : 0}
+                transform={isVisible['about2-cta'] ? 'translateX(0)' : 'translateX(-30px)'}
+                transition="all 0.8s ease-out"
+                transitionDelay="0.6s"
               >
-                Contact Us
+                Book a Free Consultation
               </Button>
             </VStack>
           </GridItem>
@@ -215,6 +283,12 @@ const About2 = () => {
                 borderRadius: 'full',
                 zIndex: 0,
               }}
+              data-animate
+              id="about2-images"
+              opacity={isVisible['about2-images'] ? 1 : 0}
+              transform={isVisible['about2-images'] ? 'translateX(0)' : 'translateX(50px)'}
+              transition="all 0.8s ease-out"
+              transitionDelay="0.3s"
             >
               {/* Main Image */}
               <Box

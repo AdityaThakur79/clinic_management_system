@@ -38,8 +38,11 @@ function SidebarContent(props) {
         </Box>
       </Stack>
 
-      <Box mt="60px" mb="40px" borderRadius="30px">
-        {!isCollapsed && <SidebarCard />}
+      <Box
+        mt='60px'
+        mb='40px'
+        borderRadius='30px'>
+        {/* <SidebarCard /> */}
       </Box>
     </Flex>
   );

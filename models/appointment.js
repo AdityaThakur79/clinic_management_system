@@ -16,6 +16,20 @@ const appointmentSchema = new mongoose.Schema(
 
     prescriptionId: { type: mongoose.Schema.Types.ObjectId, ref: "Prescription" },
     billId: { type: mongoose.Schema.Types.ObjectId, ref: "Bill" },
+    
+    // Additional appointment details
+    appointmentType: { 
+      type: String, 
+      enum: ["consultation", "followup", "emergency", "routine"], 
+      default: "consultation" 
+    },
+    duration: { type: Number, default: 30 }, // in minutes
+    charges: { type: Number, default: 0 },
+    notes: { type: String, trim: true },
+    
+    // Completion details
+    completedAt: { type: Date },
+    completedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );

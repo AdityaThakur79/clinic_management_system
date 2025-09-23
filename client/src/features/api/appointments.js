@@ -43,6 +43,15 @@ export const appointmentsApi = createApi({
       }),
     }),
 
+    // Get appointment by ID
+    getAppointmentById: builder.query({
+      query: (id) => ({
+        url: `/${id}`,
+        credentials: 'include',
+      }),
+      providesTags: (result, error, id) => [{ type: 'Appointment', id }],
+    }),
+
     // Create appointment
     createAppointment: builder.mutation({
       query: (appointmentData) => ({
@@ -81,6 +90,7 @@ export const {
   useGetAllAppointmentsQuery,
   useGetTodayAppointmentsQuery,
   useGetAvailabilityQuery,
+  useGetAppointmentByIdQuery,
   useCreateAppointmentMutation,
   useUpdateAppointmentStatusMutation,
   useDeleteAppointmentMutation,

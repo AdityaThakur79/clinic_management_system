@@ -403,6 +403,13 @@ const Branches = () => {
                   <Text color="gray.600">Loading branches...</Text>
                 </VStack>
               </Center>
+            ) : (branchesData?.branches?.length || 0) === 0 ? (
+              <Center py={16} px={6}>
+                <Alert status="info" borderRadius="md" maxW="lg">
+                  <AlertIcon />
+                  <Text>No branches found. Use "Add Branch" to create one.</Text>
+                </Alert>
+              </Center>
             ) : (
               <TableContainer>
                 <Table variant="simple">

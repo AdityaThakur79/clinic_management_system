@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectIsAuthenticated, selectUser } from '../features/auth/authSlice';
 import { Box, Spinner, Center } from '@chakra-ui/react';
+import Unauthorized from '../views/auth/Unauthorized.jsx';
 
 const ProtectedRoute = ({ children, requiredRole, requiredPermission }) => {
   const isAuthenticated = useSelector(selectIsAuthenticated);
@@ -18,16 +19,7 @@ const ProtectedRoute = ({ children, requiredRole, requiredPermission }) => {
 
   // Check for required role
   if (requiredRole && user.role !== requiredRole) {
-    return (
-      <Box p={8} textAlign="center">
-        <Box fontSize="xl" color="red.500" mb={4}>
-          Access Denied
-        </Box>
-        <Box color="gray.600">
-          You don't have permission to access this page.
-        </Box>
-      </Box>
-    );
+    return <Unauthorized title="Access Restricted" message="This route is not available for your role." />;
   }
 
   // Check for required permission
@@ -42,16 +34,7 @@ const ProtectedRoute = ({ children, requiredRole, requiredPermission }) => {
     const hasPermission = userPermissions.includes('all') || userPermissions.includes(requiredPermission);
     
     if (!hasPermission) {
-      return (
-        <Box p={8} textAlign="center">
-          <Box fontSize="xl" color="red.500" mb={4}>
-            Access Denied
-          </Box>
-          <Box color="gray.600">
-            You don't have the required permission to access this page.
-          </Box>
-        </Box>
-      );
+      return <Unauthorized title="Permission Denied" message="You don't have the required permission to access this page." />;
     }
   }
 

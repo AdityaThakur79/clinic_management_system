@@ -30,6 +30,8 @@ import {
   useColorModeValue,
   TableContainer,
   Tooltip,
+  Alert,
+  AlertIcon,
 } from '@chakra-ui/react';
 import {
   SearchIcon,
@@ -38,7 +40,7 @@ import {
   RepeatIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  SettingsIcon,
+  EditIcon,
 } from '@chakra-ui/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { useGetAllServicesQuery, useDeleteServiceMutation } from '../../../features/api/service';
@@ -181,6 +183,13 @@ const Services = () => {
                   <Text color="gray.600">Loading services...</Text>
                 </VStack>
               </Center>
+            ) : (servicesData?.services?.length || 0) === 0 ? (
+              <Center py={16} px={6}>
+                <Alert status="info" borderRadius="md" maxW="lg">
+                  <AlertIcon />
+                  <Text>No services found. Use "Add Service" to create one.</Text>
+                </Alert>
+              </Center>
             ) : (
               <TableContainer>
                 <Table variant="simple">
@@ -214,7 +223,7 @@ const Services = () => {
                           <HStack spacing={1}>
                             <Tooltip label="Edit Service">
                               <IconButton
-                                icon={<SettingsIcon boxSize={3} transform="rotate(45deg)" />}
+                                icon={<EditIcon />}
                                 aria-label="Edit"
                                 size="sm"
                                 variant="ghost"

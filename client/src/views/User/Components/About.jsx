@@ -70,23 +70,21 @@ const About1 = () => {
                 lineHeight="short"
                 mb={4}
               >
-                Premier Hearing & Speech Solutions Across Mumbai Metropolitan
-                Region
+                Premier Hearing & Speech Solutions Across the Mumbai Metropolitan Region
               </Heading>
 
               <Text fontSize={{ base: 'sm', md: 'md' }} color="gray.600" mb={3}>
-                At Aartiket Speech & Hearing Care, we are dedicated to providing
-                comprehensive audiology and speech therapy services. With over 15
-                years of specialized experience and serving as consultants at 15+
-                leading hospitals across Mumbai, we deliver expert care with
-                unmatched precision and compassion.
+                Aartiket Speech & Hearing Care delivers comprehensive audiology and
+                speech therapy services. With over 15 years of specialized experience
+                and consultant roles at 15+ leading hospitals across Mumbai, we combine
+                advanced diagnostics with compassionate, patient‑first care.
               </Text>
 
               <Text fontSize={{ base: 'sm', md: 'md' }} color="gray.600">
-                Our certified audiologists and speech therapists use
-                state-of-the-art technology and evidence-based practices to
-                create personalized treatment plans — from advanced hearing aid
-                fitting and programming to speech therapy for all ages.
+                Our certified audiologists and speech therapists use state‑of‑the‑art
+                technology and evidence‑based practices to create personalized treatment
+                plans — from precision hearing aid fittings and programming to speech
+                therapy for all ages.
               </Text>
             </Box>
 

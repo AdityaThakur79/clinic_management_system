@@ -23,8 +23,6 @@ import {
 } from '@chakra-ui/react';
 import { 
   StarIcon, 
-  PhoneIcon, 
-  EmailIcon, 
   CheckIcon,
   InfoIcon
 } from '@chakra-ui/icons';
@@ -525,26 +523,7 @@ const DoctorDetailPage = () => {
         </Box>
 
         {/* Additional Information */}
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={6} mt={8}>
-          {/* Contact Information */}
-          <Card bg={cardBg} borderColor={borderColor}>
-            <CardBody>
-              <Text fontSize="lg" fontWeight="semibold" color={headingColor} mb={4}>
-                Contact Information
-              </Text>
-              <VStack spacing={3} align="start">
-                <HStack spacing={3}>
-                  <Icon as={EmailIcon} boxSize={4} color="brand.500" />
-                  <Text color={textColor}>{doctor.email}</Text>
-                </HStack>
-                <HStack spacing={3}>
-                  <Icon as={PhoneIcon} boxSize={4} color="brand.500" />
-                  <Text color={textColor}>{doctor.phone || 'Not provided'}</Text>
-                </HStack>
-              </VStack>
-            </CardBody>
-          </Card>
-
+        <Grid templateColumns={{ base: "1fr", md: "1fr" }} gap={6} mt={8}>
           {/* Availability */}
           <Card bg={cardBg} borderColor={borderColor}>
             <CardBody>
@@ -578,6 +557,7 @@ const DoctorDetailPage = () => {
         onClose={() => setIsBookingModalOpen(false)}
         doctorId={id}
         branchId={doctor?.branch?._id || doctor?.branch}
+        branchName={doctor?.branch?.branchName}
         selectedDate={selectedDateISO}
         selectedTimeSlot={selectedTimeSlot}
         doctorName={doctor?.name}

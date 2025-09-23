@@ -2,7 +2,11 @@ import jwt from "jsonwebtoken";
 
 const isAuthenticated = async (req, res, next) => {
   try {
-    const token = req.cookies.token;
+    let token = req.cookies.token;
+    if (!token && req.headers && req.headers.authorization) {
+      const [scheme, value] = req.headers.authorization.split(' ');
+      if (scheme && scheme.toLowerCase() === 'bearer' && value) token = value;
+    }
 
     if (!token) {
       return res.status(401).json({
@@ -20,7 +24,7 @@ const isAuthenticated = async (req, res, next) => {
 
     const decode = jwt.verify(token, process.env.SECRETKEY);
     req.id = decode.userId;
-    req.user = decode
+    req.user = decode;
     next();
   } catch (error) {
     console.log("JWT Verify Error:", error.message);

@@ -16,7 +16,9 @@ const user = new mongoose.Schema(
     },
     phone:{
       type: String,
-      required: true,
+      required: function() {
+        return this.role !== "superAdmin";
+      },
     },
     role: {
       type: String,

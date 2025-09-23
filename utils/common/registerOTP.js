@@ -10,17 +10,21 @@ export const generateOTP = () =>
 
 // Create transporter with better error handling
 const createTransporter = () => {
+  // Support both old and new environment variable names
+  const emailUser = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const emailPass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+  
   // Check if email credentials are configured
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error("Email credentials not configured. Please set EMAIL_USER and EMAIL_PASS environment variables.");
+  if (!emailUser || !emailPass) {
+    throw new Error("Email credentials not configured. Please set SMTP_USER and SMTP_PASS environment variables.");
   }
 
   // For Gmail, you need to use an App Password if 2FA is enabled
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS, // This should be an App Password, not your regular password
+      user: emailUser,
+      pass: emailPass, // This should be an App Password, not your regular password
     },
     // Add additional options for better reliability
     secure: true, // Use SSL
@@ -56,8 +60,10 @@ export const sendOTPEmail = async (name, email, otp) => {
       throw new Error("Email service not available");
     }
 
+    const emailUser = process.env.SMTP_USER || process.env.EMAIL_USER;
+    
     let mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: emailUser,
       to: email,
       subject: "Your Registration OTP Code",
       html: registerOTPTemplate(name, otp),

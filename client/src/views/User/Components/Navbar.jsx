@@ -38,15 +38,33 @@ const Navbar = () => {
       py={4}
       mb={0}
       px={{ base: 4, md: 10 }}
+      borderBottom="1px solid"
+      borderColor="rgba(0,0,0,0.06)"
+      boxShadow="0 2px 8px rgba(0,0,0,0.06)"
     >
-      {/* Logo */}
-      <Image
-        w="11rem"
-        cursor="pointer"
-        src={assets.aartiket_logo}
-        alt="logo"
-        onClick={() => navigate("/")}
-      />
+      {/* Logo + Brand Text */}
+      <HStack spacing={3} align="center">
+        <Image
+          w="11rem"
+          cursor="pointer"
+          src={assets.aartiket_logo}
+          alt="logo"
+          onClick={() => navigate("/")}
+        />
+        {/* <Text
+          display={{ base: "none", md: "block" }}
+          color="#2BA8D1"
+          fontWeight="bold"
+          fontSize={{ base: "sm", md: "md", lg: "lg" }}
+          letterSpacing="0.2px"
+          cursor="pointer"
+          ml={{ md: 2, lg: 3 }}
+          onClick={() => navigate("/")}
+        >
+          Aartiket Speech & Hearing Care
+        </Text> */}
+      </HStack>
+      
 
       {/* Desktop Menu */}
       <HStack

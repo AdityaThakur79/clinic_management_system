@@ -92,13 +92,14 @@ import {
                 </Flex>
   
                 {/* Content */}
-                <VStack align="start" spacing={2}>
+                <VStack align={{ base: "center", md: "start" }} spacing={2} w="full">
                   <Heading
                     as="h3"
                     fontSize={{ base: "lg", md: "xl", lg: "2xl" }}
                     fontWeight="semibold"
                     color="white"
                     lineHeight="short"
+                    textAlign={{ base: "center", md: "left" }}
                   >
                     {item.title}
                   </Heading>
@@ -107,6 +108,7 @@ import {
                     color="white"
                     opacity={0.75}
                     lineHeight="tall"
+                    textAlign={{ base: "center", md: "left" }}
                   >
                     {item.text}
                   </Text>

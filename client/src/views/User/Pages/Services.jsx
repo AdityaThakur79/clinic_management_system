@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { assets } from "../../../assets/assets";
-import { serviceSlugs, generateSlug } from "../../../utils/slugGenerator";
+import { servicesData } from "../../../data/servicesData";
 import {
   Box,
   Grid,
@@ -17,113 +17,7 @@ import PageHeader from "../Components/PageHeader";
 import Navbar from "../Components/Navbar";
 import Footer from "../Components/Footer";
 
-const servicesData = [
-  {
-    id: 7,
-    title: "Speech Therapy for All Ages",
-    description:
-      "Personalized speech therapy services for children, adults, and senior citizens facing speech or language difficulties.",
-    image: assets.service_4,
-  },
-  {
-    id: 8,
-    title: "Pediatric Hearing Care",
-    description:
-      "Kid-friendly hearing tests and treatment tailored for infants and children in a comfortable environment.",
-    image: assets.service_6,
-  },
-  {
-    id: 9,
-    title: "Tinnitus Management",
-    description:
-      "Evaluation and therapeutic solutions for managing ringing in the ears (tinnitus).",
-    image: assets.service_1,
-  },
-  {
-    id: 10,
-    title: "Senior Citizen Hearing Test Center",
-    description:
-      "Specialized hearing tests and solutions for elderly patients in a senior-friendly environment.",
-    image: assets.service_12,
-  },
-  {
-    id: 11,
-    title: "TV Smartphone or Bluetooth Solutions",
-    description:
-      "Solutions and accessories to improve TV and smartphone listening experiences using your hearing aids with Bluetooth connectivity.",
-    image: assets.service_15,
-  },
-  {
-    id: 12,
-    title: "Hearing Aids & Accessories in Kalyan",
-    description:
-      "Full range of hearing aids, batteries, and accessories available at our Kalyan clinic.",
-    image: assets.service_11,
-  },
-  {
-    id: 13,
-    title: "PHONAK, UNITRON & AUDIO Service",
-    description:
-      "Authorized services and fitting of Phonak, Unitron & Audio hearing aids with expert consultation and support.",
-    image: assets.service_9,
-  },
-  {
-    id: 14,
-    title: "Expert Hearing Consultation",
-    description:
-      "One-on-one sessions with hearing specialists to discuss concerns and find optimal hearing solutions.",
-    image: assets.audiologist2,
-  },
-  {
-    id: 15,
-    title: "Custom Ear Molds & Ear Plugs",
-    description:
-      "High-quality custom ear molds and plugs for hearing aids, swimmers, musicians, and noise protection tailored to your ear shape.",
-    image: assets.ear_moulds,
-  },
-  {
-    id: 1,
-    title: "Hearing Tests (Audiometry - PTA)",
-    description:
-      "Comprehensive hearing assessments using audiometry (PTA) to accurately diagnose hearing conditions in all age groups.",
-    image: assets.audiologist_test,
-  },
-  {
-    id: 2,
-    title: "Hearing Aid Fitting & Programming",
-    description:
-      "Expert fitting, tuning, and programming of hearing aids based on your specific hearing profile and lifestyle.",
-    image: assets.fitting,
-  },
-  {
-    id: 3,
-    title: "Affordable Hearing Aids",
-    description:
-      "High-quality hearing aids available at affordable prices, including options from leading brands like Siemens.",
-    image: assets.service_7,
-  },
-  {
-    id: 4,
-    title: "Rechargeable Hearing Aids",
-    description:
-      "Modern rechargeable hearing aids that offer convenience and long battery life for everyday use.",
-    image: assets.rechargeable_machine,
-  },
-  {
-    id: 5,
-    title: "Hearing Aid Batteries",
-    description:
-      "Reliable and long-lasting hearing aid batteries suitable for all major hearing aid models.",
-    image: assets.battery2,
-  },
-  {
-    id: 6,
-    title: "Hearing Aid Repair & Maintenance",
-    description:
-      "Professional repair, cleaning, and maintenance for all types and brands of hearing instruments.",
-    image: assets.service_15,
-  },
-];
+// Using servicesData from centralized data file
 
 const Services = () => {
   
@@ -132,8 +26,8 @@ const Services = () => {
     <>
     <Navbar/>
      <PageHeader
-        title="Our Services — Best Speech & Hearing"
-        description="Comprehensive audiology and speech therapy under one roof: advanced hearing tests, precise digital hearing aid fitting & programming, tinnitus care, and personalised speech therapy for children and adults."
+        title="Our Services"
+        description="Comprehensive audiology and speech therapy under one roof with advanced hearing tests, precise digital hearing aid fitting and programming, tinnitus care, and personalised speech therapy for children and adults."
         crumbs={[{ label: "Services" }]}
         bgImage={assets.service_4}
       />
@@ -141,14 +35,14 @@ const Services = () => {
       <Container maxW="8xl">
         {/* Header */}
         <VStack spacing={3} textAlign="center">
-          <Text fontSize="sm" color="#F26423" fontWeight="semibold">
+          <Text fontSize="sm" color="#2BA8D1" fontWeight="semibold">
             SERVICES
           </Text>
           <Heading
             as="h2"
             fontSize={{ base: "2xl", md: "3xl" }}
             fontWeight="bold"
-            color="#043152"
+            color="#0C2F4D"
             maxW="4xl"
           >
             What Patients Get at Best Speech & Hearing
@@ -166,12 +60,11 @@ const Services = () => {
           mt={10}
         >
           {servicesData.map((service) => {
-            const slug = serviceSlugs[service.title] || generateSlug(service.title);
             return (
               <Box
                 as={Link}
                 key={service.id}
-                to={`/service/${slug}`}
+                to={`/service/${service.slug}`}
                 _hover={{ textDecoration: "none" }}
               >
                 <Box overflow="hidden" borderRadius="lg"  >
@@ -193,7 +86,7 @@ const Services = () => {
                     fontSize="xl"
                     fontWeight="semibold"
                     color="#0C2F4D"
-                    _hover={{ color: "#F26423" }}
+                    _hover={{ color: "#2BA8D1" }}
                     transition="color 0.2s"
                   >
                     {service.title}
@@ -201,7 +94,7 @@ const Services = () => {
                   <Text mt={2} color="gray.600">
                     {service.description}
                   </Text>
-                  <Text mt={3} color="#F26423" fontWeight="medium" fontSize="sm">
+                  <Text mt={3} color="#2BA8D1" fontWeight="medium" fontSize="sm">
                     Learn More →
                   </Text>
                 </Box>

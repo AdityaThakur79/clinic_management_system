@@ -54,6 +54,7 @@ import UpdateService from './views/admin/Services/UpdateService';
 import AllReferredDoctors from './views/admin/ReferredDoctors/AllReferredDoctors';
 import AddReferredDoctor from './views/admin/ReferredDoctors/AddReferredDoctor';
 import UpdateReferredDoctor from './views/admin/ReferredDoctors/UpdateReferredDoctor';
+import ReferredDoctorAnalytics from './views/admin/ReferredDoctors/ReferredDoctorAnalytics';
 import AllAppointments from './views/admin/Appointments/AllAppointments';
 import TodayAppointments from './views/admin/Appointments/TodayAppointments';
 import AddAppointment from './views/admin/Appointments/AddAppointment';
@@ -61,6 +62,19 @@ import CalendarView from './views/admin/Appointments/CalendarView';
 import AllPatients from './views/admin/Patients/AllPatients';
 import AddPatient from './views/admin/Patients/AddPatient';
 import UpdatePatient from './views/admin/Patients/UpdatePatient';
+import PatientDetail from './views/admin/Patients/PatientDetail';
+import BillView from './views/admin/Appointments/BillView';
+import AllBills from './views/admin/Appointments/AllBills';
+import EnhancedCompleteAppointment from './views/admin/Appointments/EnhancedCompleteAppointment';
+import AdvancedReminders from './views/admin/Reminders/AdvancedReminders';
+import AllReminders from './views/admin/Reminders/AllReminders';
+import TodayReminders from './views/admin/Reminders/TodayReminders';
+import CreateReminder from './views/admin/Reminders/CreateReminder';
+import Inventories from './views/admin/Inventory/Inventories';
+import CreateInventory from './views/admin/Inventory/CreateInventory';
+import UpdateInventory from './views/admin/Inventory/UpdateInventory';
+import InventoryDetail from './views/admin/Inventory/InventoryDetail.jsx';
+import GlobalSearch from './views/admin/Search/GlobalSearch.jsx';
 
 // NEW CLINIC MANAGEMENT ROUTES
 const routes = [
@@ -77,7 +91,22 @@ const routes = [
         name: 'Overview',
         layout: '/admin',
         path: '/dashboard/overview',
-        component: <MainDashboard />,
+        component: <MainDashboard />, // Updated component now fetches real analytics with filters
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
+      },
+      {
+        name: 'Search',
+        layout: '/admin',
+        path: '/search',
+        component: <GlobalSearch />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
+        hidden: true,
+      },
+      {
+        name: 'Appointments Calendar',
+        layout: '/admin',
+        path: '/appointments/calendar',
+        component: <CalendarView />,
         roles: ['superAdmin', 'branchAdmin', 'doctor'],
       },
       {
@@ -91,7 +120,7 @@ const routes = [
         name: "Today's Reminders",
         layout: '/admin',
         path: '/dashboard/today-reminders',
-        component: <MainDashboard />,
+        component: <TodayReminders />,
         roles: ['superAdmin', 'branchAdmin', 'doctor'],
       },
     ],
@@ -247,6 +276,14 @@ const routes = [
         roles: ['superAdmin', 'branchAdmin', 'doctor'],
         hidden: true,
       },
+      {
+        name: 'Patient Details',
+        layout: '/admin',
+        path: '/patients/:id/details',
+        component: <PatientDetail />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
+        hidden: true,
+      },
     ],
   },
 
@@ -273,12 +310,30 @@ const routes = [
         component: <AddAppointment />,
         roles: ['superAdmin', 'branchAdmin', 'doctor'],
       },
+      
       {
-        name: 'Calendar View',
+        name: 'Complete Appointment',
         layout: '/admin',
-        path: '/appointments/calendar',
-        component: <CalendarView />,
+        path: '/appointments/:id/complete',
+        component: <EnhancedCompleteAppointment />,
         roles: ['superAdmin', 'branchAdmin', 'doctor'],
+        hidden: true,
+      },
+      {
+        name: 'Enhanced Complete Appointment',
+        layout: '/admin',
+        path: '/appointments/:id/enhanced-complete',
+        component: <EnhancedCompleteAppointment />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
+        hidden: true,
+      },
+      {
+        name: 'View Bill',
+        layout: '/admin',
+        path: '/appointments/:id/bill',
+        component: <BillView />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
+        hidden: true,
       },
     ],
   },
@@ -293,33 +348,13 @@ const routes = [
     roles: ['superAdmin', 'branchAdmin', 'doctor'],
     children: [
       {
-        name: 'Bills (Pending / Completed)',
+        name: 'All Bills',
         layout: '/admin',
-        path: '/billing/bills',
-        component: <DataTables />,
+        path: '/billing/all-bills',
+        component: <AllBills />,
         roles: ['superAdmin', 'branchAdmin', 'doctor'],
       },
-      {
-        name: 'Add Bill',
-        layout: '/admin',
-        path: '/billing/add-bill',
-        component: <DataTables />,
-        roles: ['superAdmin', 'branchAdmin', 'doctor'],
-      },
-      {
-        name: 'Services List',
-        layout: '/admin',
-        path: '/billing/services',
-        component: <DataTables />,
-        roles: ['superAdmin', 'branchAdmin', 'doctor'],
-      },
-      {
-        name: 'Add Service',
-        layout: '/admin',
-        path: '/billing/add-service',
-        component: <DataTables />,
-        roles: ['superAdmin', 'branchAdmin', 'doctor'],
-      },
+     
     ],
   },
 
@@ -346,13 +381,14 @@ const routes = [
         component: <AddReferredDoctor />,
         roles: ['superAdmin', 'branchAdmin'],
       },
-      // {
-      //   name: 'Referral Reports',
-      //   layout: '/admin',
-      //   path: '/referred-doctors/reports',
-      //   component: <DataTables />,
-      //   roles: ['superAdmin', 'branchAdmin'],
-      // },
+      {
+        name: 'Analytics',
+        layout: '/admin',
+        path: '/referred-doctors/:id/analytics',
+        component: <ReferredDoctorAnalytics />,
+        roles: ['superAdmin', 'branchAdmin'],
+        hidden: true,
+      },
       {
         name: 'Update Referred Doctor',
         layout: '/admin',
@@ -370,65 +406,74 @@ const routes = [
     layout: '/admin',
     path: '/inventory',
     icon: <Icon as={MdLocalPharmacy} width="20px" height="20px" color="inherit" />,
-    component: <DataTables />,
+    component: <Inventories />,
     roles: ['superAdmin', 'branchAdmin'],
     children: [
       {
         name: 'Inventory List',
         layout: '/admin',
         path: '/inventory/list',
-        component: <DataTables />,
-        roles: ['superAdmin', 'branchAdmin'],
+        component: <Inventories />,
+        roles: ['superAdmin','doctor','branchAdmin'],
       },
       {
         name: 'Add Inventory Item',
         layout: '/admin',
         path: '/inventory/add',
-        component: <DataTables />,
-        roles: ['superAdmin', 'branchAdmin'],
+        component: <CreateInventory />,
+        roles: ['superAdmin','doctor','branchAdmin'],
       },
       {
-        name: 'Low Stock Alerts',
+        name: 'Update Inventory',
         layout: '/admin',
-        path: '/inventory/alerts',
-        component: <DataTables />,
-        roles: ['superAdmin', 'branchAdmin'],
+        path: '/inventory/update',
+        component: <UpdateInventory />,
+        hidden: true,
+        roles: ['superAdmin','doctor','branchAdmin'],
+      },
+      {
+        name: 'Inventory Detail',
+        layout: '/admin',
+        path: '/inventory/:id',
+        component: <InventoryDetail />,
+        hidden: true,
+        roles: ['superAdmin','doctor','branchAdmin'],
       },
     ],
   },
 
   // Reports Section
-  {
-    name: 'Reports',
-    layout: '/admin',
-    path: '/reports',
-    icon: <Icon as={MdAssessment} width="20px" height="20px" color="inherit" />,
-    component: <DataTables />,
-    roles: ['superAdmin', 'branchAdmin'],
-    children: [
-      {
-        name: 'Branch-wise Report',
-        layout: '/admin',
-        path: '/reports/branch-wise',
-        component: <DataTables />,
-        roles: ['superAdmin', 'branchAdmin'],
-      },
-      {
-        name: 'Doctor-wise Report',
-        layout: '/admin',
-        path: '/reports/doctor-wise',
-        component: <DataTables />,
-        roles: ['superAdmin', 'branchAdmin'],
-      },
-      {
-        name: 'Referral Report',
-        layout: '/admin',
-        path: '/reports/referral',
-        component: <DataTables />,
-        roles: ['superAdmin', 'branchAdmin'],
-      },
-    ],
-  },
+  // {
+  //   name: 'Reports',
+  //   layout: '/admin',
+  //   path: '/reports',
+  //   icon: <Icon as={MdAssessment} width="20px" height="20px" color="inherit" />,
+  //   component: <DataTables />,
+  //   roles: ['superAdmin', 'branchAdmin'],
+  //   children: [
+  //     {
+  //       name: 'Branch-wise Report',
+  //       layout: '/admin',
+  //       path: '/reports/branch-wise',
+  //       component: <DataTables />,
+  //       roles: ['superAdmin', 'branchAdmin'],
+  //     },
+  //     {
+  //       name: 'Doctor-wise Report',
+  //       layout: '/admin',
+  //       path: '/reports/doctor-wise',
+  //       component: <DataTables />,
+  //       roles: ['superAdmin', 'branchAdmin'],
+  //     },
+  //     {
+  //       name: 'Referral Report',
+  //       layout: '/admin',
+  //       path: '/reports/referral',
+  //       component: <DataTables />,
+  //       roles: ['superAdmin', 'branchAdmin'],
+  //     },
+  //   ],
+  // },
 
   // Reminders Section
   {
@@ -436,22 +481,31 @@ const routes = [
     layout: '/admin',
     path: '/reminders',
     icon: <Icon as={MdNotifications} width="20px" height="20px" color="inherit" />,
-    component: <DataTables />,
+    component: <AllReminders />,
     roles: ['superAdmin', 'branchAdmin', 'doctor'],
     children: [
       {
-        name: 'Appointment Reminders',
+        name: 'All Reminders',
         layout: '/admin',
-        path: '/reminders/appointments',
-        component: <DataTables />,
+        path: '/reminders/all',
+        component: <AllReminders />,
         roles: ['superAdmin', 'branchAdmin', 'doctor'],
       },
       {
-        name: 'Follow-up Reminders',
+        name: 'Advanced Reminders',
         layout: '/admin',
-        path: '/reminders/follow-up',
-        component: <DataTables />,
+        path: '/reminders/advanced',
+        component: <AdvancedReminders />,
         roles: ['superAdmin', 'branchAdmin', 'doctor'],
+      },
+      
+      {
+        name: 'Create Reminder',
+        layout: '/admin',
+        path: '/reminders/create',
+        component: <CreateReminder />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
+        hidden: true,
       },
     ],
   },

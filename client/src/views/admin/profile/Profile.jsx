@@ -42,7 +42,14 @@ import {
   AlertDescription,
 } from '@chakra-ui/react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useUpdateUserMutation, useLoadUserQuery } from 'features/api/authApi';
+import { 
+  useUpdateUserMutation, 
+  useLoadUserQuery,
+  useForgotPasswordMutation,
+  useVerifyPasswordResetOTPMutation,
+  useResetPasswordMutation,
+  useChangePasswordMutation
+} from 'features/api/authApi';
 import { userLoggedIn } from 'features/auth/authSlice';
 import { 
   MdEmail, 
@@ -62,7 +69,10 @@ import {
   MdAttachMoney,
   MdBusiness,
   MdPerson,
-  MdLocalHospital
+  MdLocalHospital,
+  MdLock,
+  MdSecurity,
+  MdRefresh
 } from 'react-icons/md';
 
 export default function Profile() {
@@ -71,6 +81,13 @@ export default function Profile() {
   const user = useSelector((s) => s.auth.user);
   const { data, isLoading } = useLoadUserQuery();
   const [updateUser, { isLoading: saving }] = useUpdateUserMutation();
+  // Branch update for branchAdmin
+  const [updateBranch] = require('features/api/branchApi').useUpdateBranchMutation();
+  const [getBranchById] = require('features/api/branchApi').useGetBranchByIdMutation();
+  const [forgotPassword, { isLoading: forgotPasswordLoading }] = useForgotPasswordMutation();
+  const [verifyPasswordResetOTP, { isLoading: verifyOTPLoading }] = useVerifyPasswordResetOTPMutation();
+  const [resetPassword, { isLoading: resetPasswordLoading }] = useResetPasswordMutation();
+  const [changePassword, { isLoading: changePasswordLoading }] = useChangePasswordMutation();
 
   const [form, setForm] = useState({
     // Basic Info
@@ -109,6 +126,20 @@ export default function Profile() {
   const [newLanguage, setNewLanguage] = useState('');
   const [newAvailableDay, setNewAvailableDay] = useState('');
 
+  // Password-related states
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+    email: '',
+    otp: '',
+    newPasswordReset: '',
+    confirmPasswordReset: ''
+  });
+  const [passwordStep, setPasswordStep] = useState('change'); // 'change', 'forgot', 'verify', 'reset'
+  const [otpSent, setOtpSent] = useState(false);
+
   // Prefer API user payload if available; fallback to Redux user
   const apiUser = data?.user;
   const currentUser = apiUser || user;
@@ -142,11 +173,41 @@ export default function Profile() {
         branchAddress: currentUser.branchAddress || '',
         branchPhone: currentUser.branchPhone || '',
         branchEmail: currentUser.branchEmail || '',
+        gst: '',
+        pan: '',
+        scn: '',
         image: currentUser.photoUrl || currentUser.image || '',
         bannerUrl: currentUser.bannerUrl || '',
       });
     }
   }, [currentUser]);
+
+  // Fetch branch details for branch admin to prefill editable fields
+  useEffect(() => {
+    const branchId = currentUser?.branch?._id || currentUser?.branch;
+    if (isBranchAdmin && branchId) {
+      (async () => {
+        try {
+          const res = await getBranchById({ id: branchId }).unwrap();
+          const b = res?.branch;
+          if (b) {
+            setForm((prev) => ({
+              ...prev,
+              branchName: b.branchName || prev.branchName,
+              branchAddress: b.address || prev.branchAddress,
+              branchPhone: b.phone || prev.branchPhone,
+              branchEmail: b.email || prev.branchEmail,
+              gst: b.gst || prev.gst || '',
+              pan: b.pan || prev.pan || '',
+              scn: b.scn || prev.scn || '',
+            }));
+          }
+        } catch (e) {
+          // non-blocking
+        }
+      })();
+    }
+  }, [isBranchAdmin, currentUser, getBranchById]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -253,6 +314,25 @@ export default function Profile() {
       }
 
       const res = await updateUser(payload).unwrap();
+
+      // If branchAdmin, allow updating branch info from the same form when fields present
+      if (isBranchAdmin && (form.branchName || form.branchAddress || form.branchPhone || form.branchEmail || form.gst || form.pan || form.scn)) {
+        try {
+          await updateBranch({
+            // Backend resolves branchId from token for branchAdmin
+            branchName: form.branchName,
+            address: form.branchAddress,
+            phone: form.branchPhone,
+            email: form.branchEmail,
+            gst: form.gst,
+            pan: form.pan,
+            scn: form.scn,
+          }).unwrap();
+        } catch (e) {
+          // Non-blocking
+          console.warn('Branch update failed', e);
+        }
+      }
       dispatch(userLoggedIn({ user: res }));
       toast({ 
         title: 'Profile updated successfully', 
@@ -323,6 +403,197 @@ export default function Profile() {
     }));
   };
 
+  // Password handling functions
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordForm({ ...passwordForm, [name]: value });
+  };
+
+  const handleChangePassword = async () => {
+    try {
+      if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+        toast({
+          title: 'Passwords do not match',
+          status: 'error',
+          duration: 3000,
+        });
+        return;
+      }
+
+      if (passwordForm.newPassword.length < 6) {
+        toast({
+          title: 'Password too short',
+          description: 'Password must be at least 6 characters long',
+          status: 'error',
+          duration: 3000,
+        });
+        return;
+      }
+
+      await changePassword({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      }).unwrap();
+
+      toast({
+        title: 'Password changed successfully',
+        status: 'success',
+        duration: 3000,
+      });
+
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+        email: '',
+        otp: '',
+        newPasswordReset: '',
+        confirmPasswordReset: ''
+      });
+      setShowPasswordSection(false);
+    } catch (err) {
+      toast({
+        title: 'Failed to change password',
+        description: err?.data?.message || 'Something went wrong',
+        status: 'error',
+        duration: 3000,
+      });
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    try {
+      if (!passwordForm.email) {
+        toast({
+          title: 'Email is required',
+          status: 'error',
+          duration: 3000,
+        });
+        return;
+      }
+
+      await forgotPassword(passwordForm.email).unwrap();
+      setOtpSent(true);
+      setPasswordStep('verify');
+      toast({
+        title: 'OTP sent to your email',
+        description: 'Please check your email for the password reset OTP',
+        status: 'success',
+        duration: 5000,
+      });
+    } catch (err) {
+      toast({
+        title: 'Failed to send OTP',
+        description: err?.data?.message || 'Something went wrong',
+        status: 'error',
+        duration: 3000,
+      });
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    try {
+      if (!passwordForm.otp) {
+        toast({
+          title: 'OTP is required',
+          status: 'error',
+          duration: 3000,
+        });
+        return;
+      }
+
+      await verifyPasswordResetOTP({
+        email: passwordForm.email,
+        otp: passwordForm.otp,
+      }).unwrap();
+
+      setPasswordStep('reset');
+      toast({
+        title: 'OTP verified successfully',
+        description: 'You can now set your new password',
+        status: 'success',
+        duration: 3000,
+      });
+    } catch (err) {
+      toast({
+        title: 'Invalid OTP',
+        description: err?.data?.message || 'Please check your OTP and try again',
+        status: 'error',
+        duration: 3000,
+      });
+    }
+  };
+
+  const handleResetPassword = async () => {
+    try {
+      if (passwordForm.newPasswordReset !== passwordForm.confirmPasswordReset) {
+        toast({
+          title: 'Passwords do not match',
+          status: 'error',
+          duration: 3000,
+        });
+        return;
+      }
+
+      if (passwordForm.newPasswordReset.length < 6) {
+        toast({
+          title: 'Password too short',
+          description: 'Password must be at least 6 characters long',
+          status: 'error',
+          duration: 3000,
+        });
+        return;
+      }
+
+      await resetPassword({
+        email: passwordForm.email,
+        otp: passwordForm.otp,
+        newPassword: passwordForm.newPasswordReset,
+      }).unwrap();
+
+      toast({
+        title: 'Password reset successfully',
+        description: 'You can now login with your new password',
+        status: 'success',
+        duration: 5000,
+      });
+
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+        email: '',
+        otp: '',
+        newPasswordReset: '',
+        confirmPasswordReset: ''
+      });
+      setPasswordStep('change');
+      setShowPasswordSection(false);
+      setOtpSent(false);
+    } catch (err) {
+      toast({
+        title: 'Failed to reset password',
+        description: err?.data?.message || 'Something went wrong',
+        status: 'error',
+        duration: 3000,
+      });
+    }
+  };
+
+  const resetPasswordFlow = () => {
+    setPasswordStep('forgot');
+    setPasswordForm({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+      email: currentUser?.email || '',
+      otp: '',
+      newPasswordReset: '',
+      confirmPasswordReset: ''
+    });
+    setOtpSent(false);
+  };
+
   const getRoleIcon = () => {
     if (isDoctor) return <Icon as={MdLocalHospital} />;
     if (isBranchAdmin) return <Icon as={MdBusiness} />;
@@ -340,6 +611,8 @@ export default function Profile() {
     typeof str === 'string' && str.length > 0
       ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
       : '';
+
+  const brandHover = { bg: '#2BA8D1', color: 'white', transform: 'translateY(-2px)', boxShadow: '0 10px 25px rgba(43, 168, 209, 0.3)' };
 
   if (isLoading) {
     return (
@@ -449,6 +722,7 @@ export default function Profile() {
                     colorScheme="gray"
                     leftIcon={<Icon as={MdCancel} />}
                     onClick={handleCancel}
+                    _hover={brandHover}
                   >
                     Cancel
                   </Button>
@@ -647,7 +921,8 @@ export default function Profile() {
                   <Input
                     name="branchName"
                     value={form.branchName}
-                    isReadOnly
+                    onChange={handleChange}
+                    isReadOnly={!isEditing}
                     placeholder="Enter branch name"
                   />
                 </FormControl>
@@ -657,7 +932,8 @@ export default function Profile() {
                   <Textarea
                     name="branchAddress"
                     value={form.branchAddress}
-                    isReadOnly
+                    onChange={handleChange}
+                    isReadOnly={!isEditing}
                     placeholder="Enter branch address"
                     rows={3}
                   />
@@ -669,7 +945,8 @@ export default function Profile() {
                     <Input
                       name="branchPhone"
                       value={form.branchPhone}
-                      isReadOnly
+                      onChange={handleChange}
+                      isReadOnly={!isEditing}
                       placeholder="Enter branch phone"
                     />
                   </FormControl>
@@ -680,11 +957,46 @@ export default function Profile() {
                       type="email"
                       name="branchEmail"
                       value={form.branchEmail}
-                      isReadOnly
+                      onChange={handleChange}
+                      isReadOnly={!isEditing}
                       placeholder="Enter branch email"
                     />
                   </FormControl>
                 </HStack>
+
+                <HStack spacing={4}>
+                  <FormControl>
+                    <FormLabel>GST</FormLabel>
+                    <Input
+                      name="gst"
+                      value={form.gst}
+                      onChange={handleChange}
+                      isReadOnly={!isEditing}
+                      placeholder="GST number"
+                    />
+                  </FormControl>
+                  <FormControl>
+                    <FormLabel>PAN</FormLabel>
+                    <Input
+                      name="pan"
+                      value={form.pan}
+                      onChange={handleChange}
+                      isReadOnly={!isEditing}
+                      placeholder="PAN number"
+                    />
+                  </FormControl>
+                </HStack>
+
+                <FormControl>
+                  <FormLabel>SCN</FormLabel>
+                  <Input
+                    name="scn"
+                    value={form.scn}
+                    onChange={handleChange}
+                    isReadOnly={!isEditing}
+                    placeholder="SCN"
+                  />
+                </FormControl>
               </VStack>
             )}
 
@@ -831,6 +1143,258 @@ export default function Profile() {
             </Card>
           </>
         )}
+
+        {/* Password Management Section */}
+        <Card gridColumn={{ base: '1', lg: '1 / -1' }}>
+          <CardBody>
+            <Flex justify="space-between" align="center" mb={4}>
+              <Heading size="md" color="brand.500" leftIcon={<Icon as={MdSecurity} />}>
+                Password Management
+              </Heading>
+              <Button
+                variant="outline"
+                leftIcon={<Icon as={MdLock} />}
+                onClick={() => setShowPasswordSection(!showPasswordSection)}
+                colorScheme="blue"
+                _hover={brandHover}
+              >
+                {showPasswordSection ? 'Hide' : 'Change Password'}
+              </Button>
+            </Flex>
+            <Divider mb={6} />
+
+            {showPasswordSection && (
+              <VStack spacing={6} align="stretch">
+                {/* Password Step Navigation */}
+                <HStack spacing={4} justify="center">
+                  <Button
+                    size="sm"
+                    variant={passwordStep === 'change' ? 'solid' : 'outline'}
+                    colorScheme="blue"
+                    onClick={() => setPasswordStep('change')}
+                    _hover={passwordStep === 'change' ? undefined : brandHover}
+                  >
+                    Change Password
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={passwordStep === 'forgot' ? 'solid' : 'outline'}
+                    colorScheme="orange"
+                    onClick={resetPasswordFlow}
+                    leftIcon={<Icon as={MdRefresh} />}
+                    _hover={passwordStep === 'forgot' ? undefined : brandHover}
+                  >
+                    Forgot Password
+                  </Button>
+                </HStack>
+
+                {/* Change Password Form */}
+                {passwordStep === 'change' && (
+                  <VStack spacing={4} align="stretch">
+                    <Alert status="info" borderRadius="md">
+                      <AlertIcon />
+                      <AlertDescription>
+                        Change your current password. You'll need to enter your current password for security.
+                      </AlertDescription>
+                    </Alert>
+
+                    <FormControl>
+                      <FormLabel>Current Password</FormLabel>
+                      <Input
+                        type="password"
+                        name="currentPassword"
+                        value={passwordForm.currentPassword}
+                        onChange={handlePasswordChange}
+                        placeholder="Enter current password"
+                      />
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel>New Password</FormLabel>
+                      <Input
+                        type="password"
+                        name="newPassword"
+                        value={passwordForm.newPassword}
+                        onChange={handlePasswordChange}
+                        placeholder="Enter new password"
+                      />
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel>Confirm New Password</FormLabel>
+                      <Input
+                        type="password"
+                        name="confirmPassword"
+                        value={passwordForm.confirmPassword}
+                        onChange={handlePasswordChange}
+                        placeholder="Confirm new password"
+                      />
+                    </FormControl>
+
+                    <HStack spacing={3}>
+                      <Button
+                        bg="brand.500"
+                        _hover={{ bg: 'brand.400' }}
+                        onClick={handleChangePassword}
+                        isLoading={changePasswordLoading}
+                        loadingText="Changing..."
+                        leftIcon={<Icon as={MdSave} />}
+                        color="white"
+                      >
+                        Change Password
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowPasswordSection(false)}
+                        _hover={brandHover}
+                      >
+                        Cancel
+                      </Button>
+                    </HStack>
+                  </VStack>
+                )}
+
+                {/* Forgot Password Form */}
+                {passwordStep === 'forgot' && (
+                  <VStack spacing={4} align="stretch">
+                    <Alert status="warning" borderRadius="md">
+                      <AlertIcon />
+                      <AlertDescription>
+                        Enter your email address to receive a password reset OTP.
+                      </AlertDescription>
+                    </Alert>
+
+                    <FormControl>
+                      <FormLabel>Email Address</FormLabel>
+                      <Input
+                        type="email"
+                        name="email"
+                        value={passwordForm.email}
+                        onChange={handlePasswordChange}
+                        placeholder="Enter your email address"
+                      />
+                    </FormControl>
+
+                    <Button
+                      bg="orange.500"
+                      _hover={{ bg: 'orange.400' }}
+                      onClick={handleForgotPassword}
+                      isLoading={forgotPasswordLoading}
+                      loadingText="Sending OTP..."
+                      leftIcon={<Icon as={MdEmail} />}
+                      color="white"
+                    >
+                      Send Reset OTP
+                    </Button>
+                  </VStack>
+                )}
+
+                {/* Verify OTP Form */}
+                {passwordStep === 'verify' && (
+                  <VStack spacing={4} align="stretch">
+                    <Alert status="success" borderRadius="md">
+                      <AlertIcon />
+                      <AlertDescription>
+                        OTP sent to {passwordForm.email}. Please check your email and enter the OTP below.
+                      </AlertDescription>
+                    </Alert>
+
+                    <FormControl>
+                      <FormLabel>Enter OTP</FormLabel>
+                      <Input
+                        type="text"
+                        name="otp"
+                        value={passwordForm.otp}
+                        onChange={handlePasswordChange}
+                        placeholder="Enter 6-digit OTP"
+                        maxLength={6}
+                        textAlign="center"
+                        fontSize="lg"
+                        letterSpacing="2px"
+                      />
+                    </FormControl>
+
+                    <HStack spacing={3}>
+                      <Button
+                        bg="green.500"
+                        _hover={{ bg: 'green.400' }}
+                        onClick={handleVerifyOTP}
+                        isLoading={verifyOTPLoading}
+                        loadingText="Verifying..."
+                        leftIcon={<Icon as={MdSecurity} />}
+                        color="white"
+                      >
+                        Verify OTP
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setPasswordStep('forgot')}
+                        _hover={brandHover}
+                      >
+                        Back
+                      </Button>
+                    </HStack>
+                  </VStack>
+                )}
+
+                {/* Reset Password Form */}
+                {passwordStep === 'reset' && (
+                  <VStack spacing={4} align="stretch">
+                    <Alert status="success" borderRadius="md">
+                      <AlertIcon />
+                      <AlertDescription>
+                        OTP verified successfully! You can now set your new password.
+                      </AlertDescription>
+                    </Alert>
+
+                    <FormControl>
+                      <FormLabel>New Password</FormLabel>
+                      <Input
+                        type="password"
+                        name="newPasswordReset"
+                        value={passwordForm.newPasswordReset}
+                        onChange={handlePasswordChange}
+                        placeholder="Enter new password"
+                      />
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel>Confirm New Password</FormLabel>
+                      <Input
+                        type="password"
+                        name="confirmPasswordReset"
+                        value={passwordForm.confirmPasswordReset}
+                        onChange={handlePasswordChange}
+                        placeholder="Confirm new password"
+                      />
+                    </FormControl>
+
+                    <HStack spacing={3}>
+                      <Button
+                        bg="green.500"
+                        _hover={{ bg: 'green.400' }}
+                        onClick={handleResetPassword}
+                        isLoading={resetPasswordLoading}
+                        loadingText="Resetting..."
+                        leftIcon={<Icon as={MdRefresh} />}
+                        color="white"
+                      >
+                        Reset Password
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setPasswordStep('verify')}
+                        _hover={brandHover}
+                      >
+                        Back
+                      </Button>
+                    </HStack>
+                  </VStack>
+                )}
+              </VStack>
+            )}
+          </CardBody>
+        </Card>
       </SimpleGrid>
     </Box>
   );

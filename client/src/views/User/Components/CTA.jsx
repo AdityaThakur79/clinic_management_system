@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Flex, Text, Button, Image } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import PatternBG from "../../../assets/patternBG.png";
 import { assets } from "../../../assets/assets";
 
@@ -85,6 +85,8 @@ const CTA = ({
         </Text>
 
         <Button
+        as={Link}
+        to={"/doctors"}
           mt={6}
           px={6}
           py={6}

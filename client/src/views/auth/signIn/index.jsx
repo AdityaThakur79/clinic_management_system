@@ -99,7 +99,7 @@ function SignIn() {
       // Add a small delay to ensure state is updated
       setTimeout(() => {
         console.log("Navigating to dashboard...");
-        navigate("/admin/dashboar/overview");
+        navigate("/admin/dashboard/overview");
       }, 100);
     }
     
@@ -240,14 +240,14 @@ function SignIn() {
                     colorScheme='brandScheme'
                     me='10px'
                   />
-                  <FormLabel
+                  {/* <FormLabel
                     htmlFor='remember-login'
                     mb='0'
                     fontWeight='normal'
                     color={textColor}
                     fontSize='sm'>
                     Keep me logged in
-                  </FormLabel>
+                  </FormLabel> */}
                 </FormControl>
                 <NavLink to='/auth/forgot-password'>
                   <Text

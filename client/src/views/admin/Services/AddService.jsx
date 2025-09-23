@@ -21,6 +21,7 @@ import {
 } from '@chakra-ui/react';
 import { MdBuild } from 'react-icons/md';
 import { useCreateServiceMutation } from '../../../features/api/service';
+import { useNavigate } from 'react-router-dom';
 
 const AddService = () => {
   const [formData, setFormData] = useState({
@@ -32,6 +33,7 @@ const AddService = () => {
   const [errors, setErrors] = useState({});
   const toast = useToast();
   const [createService, { isLoading: isSubmitting }] = useCreateServiceMutation();
+  const navigate = useNavigate();
 
   const cardBg = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
@@ -78,6 +80,9 @@ const AddService = () => {
       });
       setFormData({ name: '', description: '', isActive: 'active' });
       setErrors({});
+      setTimeout(() => {
+        navigate('/admin/services/all');
+      }, 800);
     } catch (error) {
       toast({
         title: 'Error',

@@ -445,6 +445,13 @@ const AllBranchAdmins = () => {
                   <Text color="gray.600">Loading branch admins...</Text>
                 </VStack>
               </Center>
+            ) : (branchAdmins?.length || 0) === 0 ? (
+              <Center py={16} px={6}>
+                <Alert status="info" borderRadius="md" maxW="lg">
+                  <AlertIcon />
+                  <Text>No branch admins found.</Text>
+                </Alert>
+              </Center>
             ) : (
               <TableContainer>
                 <Table variant="simple">

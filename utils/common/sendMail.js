@@ -2,26 +2,39 @@ import nodemailer from "nodemailer";
 
 // Create transporter with better error handling
 const createTransporter = () => {
+  // Support both old and new environment variable names
+  const emailUser = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const emailPass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+  
   // Check if email credentials are configured
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error("Email credentials not configured. Please set EMAIL_USER and EMAIL_PASS environment variables.");
+  if (!emailUser || !emailPass) {
+    throw new Error("Email credentials not configured. Please set SMTP_USER and SMTP_PASS environment variables.");
   }
 
-  // For Gmail, you need to use an App Password if 2FA is enabled
-  // Or use OAuth2 for better security
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS, // This should be an App Password, not your regular password
-    },
-    // Add additional options for better reliability
-    secure: true, // Use SSL
-    port: 465, // Gmail SMTP port
-    tls: {
-      rejectUnauthorized: false // For development, remove in production
-    }
-  });
+  // Allow custom SMTP or fallback to Gmail service
+  const smtpHost = process.env.SMTP_HOST;
+  const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : undefined;
+  const smtpSecure = process.env.SMTP_SECURE ? process.env.SMTP_SECURE === 'true' : undefined;
+
+  let transporter;
+  if (smtpHost) {
+    transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort ?? 587,
+      secure: smtpSecure ?? false,
+      auth: { user: emailUser, pass: emailPass },
+      tls: { rejectUnauthorized: false },
+    });
+  } else {
+    // For Gmail, use App Password
+    transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: { user: emailUser, pass: emailPass },
+      secure: true,
+      port: 465,
+      tls: { rejectUnauthorized: false }
+    });
+  }
 
   return transporter;
 };
@@ -49,8 +62,10 @@ export const sendOTPEmail = async (email, otp) => {
       throw new Error("Email service not available");
     }
 
+    const emailUser = process.env.SMTP_USER || process.env.EMAIL_USER;
+    
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: emailUser,
       to: email,
       subject: "OTP for Registration",
       html: `
@@ -67,6 +82,34 @@ export const sendOTPEmail = async (email, otp) => {
     return result;
   } catch (error) {
     console.error("Error sending OTP email:", error);
+    throw error;
+  }
+};
+
+// Generic email sender for reuse
+export const sendEmail = async ({ to, subject, html, text, attachments }) => {
+  try {
+    const transporter = createTransporter();
+    const isVerified = await verifyTransporter(transporter);
+    if (!isVerified) {
+      throw new Error("Email service not available");
+    }
+
+    const emailUser = process.env.SMTP_FROM || process.env.SMTP_USER || process.env.EMAIL_USER;
+    const fromName = process.env.SMTP_FROM_NAME || 'Clinic Management System';
+
+    const mailOptions = {
+      from: `${fromName} <${emailUser}>`,
+      to,
+      subject,
+      html,
+      text,
+      attachments: attachments || [],
+    };
+
+    return await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error("Error sending email:", error);
     throw error;
   }
 };
@@ -145,8 +188,10 @@ export const sendSalarySlipEmail = async (email, employeeData, salarySlip, month
       </div>
     `;
 
+    const emailUser = process.env.SMTP_USER || process.env.EMAIL_USER;
+    
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: emailUser,
       to: email,
       subject: `Salary Slip - ${month} - ${employeeData.name}`,
       html: `

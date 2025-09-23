@@ -16,6 +16,7 @@ import { useLoadUserQuery } from '../../features/api/authApi';
 import { useRBAC } from '../../hooks/useRBAC';
 import routes from '../../routes.js';
 import { adminRoutes } from '../../config/routes';
+import TodayModal from '../../components/TodayModal';
 
 // Custom Chakra theme
 export default function Dashboard(props) {
@@ -269,6 +270,7 @@ export default function Dashboard(props) {
                 minH="100vh"
                 pt="50px"
               >
+                <TodayModal />
                 <Routes>
                   {/* Filtered routes based on user role */}
                   {getRoutes(filteredRoutes)}

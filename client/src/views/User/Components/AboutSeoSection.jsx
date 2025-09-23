@@ -6,12 +6,12 @@ import { assets } from "../../../assets/assets";
 const MotionBox = motion(Box);
 
 const AboutSeoSection = ({
-  title = "Your Hearing. Our Care.",
-  text = "Expert audiology and speech therapy with modern diagnostics and compassionate follow-ups across our partner hospitals.",
+  title = "Aartiket Speech & Hearing Care",
+  text = "Personalized hearing care and speech therapy powered by modern diagnostics, expert fittings, and compassionate follow‑ups across Mumbai.",
   image = assets.service_1,
 }) => {
   return (
-    <Box as="section" bg="#0C2F4D" color="white" className="bg-[#0C2F4D] text-white">
+    <Box as="section" bg="#2BA8D1" color="white" className="bg-[#2BA8D1] text-white">
       <Container maxW="7xl" px={{ base: 6, md: 10, lg: 20 }} py={{ base: 10, md: 14 }}>
         <Flex
           direction={{ base: "column", md: "row" }}
@@ -27,23 +27,31 @@ const AboutSeoSection = ({
             flex="1"
             className="flex-1"
           >
-            <Heading as="h3" fontSize={{ base: "2xl", md: "3xl" }} fontWeight="bold" lineHeight="tight">
+            <Heading
+              as="h3"
+              fontSize={{ base: "2xl", md: "3xl", lg: "4xl" }}
+              fontWeight="extrabold"
+              lineHeight="short"
+              letterSpacing={{ base: 'tight', md: 'wide' }}
+              textShadow="0 2px 8px rgba(0,0,0,0.15)"
+            >
               {title}
             </Heading>
-            <Text mt={3} color="whiteAlpha.800" maxW="2xl">
+            <Box w={{ base: '60px', md: '80px' }} h="4px" bg="white" borderRadius="full" mt={3} mb={2} />
+            <Text mt={3} color="whiteAlpha.900" maxW="2xl" fontSize={{ base: 'md', md: 'lg' }}>
               {text}
             </Text>
 
             {/* Tags */}
             <HStack mt={5} spacing={3} wrap="wrap" className="flex flex-wrap gap-3 text-sm">
               <Tag px={3} py={1} borderRadius="full" bg="whiteAlpha.100" color={"white"} border="1px solid rgba(255,255,255,0.15)">
-                Hearing Tests
+                Comprehensive Hearing Tests
               </Tag>
               <Tag px={3} py={1} borderRadius="full" bg="whiteAlpha.200" color={"white"} border="1px solid rgba(255,255,255,0.15)">
-                Digital Hearing Aids
+                Digital Hearing Aids & Fittings
               </Tag>
               <Tag px={3} py={1} borderRadius="full" bg="whiteAlpha.200" color={"white"} border="1px solid rgba(255,255,255,0.15)">
-                Speech Therapy
+                Speech Therapy for All Ages
               </Tag>
             </HStack>
           </MotionBox>

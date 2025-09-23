@@ -19,10 +19,13 @@ app.use(
       "http://localhost:8080",
       "http://localhost:5174",
       "http://localhost:5173",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:8080",
     ],
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie", "X-Requested-With"],
+    optionsSuccessStatus: 200,
   })
 );
 
@@ -38,6 +41,12 @@ import serviceRoutes from "./routes/service.js";
 import appointmentRoutes from "./routes/appointment.js";
 import referredDoctorRoutes from "./routes/referredDoctor.js";
 import patientRoutes from "./routes/patient.js";
+import reminderRoutes from "./routes/reminder.js";
+import analyticsRoutes from "./routes/analytics.js";
+import billRoutes from "./routes/bill.js";
+import inventoryRoutes from "./routes/inventory.js";
+import searchRoutes from "./routes/search.js";
+import enquiryRoutes from "./routes/enquiry.js";
 
 app.use("/api/user", userRoutes);
 app.use("/api/branch", branchRoutes);
@@ -47,6 +56,12 @@ app.use("/api/service", serviceRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/referred-doctors", referredDoctorRoutes);
 app.use("/api/patients", patientRoutes);
+app.use("/api/reminders", reminderRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/bills", billRoutes);
+app.use("/api/inventory", inventoryRoutes);
+app.use("/api/search", searchRoutes);
+app.use("/api/enquiry", enquiryRoutes);
 
 // Serve static files from uploads directory
 const __filename = fileURLToPath(import.meta.url);
@@ -54,7 +69,7 @@ const __dirname = path.dirname(__filename);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Serve static files from client build directory (if it exists)
-const clientDistPath = path.join(__dirname, "./client/dist");
+const clientDistPath = path.join(__dirname, "./client/build");
 const clientDistExists = existsSync(clientDistPath);
 
 if (clientDistExists) {

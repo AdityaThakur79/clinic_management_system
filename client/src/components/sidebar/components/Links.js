@@ -266,15 +266,9 @@ export function SidebarLinks(props) {
                         ? '22px'
                         : '26px'
                     }
-                    py="5px"
-                    ps={isCollapsed ? '8px' : '10px'}
-                    pe={isCollapsed ? '16px' : '10px'}
-                  >
-                    <Flex
-                      w="100%"
-                      alignItems="center"
-                      justifyContent={isCollapsed ? 'center' : 'center'}
-                    >
+                    py='5px'
+                    ps='24px'>
+                    <Flex w='100%' alignItems='center' justifyContent='center'>
                       <Box
                         color={
                           activeRoute(route.path.toLowerCase())

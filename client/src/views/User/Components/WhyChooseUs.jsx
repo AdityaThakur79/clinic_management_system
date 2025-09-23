@@ -1,3 +1,4 @@
+import React, { useEffect } from "react";
 import {
   Box,
   Container,
@@ -6,9 +7,7 @@ import {
   SimpleGrid,
   VStack,
 } from "@chakra-ui/react";
-import {
-  GiSoundWaves,
-} from "react-icons/gi";
+import { GiSoundWaves } from "react-icons/gi";
 import {
   MdHearing,
   MdRecordVoiceOver,
@@ -19,56 +18,48 @@ import { IoShieldCheckmark } from "react-icons/io5";
 import { FaIndianRupeeSign } from "react-icons/fa6";
 
 const features = [
-  {
-    icon: <GiSoundWaves size={40} />,
-    title: "Advanced Hearing Tests",
-    description: "Comprehensive audiological assessments using state-of-the-art equipment",
-  },
-  {
-    icon: <MdHearing size={40} />,
-    title: "Digital Hearing Aids",
-    description: "Latest digital hearing aid technology for optimal sound quality",
-  },
-  {
-    icon: <MdRecordVoiceOver size={40} />,
-    title: "Speech Therapy",
-    description: "Professional speech therapy for all ages and conditions",
-  },
-  {
-    icon: <MdHome size={40} />,
-    title: "Home Visits Available",
-    description: "Convenient home consultation services in Ghatkopar area",
-  },
-  {
-    icon: <FaIndianRupeeSign size={40} />,
-    title: "Best Rates Guaranteed",
-    description: "Competitive pricing with no hidden charges",
-  },
-  {
-    icon: <FaHeadphones size={40} />,
-    title: "ITC & Microhearing Devices",
-    description: "Discreet In-The-Canal and microhearing solutions",
-  },
-  {
-    icon: <IoShieldCheckmark size={40} />,
-    title: "Warranty & Support",
-    description: "Comprehensive warranty and ongoing support services",
-  },
-  {
-    icon: <MdHearing size={40} />,
-    title: "All Accessories Available",
-    description: "Complete range of hearing aid accessories and maintenance",
-  },
+  { icon: GiSoundWaves, title: "Advanced Hearing Tests", description: "Comprehensive audiological assessments using state-of-the-art equipment" },
+  { icon: MdHearing, title: "Digital Hearing Aids", description: "Latest digital hearing aid technology for optimal sound quality" },
+  { icon: MdRecordVoiceOver, title: "Speech Therapy", description: "Professional speech therapy for all ages and conditions" },
+  { icon: MdHome, title: "Home Visits Available", description: "Convenient home consultation services in Mumbai" },
+  { icon: FaIndianRupeeSign, title: "Best Rates Guaranteed", description: "Competitive pricing with no hidden charges" },
+  { icon: FaHeadphones, title: "ITC & Microhearing Devices", description: "Discreet In-The-Canal and microhearing solutions" },
+  { icon: IoShieldCheckmark, title: "Warranty & Support", description: "Comprehensive warranty and ongoing support services" },
+  { icon: MdHearing, title: "All Accessories Available", description: "Complete range of hearing aid accessories and maintenance" },
 ];
 
 export default function WhyChooseUs() {
+  const [isVisible, setIsVisible] = React.useState({});
+
+  // Intersection Observer for reveal animations
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(prev => ({
+              ...prev,
+              [entry.target.id]: true
+            }));
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+    );
+
+    const elements = document.querySelectorAll('[data-animate]');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <Box
       as="section"
       position="relative"
       overflow="hidden"
       py={{ base: 10, md: 20 }}
-      px={{ base: 4, md: 10, lg: 20 }}
+      px={{ base: 3, md: 8, lg: 20 }}
       bg="#2BA8D1"
     >
       <Container maxW="7xl" textAlign="center" position="relative" zIndex="1">
@@ -82,7 +73,7 @@ export default function WhyChooseUs() {
           Why Choose Aartiket Speech & Hearing Care?
         </Heading>
         <Text
-          fontSize={{ base: "2xl", md: "3xl", lg: "4xl" }}
+          fontSize={{ base: "xl", md: "3xl", lg: "4xl" }}
           fontWeight="bold"
           color="white"
           mb={10}
@@ -103,11 +94,17 @@ export default function WhyChooseUs() {
               bg="white"
               rounded="2xl"
               shadow="lg"
-              p={6}
+              p={{ base: 4, md: 6 }}
               textAlign="center"
               border="1px solid transparent"
               overflow="hidden"
               transition="all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
+              data-animate
+              id={`why-choose-card-${index}`}
+              opacity={isVisible[`why-choose-card-${index}`] ? 1 : 0}
+              transform={isVisible[`why-choose-card-${index}`] ? 'translateY(0) scale(1)' : 'translateY(30px) scale(0.95)'}
+              transition={`all 0.6s ease-out`}
+              transitionDelay={`${index * 0.1}s`}
               _hover={{
                 transform: "translateY(-8px) scale(1.02)",
                 shadow: "0 25px 50px rgba(43, 168, 209, 0.25)",
@@ -180,7 +177,7 @@ export default function WhyChooseUs() {
                 }}
               >
                 <Box
-                  p={4}
+                  p={{ base: 3, md: 4 }}
                   borderRadius="full"
                   bg="rgba(43, 168, 209, 0.1)"
                   transition="all 0.3s ease"
@@ -191,7 +188,8 @@ export default function WhyChooseUs() {
                     color: "white",
                   }}
                 >
-                  {feature.icon}
+                  {/* responsive icon size */}
+                  <Box as={feature.icon} boxSize={{ base: 8, md: 10 }} />
                 </Box>
               </Box>
 
@@ -199,7 +197,7 @@ export default function WhyChooseUs() {
               <Text
                 fontWeight="bold"
                 color="#0C2F4D"
-                fontSize="lg"
+                fontSize={{ base: "md", md: "lg" }}
                 position="relative"
                 zIndex="2"
                 mb={2}

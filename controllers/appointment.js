@@ -3,6 +3,7 @@ import Appointment from "../models/appointment.js";
 import Patient from "../models/patient.js";
 import Branch from "../models/branch.js";
 import { User as Doctor } from "../models/user.js";
+import { sendEmail } from "../utils/common/sendMail.js";
 
 export const getAvailability = async (req, res) => {
   try {
@@ -44,10 +45,13 @@ export const createAppointment = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const { branchId, doctorId, date, timeSlot, notes, referredDoctorId, patient } = req.body;
+    const { branchId, doctorId, date, timeSlot, notes, referredDoctorId, patient, patientId } = req.body;
 
-    if (!branchId || !doctorId || !date || !timeSlot || !patient?.name) {
+    if (!branchId || !doctorId || !date || !timeSlot) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+    if (!patientId && !patient?.name) {
+      return res.status(400).json({ success: false, message: "Missing patient information" });
     }
 
     // Validate branch and doctor
@@ -65,35 +69,43 @@ export const createAppointment = async (req, res) => {
     const dayStart = new Date(date);
     dayStart.setHours(0, 0, 0, 0);
 
-    // Find or create patient by phone/email
-    const patientQuery = [];
-    if (patient?.contact) patientQuery.push({ contact: patient.contact });
-    if (patient?.email) patientQuery.push({ email: patient.email.toLowerCase() });
-
+    // Resolve patient: use provided patientId or find/create from inline data
     let patientDoc = null;
-    if (patientQuery.length > 0) {
-      patientDoc = await Patient.findOne({ $or: patientQuery }).session(session);
-    }
-    if (!patientDoc) {
-      patientDoc = await Patient.create([
-        {
-          name: patient.name,
-          age: patient.age,
-          gender: patient.gender,
-          contact: patient.contact,
-          email: patient.email,
-          address: patient.address,
-          medicalHistory: patient.medicalHistory || [],
-        },
-      ], { session });
-      patientDoc = Array.isArray(patientDoc) ? patientDoc[0] : patientDoc;
+    if (patientId) {
+      patientDoc = await Patient.findById(patientId).session(session);
+      if (!patientDoc) {
+        return res.status(404).json({ success: false, message: "Patient not found" });
+      }
     } else {
-      // Optionally update basic fields
-      patientDoc.name = patient.name || patientDoc.name;
-      if (patient.age !== undefined) patientDoc.age = patient.age;
-      if (patient.gender) patientDoc.gender = patient.gender;
-      if (patient.address) patientDoc.address = patient.address;
-      await patientDoc.save({ session });
+      // Find or create patient by phone/email
+      const patientQuery = [];
+      if (patient?.contact) patientQuery.push({ contact: patient.contact });
+      if (patient?.email) patientQuery.push({ email: patient.email.toLowerCase() });
+
+      if (patientQuery.length > 0) {
+        patientDoc = await Patient.findOne({ $or: patientQuery }).session(session);
+      }
+      if (!patientDoc) {
+        patientDoc = await Patient.create([
+          {
+            name: patient.name,
+            age: patient.age,
+            gender: patient.gender,
+            contact: patient.contact,
+            email: patient.email,
+            address: patient.address,
+            medicalHistory: patient.medicalHistory || [],
+          },
+        ], { session });
+        patientDoc = Array.isArray(patientDoc) ? patientDoc[0] : patientDoc;
+      } else {
+        // Optionally update basic fields
+        patientDoc.name = patient.name || patientDoc.name;
+        if (patient.age !== undefined) patientDoc.age = patient.age;
+        if (patient.gender) patientDoc.gender = patient.gender;
+        if (patient.address) patientDoc.address = patient.address;
+        await patientDoc.save({ session });
+      }
     }
 
     // Create appointment (normalize timeSlot to HH:mm if a range was passed)
@@ -129,6 +141,91 @@ export const createAppointment = async (req, res) => {
 
     await session.commitTransaction();
     session.endSession();
+    // Send notifications in background (non-blocking)
+    try {
+      const [populatedAppointment, populatedDoctor, populatedBranch] = await Promise.all([
+        Appointment.findById(appointmentDoc._id)
+          .populate('patientId', 'name email contact')
+          .populate('doctorId', 'name email')
+          .populate('branchId', 'branchName address'),
+        Doctor.findById(doctorId),
+        Branch.findById(branchId),
+      ]);
+
+      // Email notifications
+      (async () => {
+        try {
+          const superAdminEmail = process.env.SUPERADMIN_EMAIL || process.env.ADMIN_EMAIL;
+          const formatDate = (d) => new Date(d).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+          const patientEmail = populatedAppointment?.patientId?.email;
+          const doctorEmail = populatedAppointment?.doctorId?.email || populatedDoctor?.email;
+          const toSend = [
+            { to: patientEmail, role: 'Patient' },
+            { to: doctorEmail, role: 'Doctor' },
+            { to: superAdminEmail, role: 'SuperAdmin' },
+          ].filter(e => !!e.to);
+
+          const subject = `Appointment Confirmed - ${populatedAppointment?.doctorId?.name} - ${formatDate(populatedAppointment?.date)} ${populatedAppointment?.timeSlot}`;
+          const html = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color:#2BA8D1; margin-bottom: 8px;">Appointment Confirmed</h2>
+              <p style="margin:0 0 12px 0; color:#333;">Your appointment has been booked successfully.</p>
+              <div style="border:1px solid #e5e7eb; border-radius:8px; padding:12px;">
+                <p style="margin:6px 0;"><strong>Doctor:</strong> ${populatedAppointment?.doctorId?.name}</p>
+                <p style="margin:6px 0;"><strong>Date:</strong> ${formatDate(populatedAppointment?.date)}</p>
+                <p style="margin:6px 0;"><strong>Time:</strong> ${populatedAppointment?.timeSlot}</p>
+                <p style="margin:6px 0;"><strong>Branch:</strong> ${populatedAppointment?.branchId?.branchName || populatedBranch?.branchName}</p>
+                <p style="margin:6px 0;"><strong>Address:</strong> ${populatedAppointment?.branchId?.address || populatedBranch?.address}</p>
+              </div>
+              <p style="color:#666; font-size:12px; margin-top:12px;">If you have any questions, please contact the clinic.</p>
+            </div>
+          `;
+
+          await Promise.all(toSend.map(({ to }) => sendEmail({ to, subject, html })));
+        } catch (e) {
+          console.error('Appointment email notification failed:', e?.message || e);
+        }
+      })();
+
+      // WhatsApp notification to patient via AiSensy (commented until API key is available)
+      (async () => {
+        try {
+          const toPhone = populatedAppointment?.patientId?.contact;
+          // NOTE: Enable below when AiSensy credentials are available.
+          // Required env vars:
+          //   AISENSY_API_KEY, AISENSY_CAMPAIGN_ID (or TEMPLATE), AISENSY_SENDER_ID (if applicable)
+          // Docs: https://docs.aisensy.com/
+          // Example payload (template-based):
+          // if (process.env.AISENSY_API_KEY && toPhone) {
+          //   const formatDate = (d) => new Date(d).toLocaleDateString('en-IN');
+          //   const payload = {
+          //     apiKey: process.env.AISENSY_API_KEY,
+          //     campaignName: process.env.AISENSY_CAMPAIGN_ID, // or template/campaign identifier
+          //     destination: `+91${String(toPhone).replace(/\D/g, '').slice(-10)}`,
+          //     userName: populatedAppointment?.patientId?.name || 'Patient',
+          //     templateParams: [
+          //       populatedAppointment?.doctorId?.name,
+          //       formatDate(populatedAppointment?.date),
+          //       populatedAppointment?.timeSlot,
+          //       populatedAppointment?.branchId?.branchName || '',
+          //     ],
+          //     source: 'api'
+          //   };
+          //   await fetch('https://backend.aisensy.com/apis/sendTemplateMessage', {
+          //     method: 'POST',
+          //     headers: { 'Content-Type': 'application/json' },
+          //     body: JSON.stringify(payload)
+          //   });
+          // }
+          console.log('AiSensy WhatsApp notification skipped (no API key configured).');
+        } catch (e) {
+          console.error('WhatsApp notification (AiSensy) failed:', e?.message || e);
+        }
+      })();
+    } catch (notifyErr) {
+      console.error('Notification scheduling failed:', notifyErr?.message || notifyErr);
+    }
+
     return res.status(201).json({ success: true, appointment: appointmentDoc, patient: patientDoc });
   } catch (error) {
     console.error("createAppointment error", error);
@@ -183,7 +280,7 @@ export const getAllAppointments = async (req, res) => {
 
     // Get appointments with populated data
     const appointments = await Appointment.find(filter)
-      .populate('patientId', 'name age gender contact email address')
+      .populate('patientId', 'name age gender contact email address plan')
       .populate('doctorId', 'name email specialization')
       .populate('branchId', 'branchName address')
       .populate('referredDoctorId', 'name clinicName contact')
@@ -231,7 +328,7 @@ export const getTodayAppointments = async (req, res) => {
 
     // Get today's appointments
     const appointments = await Appointment.find(filter)
-      .populate('patientId', 'name age gender contact email')
+      .populate('patientId', 'name age gender contact email plan')
       .populate('doctorId', 'name specialization')
       .populate('branchId', 'branchName address')
       .populate('referredDoctorId', 'name clinicName')
@@ -257,6 +354,36 @@ export const getTodayAppointments = async (req, res) => {
   }
 };
 
+export const getAppointmentById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ success: false, message: "Appointment ID is required" });
+    }
+
+    const appointment = await Appointment.findById(id)
+      .populate('patientId', 'name age gender contact email address medicalHistory plan')
+      .populate('doctorId', 'name email specialization')
+      .populate('branchId', 'branchName address')
+      .populate('referredDoctorId', 'name clinicName contact')
+      .populate('billId')
+      .populate('prescriptionId');
+
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: "Appointment not found" });
+    }
+
+    return res.json({
+      success: true,
+      appointment
+    });
+  } catch (error) {
+    console.error("getAppointmentById error", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 export const updateAppointmentStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -275,7 +402,7 @@ export const updateAppointmentStatus = async (req, res) => {
       id,
       { status },
       { new: true }
-    ).populate('patientId', 'name age gender contact email')
+    ).populate('patientId', 'name age gender contact email plan')
      .populate('doctorId', 'name specialization')
      .populate('branchId', 'branchName address')
      .populate('referredDoctorId', 'name clinicName');

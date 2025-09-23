@@ -237,7 +237,7 @@ const About3 = () => {
               {/* CTA Button */}
               <Button
                 as="a"
-                href="#contact"
+                href="contact"
                 bg={accentColor}
                 color="white"
                 fontSize="lg"

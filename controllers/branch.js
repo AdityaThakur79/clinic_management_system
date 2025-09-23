@@ -127,7 +127,13 @@ export const updateBranchController = async (req, res) => {
   try {
     const { id, branchName, address, gst, pan, scn, phone, email, status } = req.body;
 
-    const branch = await Branch.findById(id);
+    // Allow branchAdmin to update only their branch without sending id
+    let branchId = id;
+    if (!branchId && req.user?.role === 'branchAdmin') {
+      branchId = req.user?.branch || req.user?.branch?._id;
+    }
+
+    const branch = await Branch.findById(branchId);
     
     if (!branch) {
       return res.status(404).json({
@@ -143,7 +149,7 @@ export const updateBranchController = async (req, res) => {
     branch.scn = scn || branch.scn;
     branch.phone = phone || branch.phone;
     branch.email = email || branch.email;
-    branch.status = status || branch.status;
+    if (typeof status !== 'undefined') branch.status = status;
 
     await branch.save();
 

@@ -7,7 +7,7 @@ export const referredDoctorsApi = createApi({
   tagTypes: ["ReferredDoctor"],
   endpoints: (builder) => ({
     list: builder.query({
-      query: (params) => ({ url: "", params }),
+      query: (params) => ({ url: "", params, credentials: "include" }),
       providesTags: ["ReferredDoctor"],
     }),
     create: builder.mutation({
@@ -22,9 +22,29 @@ export const referredDoctorsApi = createApi({
       query: (id) => ({ url: `/${id}`, method: "DELETE", credentials: "include" }),
       invalidatesTags: ["ReferredDoctor"],
     }),
+    getDetails: builder.query({
+      query: (id) => ({ url: `/${id}`, credentials: "include" }),
+      providesTags: (result, error, id) => [{ type: "ReferredDoctor", id }],
+    }),
+    addPayment: builder.mutation({
+      query: ({ id, ...data }) => ({ url: `/${id}/payments`, method: 'POST', body: data, credentials: 'include' }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'ReferredDoctor', id }],
+    }),
+    listPayments: builder.query({
+      query: ({ id, year }) => ({ url: `/${id}/payments`, params: { year }, credentials: 'include' }),
+      providesTags: (result, error, { id }) => [{ type: 'ReferredDoctor', id }],
+    }),
   }),
 });
 
-export const { useListQuery: useListReferredDoctorsQuery, useCreateMutation: useCreateReferredDoctorMutation, useUpdateMutation: useUpdateReferredDoctorMutation, useRemoveMutation: useDeleteReferredDoctorMutation } = referredDoctorsApi;
+export const { 
+  useListQuery: useListReferredDoctorsQuery, 
+  useCreateMutation: useCreateReferredDoctorMutation, 
+  useUpdateMutation: useUpdateReferredDoctorMutation, 
+  useRemoveMutation: useDeleteReferredDoctorMutation,
+  useGetDetailsQuery: useGetReferredDoctorDetailsQuery,
+  useAddPaymentMutation,
+  useListPaymentsQuery,
+} = referredDoctorsApi;
 
 
