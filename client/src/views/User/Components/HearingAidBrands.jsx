@@ -115,7 +115,7 @@ const HearingAidBrands = () => {
                 '--splide-arrow-height': '2.5rem',
               }}
             >
-              {hearingAidBrands.slice(0,3).map((brandItem, index) => (
+              {hearingAidBrands.map((brandItem, index) => (
                 <SplideSlide key={brandItem.id}>
                   <Box
                     {...cardProps}
