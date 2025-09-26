@@ -70,7 +70,22 @@ import battery2 from "./battery.png"
 import fitting from "./hearing_fitting.jpg"
 import aartiket_logo from "./aartiket_logo.png"
 import device_model from "./hearin_pieces.jpeg"
+import signia_logo from "./img/devices/signia.webp"
+import phonak_logo from "./img/devices/phonak.jpg"
+import resound_logo from "./img/devices/resound.jpg"
+import oticon_logo from "./img/devices/oticon.png"
+import unitron_logo from "./img/devices/unitron.avif"
+import widex_logo from "./img/devices/widex.png"
+import impedance_audiometry from "./impedence.jpeg"
+import oae from "./OAE.jpeg"
+import bera from "./BERA.jpeg"
+import popup_modal_banner from "./popup_modal_banner.jpeg"
+
 export const assets = {
+  popup_modal_banner,
+  impedance_audiometry,
+  oae,
+  bera,
   aartiket_logo,
   ear_moulds,
   fitting,
@@ -135,7 +150,13 @@ export const assets = {
   tick_icon,
   appointments_icon,
   earning_icon,
-  test
+  test,
+  signia_logo,
+  phonak_logo,
+  resound_logo,
+  oticon_logo,
+  unitron_logo,
+  widex_logo
 };
 
 export const specialityData = [

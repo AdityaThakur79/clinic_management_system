@@ -13,6 +13,9 @@ import Process from '../Components/Process'
 import About2 from '../Components/About2'
 import About3 from '../Components/About3'
 import TopDoctors from '../Components/TopDoctors'
+import HearingAidDevices from '../Components/HearingAidDevices'
+import HearingAidBrands from '../Components/HearingAidBrands'
+import PopupAppointmentModal from '../Components/PopupAppointmentModal'
 
 const Home = () => {
   const [isVisible, setIsVisible] = React.useState({});
@@ -41,11 +44,14 @@ const Home = () => {
 
   return (
     <div>
+      <PopupAppointmentModal/>
       <Navbar/>
       <HeroSection/>
       <About1/>
       <WhyChooseUs/>
       <TopDoctors/>
+      <HearingAidBrands/>
+      {/* <HearingAidDevices/> */}
       <PricingSection/>
       <Services/>
       <Process/>

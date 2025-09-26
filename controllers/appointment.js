@@ -47,22 +47,24 @@ export const createAppointment = async (req, res) => {
   try {
     const { branchId, doctorId, date, timeSlot, notes, referredDoctorId, patient, patientId } = req.body;
 
-    if (!branchId || !doctorId || !date || !timeSlot) {
+    // Allow creating appointment without doctorId
+    if (!branchId || !date || !timeSlot) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
     if (!patientId && !patient?.name) {
       return res.status(400).json({ success: false, message: "Missing patient information" });
     }
 
-    // Validate branch and doctor
-    const [branch, doctor] = await Promise.all([
-      Branch.findById(branchId).session(session),
-      Doctor.findById(doctorId).session(session),
-    ]);
+    // Validate branch (doctor validation only if provided)
+    const branch = await Branch.findById(branchId).session(session);
     if (!branch) return res.status(404).json({ success: false, message: "Branch not found" });
-    if (!doctor || doctor.role !== "doctor") return res.status(404).json({ success: false, message: "Doctor not found" });
-    if (doctor.branch?.toString() !== branchId) {
-      return res.status(400).json({ success: false, message: "Doctor does not belong to this branch" });
+    let doctor = null;
+    if (doctorId) {
+      doctor = await Doctor.findById(doctorId).session(session);
+      if (!doctor || doctor.role !== "doctor") return res.status(404).json({ success: false, message: "Doctor not found" });
+      if (doctor.branch?.toString() !== branchId) {
+        return res.status(400).json({ success: false, message: "Doctor does not belong to this branch" });
+      }
     }
 
     // Normalize date to specific day
@@ -115,7 +117,7 @@ export const createAppointment = async (req, res) => {
       appointmentDoc = await Appointment.create([
         {
           patientId: patientDoc._id,
-          doctorId,
+          doctorId: doctorId || undefined,
           branchId,
           referredDoctorId: referredDoctorId || undefined,
           date: dayStart,

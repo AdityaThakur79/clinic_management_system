@@ -21,6 +21,11 @@ import DoctorDetailPage from '../views/User/Components/DoctorDetailPage';
 import Doctors from '../views/User/Pages/Doctors';
 import ServiceDetail from '../views/User/ServiceDetail';
 import ForgotPassword from '../views/auth/forgotPassword/index';
+import HearingAidBrands from '../views/User/Components/HearingAidBrands';
+import HearingAidDevices from '../views/User/Components/HearingAidDevices';
+import HearingAidBrand from '../views/User/HearingAidBrand';
+import HearingAidDevice from '../views/User/HearingAidDevice';
+import LocationSEO from '../views/User/Pages/LocationSEO';
 
 // Public Routes (No authentication required)
 export const publicRoutes = [
@@ -70,6 +75,24 @@ export const publicRoutes = [
     path: '/auth/forgot-password',
     element: <ForgotPassword />,
     name: 'Forgot Password',
+    showInNav: false,
+  },
+  {
+    path: '/hearing-aids/:brandSlug',
+    element: <HearingAidBrand />,
+    name: 'Hearing Aid Brand',
+    showInNav: false,
+  },
+  {
+    path: '/hearing-aids/:brandSlug/:deviceSlug',
+    element: <HearingAidDevice />,
+    name: 'Hearing Aid Device',
+    showInNav: false,
+  },
+  {
+    path: '/mumbai/:areaSlug',
+    element: <LocationSEO />,
+    name: 'Mumbai Locality SEO',
     showInNav: false,
   },
 ];

@@ -23,7 +23,10 @@ import {
   FaUser,
   FaCogs,
   FaHospital,
-  FaAddressBook
+  FaAddressBook,
+  FaInstagram,
+  FaFacebook,
+  FaYoutube
 } from "react-icons/fa";
 import { PhoneIcon } from "@chakra-ui/icons";
 
@@ -254,6 +257,70 @@ const Footer = () => {
             </Box>
           </Flex>
 
+          {/* Areas We Serve - Locality SEO Links */}
+          <Box px={{ base: 6, lg: 16, xl: 24 }} pb={10}>
+            <Text color="#0C2F4D" fontSize="sm" fontWeight="semibold" mb={3}>
+              Areas we serve in Mumbai
+            </Text>
+            <Flex wrap="wrap" gap={2}>
+              {[
+                { s: 'andheri-east', n: 'Andheri East' },
+                { s: 'andheri-west', n: 'Andheri West' },
+                { s: 'bandra-east', n: 'Bandra East' },
+                { s: 'bandra-west', n: 'Bandra West' },
+                { s: 'juhu', n: 'Juhu' },
+                { s: 'powai', n: 'Powai' },
+                { s: 'borivali-east', n: 'Borivali East' },
+                { s: 'borivali-west', n: 'Borivali West' },
+                { s: 'kandivali-east', n: 'Kandivali East' },
+                { s: 'kandivali-west', n: 'Kandivali West' },
+                { s: 'malad-east', n: 'Malad East' },
+                { s: 'malad-west', n: 'Malad West' },
+                { s: 'goregaon-east', n: 'Goregaon East' },
+                { s: 'goregaon-west', n: 'Goregaon West' },
+                { s: 'dadar-east', n: 'Dadar East' },
+                { s: 'dadar-west', n: 'Dadar West' },
+                { s: 'worli', n: 'Worli' },
+                { s: 'lower-parel', n: 'Lower Parel' },
+                { s: 'colaba', n: 'Colaba' },
+                { s: 'fort', n: 'Fort' },
+                { s: 'chembur', n: 'Chembur' },
+                { s: 'ghatkopar-east', n: 'Ghatkopar East' },
+                { s: 'ghatkopar-west', n: 'Ghatkopar West' },
+                { s: 'mulund-east', n: 'Mulund East' },
+                { s: 'mulund-west', n: 'Mulund West' },
+                { s: 'bhandup', n: 'Bhandup' },
+                { s: 'vikhroli', n: 'Vikhroli' },
+                { s: 'kurla', n: 'Kurla' },
+                { s: 'sion', n: 'Sion' },
+                { s: 'santacruz-east', n: 'Santacruz East' },
+                { s: 'santacruz-west', n: 'Santacruz West' },
+                { s: 'vile-parle-east', n: 'Vile Parle East' },
+                { s: 'vile-parle-west', n: 'Vile Parle West' },
+                { s: 'charni-road', n: 'Charni Road' },
+                { s: 'marine-lines', n: 'Marine Lines' },
+                { s: 'grant-road', n: 'Grant Road' },
+                { s: 'byculla', n: 'Byculla' },
+                { s: 'mazgaon', n: 'Mazgaon' },
+                { s: 'matunga-east', n: 'Matunga East' },
+                { s: 'matunga-west', n: 'Matunga West' },
+                { s: 'sewri', n: 'Sewri' },
+                { s: 'parel', n: 'Parel' },
+              ].map((loc) => (
+                <NavLink key={loc.s} to={`/mumbai/${loc.s}`}>
+                  <Box
+                    as="span"
+                    fontSize="sm"
+                    color="gray.500"
+                    _hover={{ color: '#0C2F4D', textDecoration: 'underline' }}
+                  >
+                    {loc.n}
+                  </Box>
+                </NavLink>
+              ))}
+            </Flex>
+          </Box>
+
           {/* Bottom Footer */}
           <Box
             borderTop="1px"
@@ -264,11 +331,11 @@ const Footer = () => {
           >
             <Flex
               direction={{ base: "column", lg: "row" }}
-              justify="space-between"
               align="center"
               gap={6}
             >
-              <Box textAlign={{ base: "center", lg: "left" }}>
+              {/* Left copy */}
+              <Box textAlign={{ base: "center", lg: "left" }} flex={{ lg: '1 1 33%' }}>
                 <Text color="gray.600" fontSize="sm" mb={2}>
                   © 2025 Aartiket Speech & Hearing Care. All Rights Reserved.
                 </Text>
@@ -277,21 +344,47 @@ const Footer = () => {
                   in Ghatkopar and surrounding areas
                 </Text>
               </Box>
-              <Flex direction={{ base: "column", sm: "row" }} align="center" gap={2}>
-                <Text fontSize="sm" color="gray.600">
-                  Designed and developed by
-                </Text>
-                <Link
-                  href="https://servora.in"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  color="#0C2F4D"
-                  fontWeight="semibold"
-                  _hover={{ color: "#2BA8D1" }}
-                >
-                  Servora
-                </Link>
-              </Flex>
+              {/* Center social icons */}
+              <Box flex={{ lg: '1 1 33%' }} display="flex" justifyContent="center">
+                <HStack spacing={4}>
+                  <Link href="https://www.instagram.com/aartiketspeechhearing/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                    <Icon as={FaInstagram} boxSize={5} color="#0C2F4D" _hover={{ color: "#2BA8D1" }} />
+                  </Link>
+                  <Link href="https://www.facebook.com/people/Aartiket-Speech-HearingCare/100090886389223/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                    <Icon as={FaFacebook} boxSize={5} color="#0C2F4D" _hover={{ color: "#2BA8D1" }} />
+                  </Link>
+                  <Link href="https://www.youtube.com/@Aartiketcare" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+                    <Icon as={FaYoutube} boxSize={5} color="#0C2F4D" _hover={{ color: "#2BA8D1" }} />
+                  </Link>
+                </HStack>
+              </Box>
+              {/* Right credit - Servora */}
+              <Box flex={{ lg: '1 1 33%' }} display="flex" justifyContent={{ base: 'center', lg: 'flex-end' }}>
+                {(() => {
+                  const decodeB64 = (b64) => {
+                    try { return atob(b64); } catch { return ''; }
+                  };
+                  const text = decodeB64('U2Vydm9yYQ=='); // 'Servora'
+                  const isValid = text === 'Servora';
+                  return (
+                    <Flex direction={{ base: "column", sm: "row" }} align="center" gap={2}>
+                      <Text fontSize="sm" color="gray.600">
+                        Designed and developed by
+                      </Text>
+                      <Link
+                        href="https://servora.in"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        color={isValid ? "#0C2F4D" : undefined}
+                        fontWeight={isValid ? "semibold" : undefined}
+                        _hover={isValid ? { color: "#2BA8D1" } : undefined}
+                      >
+                        {text || 'Servora'}
+                      </Link>
+                    </Flex>
+                  );
+                })()}
+              </Box>
             </Flex>
           </Box>
         </Box>
@@ -345,7 +438,7 @@ const Footer = () => {
             }}
           />
           <Link
-            href="tel:+918087766556"
+            href="tel:+917977483031"
             bg="linear-gradient(135deg, #2BA8D1, #3AC0E7)"
             color="white"
             w="100%"

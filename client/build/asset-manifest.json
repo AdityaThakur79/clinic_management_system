@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.b38e4392.css",
-    "main.js": "/static/js/main.e3e890b6.js",
+    "main.css": "/static/css/main.c4fa9b88.css",
+    "main.js": "/static/js/main.166e0db4.js",
     "static/media/image1.jpg": "/static/media/image1.e7c099d87f449342804f.jpg",
     "static/media/image2.jpg": "/static/media/image2.04538bee9b58e2c69f8c.jpg",
     "static/media/about_4.jpg": "/static/media/about_4.70aaf36432d0445cf46a.jpg",
@@ -14,12 +14,15 @@
     "static/media/image5.jpg": "/static/media/image5.5af8e2361dde070f0700.jpg",
     "static/media/contact_image.png": "/static/media/contact_image.20b30fe24d6647e07d16.png",
     "static/media/hearin_pieces.jpeg": "/static/media/hearin_pieces.34aba6782bb032659913.jpeg",
+    "static/media/oticon.png": "/static/media/oticon.f64576f35e452de80a01.png",
     "static/media/header_img.png": "/static/media/header_img.70253f4e7d8c989e6e15.png",
     "static/media/about_image.png": "/static/media/about_image.a8d35114424cad5f0f17.png",
     "static/media/Test.png": "/static/media/Test.162aad44df45c22e5cd6.png",
     "static/media/appointment_img.png": "/static/media/appointment_img.656db3af70f5c3a64ac3.png",
     "static/media/auth.png": "/static/media/auth.20d5979b439e1531640d.png",
     "static/media/NftBanner1.png": "/static/media/NftBanner1.87062366f75bedd52bd2.png",
+    "static/media/widex.png": "/static/media/widex.21faf0c586dbf8fa8a8e.png",
+    "static/media/popup_modal_banner.jpeg": "/static/media/popup_modal_banner.e993371d285ede1a3071.jpeg",
     "static/media/doctor-1.png": "/static/media/doctor-1.5076b1275883af0748ca.png",
     "static/media/service-9.jpg": "/static/media/service-9.f43f077d2af8393910be.jpg",
     "static/media/service-11.jpg": "/static/media/service-11.f72858efdaea17e50d65.jpg",
@@ -36,6 +39,7 @@
     "static/media/Nft2.png": "/static/media/Nft2.7897c45d2601ee3adfb5.png",
     "static/media/service-3.jpg": "/static/media/service-3.25cfae4edfafde55828f.jpg",
     "static/media/avatar2.png": "/static/media/avatar2.5692c39db4f8c0ea999e.png",
+    "static/media/resound.jpg": "/static/media/resound.d8f30e6829e9c3d4e116.jpg",
     "static/media/service-4.jpg": "/static/media/service-4.612733deeea25dac82ee.jpg",
     "static/media/battery.png": "/static/media/battery.6580bb416f493fdfda46.png",
     "static/media/service-16.jpg": "/static/media/service-16.128fe4f1a6794393bacf.jpg",
@@ -50,6 +54,7 @@
     "static/media/Navbar.png": "/static/media/Navbar.f96a9f58c491b9acda99.png",
     "static/media/Nft1.png": "/static/media/Nft1.0fea34cca5aed6cad72b.png",
     "static/media/avatar4.png": "/static/media/avatar4.54d5c1de851c273b2cd9.png",
+    "static/media/signia.webp": "/static/media/signia.f8793efe9fc89bafc918.webp",
     "static/media/service-7.jpg": "/static/media/service-7.b71b42f5e4819a452106.jpg",
     "static/media/aartiket_logo.png": "/static/media/aartiket_logo.8979a5b89d43040c7a2f.png",
     "static/media/audiometry_test.webp": "/static/media/audiometry_test.f42652a5c75978426e7b.webp",
@@ -60,10 +65,14 @@
     "static/media/patternBG.png": "/static/media/patternBG.47bd81a300e26f392226.png",
     "static/media/hearing_fitting.jpg": "/static/media/hearing_fitting.e0c40f0bcc5fbbfac808.jpg",
     "static/media/admin_logo.svg": "/static/media/admin_logo.69d164e2ae76899f20fa7056a73955cc.svg",
+    "static/media/phonak.jpg": "/static/media/phonak.f68fb878592908054783.jpg",
     "static/media/group_profiles.png": "/static/media/group_profiles.72337136b27b09216a23.png",
     "static/media/Neurologist.svg": "/static/media/Neurologist.2a6cf19c676687d7c64fe99b2eb4652c.svg",
+    "static/media/unitron.avif": "/static/media/unitron.17a691cbfd9463645387.avif",
+    "static/media/impedence.jpeg": "/static/media/impedence.8e5bf9f9ef8201e63b81.jpeg",
     "static/media/recharegeable_hearingAids.webp": "/static/media/recharegeable_hearingAids.04cd1b61730908d2bc2c.webp",
     "static/media/Pediatricians.svg": "/static/media/Pediatricians.77d831fbba3f98bd74a1054d90bf308e.svg",
+    "static/media/OAE.jpeg": "/static/media/OAE.d45b00560708afe99b77.jpeg",
     "static/media/Gynecologist.svg": "/static/media/Gynecologist.7a09bf4b68eec87cd218cff1ef9a3788.svg",
     "static/media/Gastroenterologist.svg": "/static/media/Gastroenterologist.dc56dd1c037ec5e035acde49c66c7725.svg",
     "static/media/General_physician.svg": "/static/media/General_physician.9de6cf60c760641ea020344fc27e7ec1.svg",
@@ -89,7 +98,7 @@
     "static/media/arrow_icon.svg": "/static/media/arrow_icon.88b22fbca7642e4ce626e574f9c09e60.svg"
   },
   "entrypoints": [
-    "static/css/main.b38e4392.css",
-    "static/js/main.e3e890b6.js"
+    "static/css/main.c4fa9b88.css",
+    "static/js/main.166e0db4.js"
   ]
 }
