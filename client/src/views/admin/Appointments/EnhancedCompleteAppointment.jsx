@@ -100,7 +100,6 @@ const EnhancedCompleteAppointment = () => {
   const [newService, setNewService] = useState({
     serviceId: '',
     name: '',
-    description: '',
     basePrice: 0,
     actualPrice: 0,
     discount: 0,
@@ -293,10 +292,10 @@ const EnhancedCompleteAppointment = () => {
 
     const selectedService = services.find(s => s._id === newService.serviceId);
     if (selectedService) {
+      console.log('Selected Service:', selectedService);
       const serviceToAdd = {
         ...newService,
         name: selectedService.name,
-        description: selectedService.description,
         basePrice: selectedService.price,
         actualPrice: newService.actualPrice || selectedService.price
       };
@@ -309,7 +308,6 @@ const EnhancedCompleteAppointment = () => {
       setNewService({
         serviceId: '',
         name: '',
-        description: '',
         basePrice: 0,
         actualPrice: 0,
         discount: 0,
@@ -838,7 +836,6 @@ const EnhancedCompleteAppointment = () => {
                                 ...prev,
                                 serviceId: e.target.value,
                                 name: selectedService.name,
-                                description: selectedService.description,
                                 basePrice: selectedService.price,
                                 actualPrice: selectedService.price
                               }));
@@ -954,10 +951,7 @@ const EnhancedCompleteAppointment = () => {
                         return (
                           <Tr key={index}>
                             <Td>
-                              <VStack align="start" spacing={1}>
-                                <Text fontWeight="bold">{service.name}</Text>
-                                <Text fontSize="sm" color="gray.600">{service.description}</Text>
-                              </VStack>
+                              <Text fontWeight="bold">{service.name}</Text>
                             </Td>
                             <Td>₹{service.basePrice}</Td>
                             <Td>

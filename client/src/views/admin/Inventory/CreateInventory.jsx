@@ -30,13 +30,20 @@ import {
   Switch,
   FormErrorMessage,
   Icon,
-  Flex
+  Flex,
+  Image,
+  IconButton,
+  CloseButton,
+  SimpleGrid,
+  Badge,
+  Spinner,
+  Center
 } from '@chakra-ui/react';
 import { useCreateInventoryMutation } from '../../../features/api/inventoryApi';
 import { useGetAllBranchesQuery, useGetBranchByIdMutation } from '../../../features/api/branchApi';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { MdSave, MdArrowBack, MdAdd, MdWarning } from 'react-icons/md';
+import { MdSave, MdArrowBack, MdAdd, MdWarning, MdClose } from 'react-icons/md';
 
 const CreateInventory = () => {
   const [formData, setFormData] = useState({
@@ -66,6 +73,23 @@ const CreateInventory = () => {
     purchaseDate: new Date().toISOString().split('T')[0],
     warrantyExpiry: '',
     description: '',
+    deviceImage: {
+      publicId: '',
+      url: ''
+    },
+    dosAndDonts: {
+      dos: [''],
+      donts: ['']
+    },
+    careInstructions: '',
+    warrantyInfo: {
+      duration: '',
+      conditions: ''
+    },
+    troubleshooting: [{
+      issue: '',
+      solution: ''
+    }],
     notes: ''
   });
 
@@ -156,6 +180,156 @@ const CreateInventory = () => {
     }
   };
 
+  // Image upload handler
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Invalid file type',
+        description: 'Please select an image file',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: 'File too large',
+        description: 'Please select an image smaller than 5MB',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file);
+    
+    setFormData(prev => ({
+      ...prev,
+      deviceImage: {
+        file: file,
+        preview: previewUrl
+      }
+    }));
+
+    toast({
+      title: 'Image selected',
+      description: 'Image will be uploaded when you save the inventory item',
+      status: 'info',
+      duration: 3000,
+      isClosable: true,
+    });
+  };
+
+  // Remove image handler
+  const handleRemoveImage = () => {
+    // Clean up preview URL if it exists
+    if (formData.deviceImage?.preview) {
+      URL.revokeObjectURL(formData.deviceImage.preview);
+    }
+    
+    setFormData(prev => ({
+      ...prev,
+      deviceImage: {
+        publicId: '',
+        url: ''
+      }
+    }));
+  };
+
+  // Dos and Don'ts handlers
+  const addDosItem = () => {
+    setFormData(prev => ({
+      ...prev,
+      dosAndDonts: {
+        ...prev.dosAndDonts,
+        dos: [...prev.dosAndDonts.dos, '']
+      }
+    }));
+  };
+
+  const removeDosItem = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      dosAndDonts: {
+        ...prev.dosAndDonts,
+        dos: prev.dosAndDonts.dos.filter((_, i) => i !== index)
+      }
+    }));
+  };
+
+  const updateDosItem = (index, value) => {
+    setFormData(prev => ({
+      ...prev,
+      dosAndDonts: {
+        ...prev.dosAndDonts,
+        dos: prev.dosAndDonts.dos.map((item, i) => i === index ? value : item)
+      }
+    }));
+  };
+
+  const addDontsItem = () => {
+    setFormData(prev => ({
+      ...prev,
+      dosAndDonts: {
+        ...prev.dosAndDonts,
+        donts: [...prev.dosAndDonts.donts, '']
+      }
+    }));
+  };
+
+  const removeDontsItem = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      dosAndDonts: {
+        ...prev.dosAndDonts,
+        donts: prev.dosAndDonts.donts.filter((_, i) => i !== index)
+      }
+    }));
+  };
+
+  const updateDontsItem = (index, value) => {
+    setFormData(prev => ({
+      ...prev,
+      dosAndDonts: {
+        ...prev.dosAndDonts,
+        donts: prev.dosAndDonts.donts.map((item, i) => i === index ? value : item)
+      }
+    }));
+  };
+
+  // Troubleshooting handlers
+  const addTroubleshootingItem = () => {
+    setFormData(prev => ({
+      ...prev,
+      troubleshooting: [...prev.troubleshooting, { issue: '', solution: '' }]
+    }));
+  };
+
+  const removeTroubleshootingItem = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      troubleshooting: prev.troubleshooting.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateTroubleshootingItem = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      troubleshooting: prev.troubleshooting.map((item, i) => 
+        i === index ? { ...item, [field]: value } : item
+      )
+    }));
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -204,7 +378,26 @@ const CreateInventory = () => {
 
     setIsSubmitting(true);
     try {
-      const result = await createInventory(formData).unwrap();
+      // Create FormData for file upload
+      const submitData = new FormData();
+      
+      // Add all form fields
+      Object.keys(formData).forEach(key => {
+        if (key === 'deviceImage') {
+          // Handle device image file
+          if (formData.deviceImage?.file) {
+            submitData.append('deviceImage', formData.deviceImage.file);
+          }
+        } else if (key === 'dosAndDonts' || key === 'warrantyInfo' || key === 'troubleshooting') {
+          // Stringify JSON fields
+          submitData.append(key, JSON.stringify(formData[key]));
+        } else {
+          // Add other fields as strings
+          submitData.append(key, formData[key]);
+        }
+      });
+
+      const result = await createInventory(submitData).unwrap();
       
       toast({
         title: 'Success',
@@ -705,6 +898,325 @@ const CreateInventory = () => {
               </CardBody>
             </Card>
 
+            {/* Device Image */}
+            <Card bg={cardBg} borderColor={borderColor}>
+              <CardHeader bg={headerBg}>
+                <Text fontSize="lg" fontWeight="semibold">
+                  Device Image
+                </Text>
+              </CardHeader>
+              <CardBody>
+                <VStack spacing={4} align="stretch">
+                  {(formData.deviceImage?.url || formData.deviceImage?.preview) ? (
+                    <Box position="relative" display="inline-block">
+                      <Image
+                        src={formData.deviceImage.preview || formData.deviceImage.url}
+                        alt="Device preview"
+                        maxW="200px"
+                        maxH="200px"
+                        objectFit="contain"
+                        borderRadius="md"
+                        border="1px solid"
+                        borderColor={borderColor}
+                      />
+                      <IconButton
+                        aria-label="Remove image"
+                        icon={<Icon as={MdClose} />}
+                        size="sm"
+                        colorScheme="red"
+                        position="absolute"
+                        top={2}
+                        right={2}
+                        onClick={handleRemoveImage}
+                      />
+                    </Box>
+                  ) : (
+                    <Box
+                      border="2px dashed"
+                      borderColor={borderColor}
+                      borderRadius="md"
+                      p={8}
+                      textAlign="center"
+                    >
+                      <Text color="gray.500" mb={4}>
+                        No image selected
+                      </Text>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        display="none"
+                        id="image-upload"
+                      />
+                      <Button
+                        as="label"
+                        htmlFor="image-upload"
+                        colorScheme="blue"
+                        variant="outline"
+                        cursor="pointer"
+                        _hover={{
+                          bg: "blue.500",
+                          color: "white",
+                          transform: "translateY(-1px)",
+                          boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)"
+                        }}
+                        _active={{
+                          bg: "blue.600",
+                          color: "white",
+                          transform: "translateY(0px)"
+                        }}
+                      >
+                        Upload Device Image
+                      </Button>
+                    </Box>
+                  )}
+                  {!formData.deviceImage.url && (
+                    <Text fontSize="sm" color="gray.500">
+                      Upload a clear image of the device (max 5MB)
+                    </Text>
+                  )}
+                </VStack>
+              </CardBody>
+            </Card>
+
+            {/* Dos and Don'ts */}
+            <Card bg={cardBg} borderColor={borderColor}>
+              <CardHeader bg={headerBg}>
+                <Text fontSize="lg" fontWeight="semibold">
+                  Care Guidelines
+                </Text>
+              </CardHeader>
+              <CardBody>
+                <VStack spacing={6} align="stretch">
+                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+                    {/* Dos */}
+                    <Box>
+                      <HStack justify="space-between" mb={4}>
+                        <Text fontWeight="semibold" color="green.600">
+                          ✓ DO's
+                        </Text>
+                        <Button
+                          size="sm"
+                          colorScheme="green"
+                          variant="outline"
+                          leftIcon={<Icon as={MdAdd} />}
+                          onClick={addDosItem}
+                          _hover={{
+                            bg: "green.500",
+                            color: "white",
+                            transform: "translateY(-1px)",
+                            boxShadow: "0 4px 12px rgba(34, 197, 94, 0.3)"
+                          }}
+                          _active={{
+                            bg: "green.600",
+                            color: "white",
+                            transform: "translateY(0px)"
+                          }}
+                        >
+                          Add
+                        </Button>
+                      </HStack>
+                      <VStack spacing={2} align="stretch">
+                        {formData.dosAndDonts.dos.map((item, index) => (
+                          <HStack key={index}>
+                            <Input
+                              value={item}
+                              onChange={(e) => updateDosItem(index, e.target.value)}
+                              placeholder="Enter a DO item"
+                              size="sm"
+                            />
+                            <IconButton
+                              aria-label="Remove DO item"
+                              icon={<Icon as={MdClose} />}
+                              size="sm"
+                              colorScheme="red"
+                              variant="ghost"
+                              onClick={() => removeDosItem(index)}
+                            />
+                          </HStack>
+                        ))}
+                      </VStack>
+                    </Box>
+
+                    {/* Don'ts */}
+                    <Box>
+                      <HStack justify="space-between" mb={4}>
+                        <Text fontWeight="semibold" color="red.600">
+                          ✗ DON'Ts
+                        </Text>
+                        <Button
+                          size="sm"
+                          colorScheme="red"
+                          variant="outline"
+                          leftIcon={<Icon as={MdAdd} />}
+                          onClick={addDontsItem}
+                          _hover={{
+                            bg: "red.500",
+                            color: "white",
+                            transform: "translateY(-1px)",
+                            boxShadow: "0 4px 12px rgba(239, 68, 68, 0.3)"
+                          }}
+                          _active={{
+                            bg: "red.600",
+                            color: "white",
+                            transform: "translateY(0px)"
+                          }}
+                        >
+                          Add
+                        </Button>
+                      </HStack>
+                      <VStack spacing={2} align="stretch">
+                        {formData.dosAndDonts.donts.map((item, index) => (
+                          <HStack key={index}>
+                            <Input
+                              value={item}
+                              onChange={(e) => updateDontsItem(index, e.target.value)}
+                              placeholder="Enter a DON'T item"
+                              size="sm"
+                            />
+                            <IconButton
+                              aria-label="Remove DON'T item"
+                              icon={<Icon as={MdClose} />}
+                              size="sm"
+                              colorScheme="red"
+                              variant="ghost"
+                              onClick={() => removeDontsItem(index)}
+                            />
+                          </HStack>
+                        ))}
+                      </VStack>
+                    </Box>
+                  </SimpleGrid>
+                </VStack>
+              </CardBody>
+            </Card>
+
+            {/* Care Instructions */}
+            <Card bg={cardBg} borderColor={borderColor}>
+              <CardHeader bg={headerBg}>
+                <Text fontSize="lg" fontWeight="semibold">
+                  Care Instructions
+                </Text>
+              </CardHeader>
+              <CardBody>
+                <FormControl>
+                  <FormLabel>Detailed Care Instructions</FormLabel>
+                  <Textarea
+                    value={formData.careInstructions}
+                    onChange={(e) => handleInputChange('careInstructions', e.target.value)}
+                    placeholder="Enter detailed care instructions for the device..."
+                    rows={4}
+                  />
+                </FormControl>
+              </CardBody>
+            </Card>
+
+            {/* Warranty Information */}
+            <Card bg={cardBg} borderColor={borderColor}>
+              <CardHeader bg={headerBg}>
+                <Text fontSize="lg" fontWeight="semibold">
+                  Warranty Information
+                </Text>
+              </CardHeader>
+              <CardBody>
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                  <FormControl>
+                    <FormLabel>Warranty Duration</FormLabel>
+                    <Input
+                      value={formData.warrantyInfo.duration}
+                      onChange={(e) => handleInputChange('warrantyInfo.duration', e.target.value)}
+                      placeholder="e.g., 2 years, 6 months"
+                    />
+                  </FormControl>
+                  <FormControl>
+                    <FormLabel>Warranty Conditions</FormLabel>
+                    <Textarea
+                      value={formData.warrantyInfo.conditions}
+                      onChange={(e) => handleInputChange('warrantyInfo.conditions', e.target.value)}
+                      placeholder="Enter warranty terms and conditions..."
+                      rows={3}
+                    />
+                  </FormControl>
+                </SimpleGrid>
+              </CardBody>
+            </Card>
+
+            {/* Troubleshooting */}
+            <Card bg={cardBg} borderColor={borderColor}>
+              <CardHeader bg={headerBg}>
+                <HStack justify="space-between">
+                  <Text fontSize="lg" fontWeight="semibold">
+                    Troubleshooting Guide
+                  </Text>
+                  <Button
+                    size="sm"
+                    colorScheme="blue"
+                    variant="outline"
+                    leftIcon={<Icon as={MdAdd} />}
+                    onClick={addTroubleshootingItem}
+                    _hover={{
+                      bg: "blue.500",
+                      color: "white",
+                      transform: "translateY(-1px)",
+                      boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)"
+                    }}
+                    _active={{
+                      bg: "blue.600",
+                      color: "white",
+                      transform: "translateY(0px)"
+                    }}
+                  >
+                    Add Issue
+                  </Button>
+                </HStack>
+              </CardHeader>
+              <CardBody>
+                <VStack spacing={4} align="stretch">
+                  {formData.troubleshooting.map((item, index) => (
+                    <Box key={index} p={4} border="1px solid" borderColor={borderColor} borderRadius="md">
+                      <HStack justify="space-between" mb={3}>
+                        <Text fontWeight="medium">Issue #{index + 1}</Text>
+                        <IconButton
+                          aria-label="Remove troubleshooting item"
+                          icon={<Icon as={MdClose} />}
+                          size="sm"
+                          colorScheme="red"
+                          variant="ghost"
+                          onClick={() => removeTroubleshootingItem(index)}
+                        />
+                      </HStack>
+                      <VStack spacing={3} align="stretch">
+                        <FormControl>
+                          <FormLabel fontSize="sm">Issue Description</FormLabel>
+                          <Input
+                            value={item.issue}
+                            onChange={(e) => updateTroubleshootingItem(index, 'issue', e.target.value)}
+                            placeholder="Describe the issue..."
+                            size="sm"
+                          />
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel fontSize="sm">Solution</FormLabel>
+                          <Textarea
+                            value={item.solution}
+                            onChange={(e) => updateTroubleshootingItem(index, 'solution', e.target.value)}
+                            placeholder="Provide the solution..."
+                            rows={2}
+                            size="sm"
+                          />
+                        </FormControl>
+                      </VStack>
+                    </Box>
+                  ))}
+                  {formData.troubleshooting.length === 0 && (
+                    <Text color="gray.500" textAlign="center" py={4}>
+                      No troubleshooting items added yet
+                    </Text>
+                  )}
+                </VStack>
+              </CardBody>
+            </Card>
+
             {/* Additional Information */}
             <Card bg={cardBg} borderColor={borderColor}>
               <CardHeader bg={headerBg}>
@@ -743,10 +1255,19 @@ const CreateInventory = () => {
                 type="button"
                 variant="outline"
                 onClick={handleReset}
+                color="gray.700"
+                borderColor="gray.300"
                 _hover={{
-                  bg: "gray.100",
+                  bg: "#2BA8D1",
+                  color: "white",
+                  borderColor: "#2BA8D1",
                   transform: "translateY(-2px)",
-                  boxShadow: "0 5px 15px rgba(0, 0, 0, 0.1)"
+                  boxShadow: "0 5px 15px rgba(43, 168, 209, 0.3)"
+                }}
+                _active={{
+                  bg: "#0C2F4D",
+                  color: "white",
+                  transform: "translateY(0px)"
                 }}
               >
                 Reset Form
@@ -760,8 +1281,14 @@ const CreateInventory = () => {
                 color="white"
                 _hover={{
                   bg: '#0C2F4D',
+                  color: "white",
                   transform: "translateY(-2px)",
                   boxShadow: "0 10px 25px rgba(43, 168, 209, 0.3)"
+                }}
+                _active={{
+                  bg: '#0C2F4D',
+                  color: "white",
+                  transform: "translateY(0px)"
                 }}
               >
                 Create Inventory Item

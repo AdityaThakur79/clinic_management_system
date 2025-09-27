@@ -1,6 +1,7 @@
 import Inventory from '../models/inventory.js';
 import { User } from '../models/user.js';
 import mongoose from 'mongoose';
+import { v2 as cloudinary } from 'cloudinary';
 
 export const createInventory = async (req, res) => {
   try {
@@ -22,7 +23,11 @@ export const createInventory = async (req, res) => {
       purchaseDate,
       warrantyExpiry,
       description,
-      notes
+      notes,
+      dosAndDonts,
+      careInstructions,
+      warrantyInfo,
+      troubleshooting
     } = req.body;
 
     // Fetch user data from database
@@ -59,6 +64,34 @@ export const createInventory = async (req, res) => {
       }
     }
 
+    // Handle device image upload
+    let deviceImage = null;
+    if (req.files && req.files.deviceImage) {
+      try {
+        const imageFile = req.files.deviceImage[0];
+        console.log('Uploading device image:', imageFile.originalname);
+        
+        const result = await cloudinary.uploader.upload(imageFile.path, {
+          folder: 'inventory',
+          resource_type: 'image',
+          public_id: `device-${Date.now()}`
+        });
+        
+        deviceImage = {
+          url: result.secure_url,
+          publicId: result.public_id
+        };
+        
+        console.log('Device image uploaded successfully:', deviceImage);
+      } catch (imageError) {
+        console.error('Device image upload failed:', imageError);
+        return res.status(500).json({
+          success: false,
+          message: "Failed to upload device image"
+        });
+      }
+    }
+
     const inventory = await Inventory.create({
       deviceName,
       model,
@@ -79,6 +112,11 @@ export const createInventory = async (req, res) => {
       warrantyExpiry,
       description,
       notes,
+      deviceImage,
+      dosAndDonts: dosAndDonts ? JSON.parse(dosAndDonts) : { dos: [], donts: [] },
+      careInstructions,
+      warrantyInfo: warrantyInfo ? JSON.parse(warrantyInfo) : { duration: '', conditions: '' },
+      troubleshooting: troubleshooting ? JSON.parse(troubleshooting) : [],
       branchId,
       createdBy
     });
@@ -304,6 +342,50 @@ export const updateInventory = async (req, res) => {
 
     // Add updatedBy
     updateData.updatedBy = user._id;
+
+    // Handle device image upload
+    if (req.files && req.files.deviceImage) {
+      try {
+        // Get existing inventory to delete old image
+        const existingInventory = await Inventory.findById(id);
+        if (existingInventory && existingInventory.deviceImage && existingInventory.deviceImage.publicId) {
+          await cloudinary.uploader.destroy(existingInventory.deviceImage.publicId);
+        }
+
+        const imageFile = req.files.deviceImage[0];
+        console.log('Uploading new device image:', imageFile.originalname);
+        
+        const result = await cloudinary.uploader.upload(imageFile.path, {
+          folder: 'inventory',
+          resource_type: 'image',
+          public_id: `device-${Date.now()}`
+        });
+        
+        updateData.deviceImage = {
+          url: result.secure_url,
+          publicId: result.public_id
+        };
+        
+        console.log('Device image updated successfully:', updateData.deviceImage);
+      } catch (imageError) {
+        console.error('Device image upload failed:', imageError);
+        return res.status(500).json({
+          success: false,
+          message: "Failed to upload device image"
+        });
+      }
+    }
+
+    // Parse JSON fields if they exist
+    if (updateData.dosAndDonts && typeof updateData.dosAndDonts === 'string') {
+      updateData.dosAndDonts = JSON.parse(updateData.dosAndDonts);
+    }
+    if (updateData.warrantyInfo && typeof updateData.warrantyInfo === 'string') {
+      updateData.warrantyInfo = JSON.parse(updateData.warrantyInfo);
+    }
+    if (updateData.troubleshooting && typeof updateData.troubleshooting === 'string') {
+      updateData.troubleshooting = JSON.parse(updateData.troubleshooting);
+    }
 
     // If quantity is being updated, sync currentStock with quantity
     if (updateData.quantity !== undefined) {

@@ -27,12 +27,11 @@ import { useGetAllBranchesQuery } from '../../features/api/branchApi';
 const AppointmentFormModal = ({
   isOpen,
   onClose,
-  doctorId,
+  service,
   branchId,
   branchName,
   selectedDate,
   selectedTimeSlot,
-  doctorName,
   onBookingSuccess,
 }) => {
   const [formData, setFormData] = useState({
@@ -74,7 +73,9 @@ const AppointmentFormModal = ({
     try {
       const appointmentData = {
         branchId,
-        doctorId,
+        service: service?.title || service,
+        servicePrice: service?.detailedContent?.cost || service?.price || 0,
+        serviceDuration: service?.duration || 30,
         date: selectedDate,
         timeSlot: selectedTimeSlot,
         notes: formData.notes,
@@ -92,7 +93,7 @@ const AppointmentFormModal = ({
       
       toast({
         title: 'Appointment Booked!',
-        description: `Your appointment with Dr. ${doctorName} has been scheduled for ${selectedDate} at ${selectedTimeSlot}`,
+        description: `Your appointment for ${service?.title || service} has been scheduled for ${selectedDate} at ${selectedTimeSlot}. A doctor will be assigned to your appointment.`,
         status: 'success',
         duration: 5000,
         isClosable: true,
@@ -157,7 +158,7 @@ const AppointmentFormModal = ({
             Book Appointment
           </Text>
           <Text fontSize="sm" color={headerSubColor} mt={1}>
-            with Dr. {doctorName}
+            for {service?.title || service}
           </Text>
         </ModalHeader>
         <ModalCloseButton />

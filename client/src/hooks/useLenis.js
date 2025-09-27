@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from 'react';
+import Lenis from 'lenis';
 
 const useLenis = () => {
   // Scroll to a specific element

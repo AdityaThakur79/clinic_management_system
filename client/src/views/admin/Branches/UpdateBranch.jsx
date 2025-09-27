@@ -23,8 +23,16 @@ import {
   Center,
   Alert,
   AlertIcon,
+  Checkbox,
+  CheckboxGroup,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+  CloseButton,
 } from '@chakra-ui/react';
-import { MdBusiness, MdLocationOn, MdPhone, MdEmail, MdArrowBack } from 'react-icons/md';
+import { MdBusiness, MdLocationOn, MdPhone, MdEmail, MdArrowBack, MdSchedule, MdAccessTime } from 'react-icons/md';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useGetBranchByIdMutation, useUpdateBranchMutation } from '../../../features/api/branchApi';
 
@@ -45,6 +53,22 @@ const UpdateBranch = () => {
     phone: '',
     email: '',
     status: 'active',
+    workingDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    workingHours: {
+      start: '09:00',
+      end: '17:00'
+    },
+    dailyWorkingHours: {
+      Monday: { start: '09:00', end: '17:00', isWorking: true },
+      Tuesday: { start: '09:00', end: '17:00', isWorking: true },
+      Wednesday: { start: '09:00', end: '17:00', isWorking: true },
+      Thursday: { start: '09:00', end: '17:00', isWorking: true },
+      Friday: { start: '09:00', end: '17:00', isWorking: true },
+      Saturday: { start: '09:00', end: '17:00', isWorking: true },
+      Sunday: { start: '09:00', end: '17:00', isWorking: false }
+    },
+    slotDuration: 30,
+    breakTimes: []
   });
   
   const [errors, setErrors] = useState({});
@@ -74,6 +98,19 @@ const UpdateBranch = () => {
             phone: branch.phone || '',
             email: branch.email || '',
             status: branch.status || 'active',
+            workingDays: branch.workingDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+            workingHours: branch.workingHours || { start: '09:00', end: '17:00' },
+            dailyWorkingHours: branch.dailyWorkingHours || {
+              Monday: { start: '09:00', end: '17:00', isWorking: true },
+              Tuesday: { start: '09:00', end: '17:00', isWorking: true },
+              Wednesday: { start: '09:00', end: '17:00', isWorking: true },
+              Thursday: { start: '09:00', end: '17:00', isWorking: true },
+              Friday: { start: '09:00', end: '17:00', isWorking: true },
+              Saturday: { start: '09:00', end: '17:00', isWorking: true },
+              Sunday: { start: '09:00', end: '17:00', isWorking: false }
+            },
+            slotDuration: branch.slotDuration || 30,
+            breakTimes: branch.breakTimes || []
           });
         } else {
           setFetchError('Branch not found');
@@ -99,6 +136,66 @@ const UpdateBranch = () => {
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
+  };
+
+  const handleWorkingDaysChange = (selectedDays) => {
+    setFormData((prev) => ({
+      ...prev,
+      workingDays: selectedDays,
+    }));
+  };
+
+  const handleWorkingHoursChange = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      workingHours: {
+        ...prev.workingHours,
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleSlotDurationChange = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      slotDuration: parseInt(value) || 30,
+    }));
+  };
+
+  const addBreakTime = () => {
+    setFormData((prev) => ({
+      ...prev,
+      breakTimes: [...prev.breakTimes, { start: '12:00', end: '13:00' }],
+    }));
+  };
+
+  const removeBreakTime = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      breakTimes: prev.breakTimes.filter((_, i) => i !== index),
+    }));
+  };
+
+  const updateBreakTime = (index, field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      breakTimes: prev.breakTimes.map((breakTime, i) =>
+        i === index ? { ...breakTime, [field]: value } : breakTime
+      ),
+    }));
+  };
+
+  const handleDailyWorkingHoursChange = (day, field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      dailyWorkingHours: {
+        ...prev.dailyWorkingHours,
+        [day]: {
+          ...prev.dailyWorkingHours[day],
+          [field]: value
+        }
+      }
+    }));
   };
 
   const validateForm = () => {
@@ -533,6 +630,179 @@ const UpdateBranch = () => {
                       />
                     </FormControl>
                   </SimpleGrid>
+                </Box>
+
+                {/* Working Hours and Slots */}
+                <Box>
+                  <HStack mb={4}>
+                    <Icon as={MdSchedule} w={5} h={5} color="#3AC0E7" />
+                    <Text fontSize="md" fontWeight="semibold">
+                      Working Hours & Slot Management
+                    </Text>
+                  </HStack>
+
+                  <VStack spacing={6} align="stretch">
+                    {/* Daily Working Hours */}
+                    <Box>
+                      <FormLabel fontWeight="600" color="gray.700" mb={3}>
+                        Daily Working Hours *
+                      </FormLabel>
+                      <Text fontSize="sm" color="gray.600" mb={4}>
+                        Set different working hours for each day. Check the box to enable working on that day.
+                      </Text>
+                      
+                      <VStack spacing={4} align="stretch">
+                        {Object.keys(formData.dailyWorkingHours).map((day) => (
+                          <Box key={day} p={4} border="1px solid" borderColor="gray.200" borderRadius="lg">
+                            <HStack justify="space-between" mb={3}>
+                              <Text fontWeight="medium" fontSize="md">
+                                {day}
+                              </Text>
+                              <Checkbox
+                                isChecked={formData.dailyWorkingHours[day].isWorking}
+                                onChange={(e) => handleDailyWorkingHoursChange(day, 'isWorking', e.target.checked)}
+                                colorScheme="blue"
+                                size="md"
+                              >
+                                Working Day
+                              </Checkbox>
+                            </HStack>
+                            
+                            {formData.dailyWorkingHours[day].isWorking && (
+                              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                                <FormControl>
+                                  <FormLabel fontSize="sm" fontWeight="600">Start Time</FormLabel>
+                                  <Input
+                                    type="time"
+                                    value={formData.dailyWorkingHours[day].start}
+                                    onChange={(e) => handleDailyWorkingHoursChange(day, 'start', e.target.value)}
+                                    size="md"
+                                    borderRadius="lg"
+                                    border="2px solid"
+                                    borderColor="gray.200"
+                                    _focus={{
+                                      borderColor: '#3AC0E7',
+                                      boxShadow: '0 0 0 3px rgba(58, 192, 231, 0.1)',
+                                    }}
+                                    h="48px"
+                                    fontSize="md"
+                                  />
+                                </FormControl>
+                                <FormControl>
+                                  <FormLabel fontSize="sm" fontWeight="600">End Time</FormLabel>
+                                  <Input
+                                    type="time"
+                                    value={formData.dailyWorkingHours[day].end}
+                                    onChange={(e) => handleDailyWorkingHoursChange(day, 'end', e.target.value)}
+                                    size="md"
+                                    borderRadius="lg"
+                                    border="2px solid"
+                                    borderColor="gray.200"
+                                    _focus={{
+                                      borderColor: '#3AC0E7',
+                                      boxShadow: '0 0 0 3px rgba(58, 192, 231, 0.1)',
+                                    }}
+                                    h="48px"
+                                    fontSize="md"
+                                  />
+                                </FormControl>
+                              </SimpleGrid>
+                            )}
+                          </Box>
+                        ))}
+                      </VStack>
+                    </Box>
+
+                    {/* Slot Duration */}
+                    <FormControl>
+                      <FormLabel fontWeight="600" color="gray.700" mb={2}>
+                        Slot Duration (minutes) *
+                      </FormLabel>
+                      <NumberInput
+                        value={formData.slotDuration}
+                        onChange={handleSlotDurationChange}
+                        min={15}
+                        max={120}
+                        step={15}
+                      >
+                        <NumberInputField
+                          borderRadius="lg"
+                          border="2px solid"
+                          borderColor="gray.200"
+                          _focus={{
+                            borderColor: '#3AC0E7',
+                            boxShadow: '0 0 0 3px rgba(58, 192, 231, 0.1)',
+                          }}
+                          h="48px"
+                          fontSize="md"
+                        />
+                        <NumberInputStepper>
+                          <NumberIncrementStepper />
+                          <NumberDecrementStepper />
+                        </NumberInputStepper>
+                      </NumberInput>
+                    </FormControl>
+
+                    {/* Break Times */}
+                    <Box>
+                      <HStack justify="space-between" mb={3}>
+                        <FormLabel fontWeight="600" color="gray.700" mb={0}>
+                          Break Times (Optional)
+                        </FormLabel>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          leftIcon={<Icon as={MdAccessTime} />}
+                          onClick={addBreakTime}
+                          _hover={{
+                            bg: "#2BA8D1",
+                            color: "white",
+                            transform: "translateY(-1px)",
+                            boxShadow: "0 4px 12px rgba(43, 168, 209, 0.3)"
+                          }}
+                        >
+                          Add Break
+                        </Button>
+                      </HStack>
+
+                      {formData.breakTimes.length === 0 ? (
+                        <Text fontSize="sm" color="gray.500" fontStyle="italic">
+                          No break times added. Click "Add Break" to add lunch breaks or other break periods.
+                        </Text>
+                      ) : (
+                        <VStack spacing={3} align="stretch">
+                          {formData.breakTimes.map((breakTime, index) => (
+                            <HStack key={index} p={3} bg="gray.50" borderRadius="lg" border="1px solid" borderColor="gray.200">
+                              <Text fontSize="sm" fontWeight="medium" minW="60px">
+                                Break {index + 1}:
+                              </Text>
+                              <Input
+                                type="time"
+                                value={breakTime.start}
+                                onChange={(e) => updateBreakTime(index, 'start', e.target.value)}
+                                size="sm"
+                                w="120px"
+                              />
+                              <Text fontSize="sm">to</Text>
+                              <Input
+                                type="time"
+                                value={breakTime.end}
+                                onChange={(e) => updateBreakTime(index, 'end', e.target.value)}
+                                size="sm"
+                                w="120px"
+                              />
+                              <CloseButton
+                                size="sm"
+                                onClick={() => removeBreakTime(index)}
+                                color="red.500"
+                                _hover={{ bg: "red.50" }}
+                              />
+                            </HStack>
+                          ))}
+                        </VStack>
+                      )}
+                    </Box>
+                  </VStack>
                 </Box>
 
                 {/* Action Buttons */}

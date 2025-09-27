@@ -15,6 +15,7 @@ const imageFields = [
   "profilePhoto",
   "profileImage",
   "bannerImage",
+  "deviceImage",
 ];
 
 const videoFields = ["videoUpload"];
@@ -33,6 +34,11 @@ const storage = new CloudinaryStorage({
     // Special handling for Aadhaar images
     if (file.fieldname === "aadhaarImage") {
       folder = "employees/aadhaar";
+    }
+    
+    // Special handling for device images
+    if (file.fieldname === "deviceImage") {
+      folder = "inventory";
     }
 
     return {
@@ -60,6 +66,7 @@ const upload = multer({
   { name: "profilePhoto", maxCount: 1 },
   { name: "profileImage", maxCount: 1 },
   { name: "bannerImage", maxCount: 1 },
+  { name: "deviceImage", maxCount: 1 },
 ]);
  
 

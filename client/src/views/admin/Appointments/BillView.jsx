@@ -428,7 +428,7 @@ const BillView = () => {
                   {appointment.billId?.services && appointment.billId.services.map((service, index) => (
                     <Tr key={index}>
                       <Td fontWeight="semibold">{service.name}</Td>
-                      <Td color="gray.600">{service.description || 'Service provided'}</Td>
+                      <Td color="gray.600"> {'Service provided'}</Td>
                       <Td isNumeric fontWeight="semibold">Rs {((service.actualPrice || service.basePrice) || 0).toFixed(2)}</Td>
                     </Tr>
                   ))}

@@ -2,7 +2,21 @@ import Branch from "../models/branch.js";
 
 export const createBranchController = async (req, res) => {
   try {
-    const { branchName, address, gst, pan, scn, phone, email, status } = req.body;
+    const { 
+      branchName, 
+      address, 
+      gst, 
+      pan, 
+      scn, 
+      phone, 
+      email, 
+      status,
+      workingDays,
+      workingHours,
+      dailyWorkingHours,
+      slotDuration,
+      breakTimes
+    } = req.body;
 
     if (!branchName || !address) {
       return res.status(400).json({
@@ -28,6 +42,11 @@ export const createBranchController = async (req, res) => {
       phone,
       email,
       status,
+      workingDays,
+      workingHours,
+      dailyWorkingHours,
+      slotDuration,
+      breakTimes
     });
 
     res.status(201).json({
@@ -125,7 +144,22 @@ export const getBranchByIdController = async (req, res) => {
 
 export const updateBranchController = async (req, res) => {
   try {
-    const { id, branchName, address, gst, pan, scn, phone, email, status } = req.body;
+    const { 
+      id, 
+      branchName, 
+      address, 
+      gst, 
+      pan, 
+      scn, 
+      phone, 
+      email, 
+      status,
+      workingDays,
+      workingHours,
+      dailyWorkingHours,
+      slotDuration,
+      breakTimes
+    } = req.body;
 
     // Allow branchAdmin to update only their branch without sending id
     let branchId = id;
@@ -142,6 +176,7 @@ export const updateBranchController = async (req, res) => {
       });
     }
 
+    // Update basic fields
     branch.branchName = branchName || branch.branchName;
     branch.address = address || branch.address;
     branch.gst = gst || branch.gst;
@@ -150,6 +185,18 @@ export const updateBranchController = async (req, res) => {
     branch.phone = phone || branch.phone;
     branch.email = email || branch.email;
     if (typeof status !== 'undefined') branch.status = status;
+
+    // Update working hours and days
+    if (workingDays) branch.workingDays = workingDays;
+    if (workingHours) {
+      branch.workingHours = {
+        start: workingHours.start || branch.workingHours.start,
+        end: workingHours.end || branch.workingHours.end
+      };
+    }
+    if (dailyWorkingHours) branch.dailyWorkingHours = dailyWorkingHours;
+    if (slotDuration) branch.slotDuration = slotDuration;
+    if (breakTimes) branch.breakTimes = breakTimes;
 
     await branch.save();
 

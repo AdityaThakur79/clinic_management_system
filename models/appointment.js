@@ -3,13 +3,14 @@ import mongoose from "mongoose";
 const appointmentSchema = new mongoose.Schema(
   {
     patientId: { type: mongoose.Schema.Types.ObjectId, ref: "Patient", required: true },
-    doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "User", },
+    doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Optional - assigned later
+    service: { type: String, required: true }, // Service name as string
     branchId: { type: mongoose.Schema.Types.ObjectId, ref: "Branch", required: true },
     referredDoctorId: { type: mongoose.Schema.Types.ObjectId, ref: "ReferredDoctor" },
 
     date: { type: Date, required: true },
     timeSlot: { type: String, required: true }, // e.g., "10:00-10:30"
-    status: { type: String, enum: ["booked", "completed", "cancelled"], default: "booked" },
+    status: { type: String, enum: ["booked", "assigned", "completed", "cancelled"], default: "booked" },
 
     reminder: { type: Date },
     notes: { type: String, trim: true },
@@ -25,7 +26,10 @@ const appointmentSchema = new mongoose.Schema(
     },
     duration: { type: Number, default: 30 }, // in minutes
     charges: { type: Number, default: 0 },
-    notes: { type: String, trim: true },
+    
+    // Assignment details
+    assignedAt: { type: Date },
+    assignedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Branch admin who assigned
     
     // Completion details
     completedAt: { type: Date },
@@ -34,7 +38,8 @@ const appointmentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-appointmentSchema.index({ doctorId: 1, branchId: 1, date: 1, timeSlot: 1 }, { unique: true });
+// Unique constraint: one appointment per branch, date, and time slot
+appointmentSchema.index({ branchId: 1, date: 1, timeSlot: 1 }, { unique: true });
 
 export default mongoose.models.Appointment || mongoose.model("Appointment", appointmentSchema);
 

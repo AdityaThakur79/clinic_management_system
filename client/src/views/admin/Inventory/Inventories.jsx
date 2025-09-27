@@ -22,6 +22,8 @@ import {
   ViewIcon, RepeatIcon, SettingsIcon, PhoneIcon, EmailIcon, CalendarIcon, 
   InfoIcon, WarningIcon, CheckIcon, CloseIcon
 } from '@chakra-ui/icons';
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import InventoryPDF from './InventoryPDF';
 import { 
   MdAssignment, MdBusiness, MdPhone, MdEmail, MdAssessment, MdInventory, 
   MdWarning, MdTrendingUp, MdTrendingDown, MdAdd, MdEdit, MdDelete,
@@ -622,6 +624,103 @@ const Inventories = () => {
                                 variant="ghost"
                                 colorScheme="green"
                                 onClick={() => navigate('/admin/inventory/update', { state: { inventory } })}
+                              />
+                            </Tooltip>
+                            <Tooltip label="Print PDF">
+                              <IconButton
+                                icon={<Icon as={MdPrint} />}
+                                size="sm"
+                                variant="ghost"
+                                colorScheme="purple"
+                                onClick={async () => {
+                                  try {
+                                    console.log('Print PDF clicked for inventory:', inventory?.deviceName);
+                                    console.log('Full inventory object:', JSON.stringify(inventory, null, 2));
+                                    
+                                    // Validate inventory data more thoroughly
+                                    if (!inventory) {
+                                      throw new Error('No inventory data provided');
+                                    }
+                                    
+                                    if (!inventory.deviceName) {
+                                      throw new Error('Inventory missing device name');
+                                    }
+
+                                    // Create a clean inventory object with all required fields
+                                    const cleanInventory = {
+                                      deviceName: inventory.deviceName || 'Unknown Device',
+                                      brand: inventory.brand || 'Unknown Brand',
+                                      model: inventory.model || 'Unknown Model',
+                                      sellingPrice: inventory.sellingPrice || 0,
+                                      description: inventory.description || '',
+                                      deviceImage: inventory.deviceImage || { url: '', publicId: '' },
+                                      dosAndDonts: inventory.dosAndDonts || { dos: [], donts: [] },
+                                      careInstructions: inventory.careInstructions || '',
+                                      warrantyInfo: inventory.warrantyInfo || { duration: '', conditions: '' },
+                                      troubleshooting: inventory.troubleshooting || []
+                                    };
+
+                                    console.log('Clean inventory data:', cleanInventory);
+
+                                    // Create PDF document
+                                    const pdfDoc = <InventoryPDF 
+                                      inventory={cleanInventory} 
+                                      clinicInfo={{
+                                        name: 'Aartiket Speech & Hearing Care',
+                                        subtitle: 'Hearing Care Specialists',
+                                        address: 'Your Clinic Address',
+                                        phone: '7977483031',
+                                        email: 'aartiketspeechandhearing@gmail.com',
+                                        website: 'aartiketspeechandhearingcare.in'
+                                      }} 
+                                    />;
+
+                                    console.log('PDF document created successfully');
+
+                                    // Generate PDF blob
+                                    const { pdf } = await import('@react-pdf/renderer');
+                                    console.log('PDF renderer imported successfully');
+                                    
+                                    const blob = await pdf(pdfDoc).toBlob();
+                                    console.log('PDF blob generated successfully');
+                                    
+                                    // Create object URL and open in new window for printing
+                                    const url = URL.createObjectURL(blob);
+                                    console.log('Object URL created:', url);
+                                    
+                                    const printWindow = window.open(url, '_blank');
+                                    
+                                    if (printWindow) {
+                                      printWindow.onload = () => {
+                                        console.log('Print window loaded, triggering print');
+                                        printWindow.print();
+                                        // Clean up the URL after printing
+                                        setTimeout(() => {
+                                          URL.revokeObjectURL(url);
+                                        }, 1000);
+                                      };
+                                    } else {
+                                      console.error('Could not open print window');
+                                      toast({
+                                        title: 'Print Error',
+                                        description: 'Could not open print window. Please check popup blockers.',
+                                        status: 'error',
+                                        duration: 3000,
+                                        isClosable: true,
+                                      });
+                                    }
+                                  } catch (error) {
+                                    console.error('Print PDF error:', error);
+                                    console.error('Error stack:', error.stack);
+                                    toast({
+                                      title: 'Print Error',
+                                      description: `Failed to generate PDF: ${error.message}`,
+                                      status: 'error',
+                                      duration: 5000,
+                                      isClosable: true,
+                                    });
+                                  }
+                                }}
                               />
                             </Tooltip>
                             <Tooltip label="Delete">

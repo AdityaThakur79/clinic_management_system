@@ -140,6 +140,57 @@ const inventorySchema = new mongoose.Schema({
     trim: true,
     maxlength: [500, 'Description cannot exceed 500 characters']
   },
+  deviceImage: {
+    publicId: {
+      type: String,
+      trim: true
+    },
+    url: {
+      type: String,
+      trim: true
+    }
+  },
+  dosAndDonts: {
+    dos: [{
+      type: String,
+      trim: true,
+      maxlength: [200, 'Each "Do" item cannot exceed 200 characters']
+    }],
+    donts: [{
+      type: String,
+      trim: true,
+      maxlength: [200, 'Each "Don\'t" item cannot exceed 200 characters']
+    }]
+  },
+  careInstructions: {
+    type: String,
+    trim: true,
+    maxlength: [1000, 'Care instructions cannot exceed 1000 characters']
+  },
+  warrantyInfo: {
+    duration: {
+      type: String,
+      trim: true,
+      maxlength: [50, 'Warranty duration cannot exceed 50 characters']
+    },
+    conditions: {
+      type: String,
+      trim: true,
+      maxlength: [500, 'Warranty conditions cannot exceed 500 characters']
+    }
+  },
+  troubleshooting: [{
+    issue: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'Issue description cannot exceed 100 characters']
+    },
+    solution: {
+      type: String,
+      trim: true,
+      maxlength: [200, 'Solution cannot exceed 200 characters']
+    }
+  }],
   notes: {
     type: String,
     trim: true,

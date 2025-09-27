@@ -1,5 +1,5 @@
 import express from "express";
-import { createAppointment, getAvailability, getAllAppointments, getTodayAppointments, getAppointmentById, updateAppointmentStatus, deleteAppointment } from "../controllers/appointment.js";
+import { createAppointment, getAvailability, getAllAppointments, getTodayAppointments, getAppointmentById, updateAppointmentStatus, assignDoctorToAppointment, deleteAppointment } from "../controllers/appointment.js";
 import { isAuthenticated } from "../middlewares/isAuthenticated.js";
 
 const router = express.Router();
@@ -13,6 +13,7 @@ router.get("/", isAuthenticated, getAllAppointments);
 router.get("/today", isAuthenticated, getTodayAppointments);
 router.get("/:id", isAuthenticated, getAppointmentById);
 router.patch("/:id/status", isAuthenticated, updateAppointmentStatus);
+router.post("/assign-doctor", isAuthenticated, assignDoctorToAppointment);
 router.delete("/:id", isAuthenticated, deleteAppointment);
 
 export default router;

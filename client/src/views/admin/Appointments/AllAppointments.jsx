@@ -14,6 +14,7 @@ import { useGetAllAppointmentsQuery, useUpdateAppointmentStatusMutation, useDele
 import { useCompleteAppointmentMutation } from '../../../features/api/patientApi';
 import { useGetAllBranchesQuery } from '../../../features/api/branchApi';
 import { useGetAllDoctorsMutation } from '../../../features/api/doctor';
+import { useAssignDoctorToAppointmentMutation } from '../../../features/api/appointments';
 import { DeleteIcon, EditIcon, SearchIcon, AddIcon, ChevronLeftIcon, ChevronRightIcon, ViewIcon, RepeatIcon, SettingsIcon, PhoneIcon, EmailIcon, CalendarIcon, InfoIcon, CheckIcon, ReceiptIcon } from '@chakra-ui/icons';
 import { FaPen } from 'react-icons/fa';
 import { MdAssignment, MdBusiness, MdPhone, MdEmail, MdPerson, MdSchedule } from 'react-icons/md';
@@ -82,6 +83,7 @@ const AllAppointments = () => {
   const [updateAppointmentStatus] = useUpdateAppointmentStatusMutation();
   const [deleteAppointment, { isLoading: isDeleting }] = useDeleteAppointmentMutation();
   const [completeAppointment] = useCompleteAppointmentMutation();
+  const [assignDoctorToAppointment] = useAssignDoctorToAppointmentMutation();
 
   const cardBg = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
@@ -138,6 +140,14 @@ const AllAppointments = () => {
     fetchDoctors();
   }, [userRole, userBranchId, getAllDoctors]);
 
+  // Get doctors for a specific branch
+  const getDoctorsForBranch = (branchId) => {
+    if (userRole === 'superAdmin') {
+      return doctors; // Show all doctors for super admin
+    }
+    return doctors.filter(doctor => doctor.branch === branchId);
+  };
+
   const handleViewAppointment = (appointment) => {
     setSelectedAppointment(appointment);
     onDrawerOpen();
@@ -191,6 +201,34 @@ const AllAppointments = () => {
       toast({
         title: 'Error',
         description: error?.data?.message || 'Failed to update appointment status.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleDoctorAssignment = async (appointmentId, doctorId) => {
+    if (!doctorId) return;
+    
+    try {
+      await assignDoctorToAppointment({ 
+        appointmentId, 
+        doctorId 
+      }).unwrap();
+      
+      toast({
+        title: 'Doctor Assigned',
+        description: 'Doctor has been successfully assigned to the appointment.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      refetch();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error?.data?.message || 'Failed to assign doctor to appointment.',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -283,6 +321,8 @@ const AllAppointments = () => {
     switch (status) {
       case 'booked':
         return 'blue';
+      case 'assigned':
+        return 'purple';
       case 'completed':
         return 'green';
       case 'cancelled':
@@ -400,6 +440,7 @@ const AllAppointments = () => {
                       >
                         <option value="all">All Status</option>
                         <option value="booked">Booked</option>
+                        <option value="assigned">Assigned</option>
                         <option value="completed">Completed</option>
                         <option value="cancelled">Cancelled</option>
                       </Select>
@@ -537,6 +578,7 @@ const AllAppointments = () => {
                       <Th>Branch</Th>
                       <Th>Date & Time</Th>
                       <Th>Status</Th>
+                      <Th>Assign Doctor</Th>
                       <Th>Actions</Th>
                     </Tr>
                   </Thead>
@@ -584,13 +626,31 @@ const AllAppointments = () => {
                             colorScheme={getStatusColor(appointment.status)}
                           >
                             <option value="booked">Booked</option>
+                            <option value="assigned">Assigned</option>
                             <option value="completed">Completed</option>
                             <option value="cancelled">Cancelled</option>
                           </Select>
                         </Td>
                         <Td>
+                          <Select
+                            value={appointment.doctorId?._id || ''}
+                            onChange={(e) => handleDoctorAssignment(appointment._id, e.target.value)}
+                            size="sm"
+                            w="150px"
+                            placeholder="Assign Doctor"
+                            isDisabled={appointment.status === 'completed' || appointment.status === 'cancelled' || appointment.status === 'Completed' || appointment.status === 'Cancelled'}
+                          >
+                            <option value="">Select Doctor</option>
+                            {getDoctorsForBranch(appointment.branchId?._id).map(doctor => (
+                              <option key={doctor._id} value={doctor._id}>
+                                {doctor.name} - {doctor.specialization}
+                              </option>
+                            ))}
+                          </Select>
+                        </Td>
+                        <Td>
                           <HStack spacing={1}>
-                            {appointment.status === 'booked' && (
+                            {(appointment.status === 'booked' || appointment.status === 'Booked' || appointment.status === 'assigned' || appointment.status === 'Assigned') && (
                               <Tooltip label="Complete Appointment">
                                 <IconButton
                                   icon={<CheckIcon />}
@@ -601,7 +661,11 @@ const AllAppointments = () => {
                                 />
                               </Tooltip>
                             )}
-                            {appointment.status === 'completed' && (
+                            {/* Debug: Show status for troubleshooting */}
+                            <Text fontSize="xs" color="gray.500" title={`Status: ${appointment.status}`}>
+                              {appointment.status}
+                            </Text>
+                            {(appointment.status === 'completed' || appointment.status === 'Completed') && (
                               <Tooltip label="View Bill">
                                 <IconButton
                                   icon={<FaReceipt />}
@@ -612,7 +676,7 @@ const AllAppointments = () => {
                                 />
                               </Tooltip>
                             )}
-                            {appointment.status === 'completed' && (
+                            {(appointment.status === 'completed' || appointment.status === 'Completed') && (
                               <Tooltip label="Edit Completed Appointment">
                                 <IconButton
                                   icon={<FaPen />}
@@ -660,6 +724,7 @@ const AllAppointments = () => {
                       <Th>Branch</Th>
                       <Th>Date & Time</Th>
                       <Th>Status</Th>
+                      <Th>Assign Doctor</Th>
                       <Th>Actions</Th>
                     </Tr>
                   </Thead>

@@ -26,6 +26,8 @@ import HearingAidDevices from '../views/User/Components/HearingAidDevices';
 import HearingAidBrand from '../views/User/HearingAidBrand';
 import HearingAidDevice from '../views/User/HearingAidDevice';
 import LocationSEO from '../views/User/Pages/LocationSEO';
+import BookAppointment from '../views/User/Pages/BookAppointment';
+import ServiceBookingPage from '../views/User/Pages/ServiceBookingPage';
 
 // Public Routes (No authentication required)
 export const publicRoutes = [
@@ -60,6 +62,13 @@ export const publicRoutes = [
     showInNav: true,
   },
   {
+    path: '/book-an-appointment',
+    element: <BookAppointment />,
+    name: 'Doctors',
+    showInNav: true,
+  },
+
+  {
     path: '/doctor/:id',
     element: <DoctorDetailPage />,
     name: 'Doctor Detail',
@@ -69,6 +78,12 @@ export const publicRoutes = [
     path: '/service/:slug',
     element: <ServiceDetail />,
     name: 'Service Detail',
+    showInNav: false,
+  },
+  {
+    path: '/book-service/:serviceSlug',
+    element: <ServiceBookingPage />,
+    name: 'Book Service',
     showInNav: false,
   },
   {

@@ -70,8 +70,9 @@ import {
   EmailIcon,
   CalendarIcon,
   InfoIcon,
+  TimeIcon,
 } from '@chakra-ui/icons';
-import { MdBusiness, MdLocationOn } from 'react-icons/md';
+import { MdBusiness, MdLocationOn, MdSchedule, MdAccessTime } from 'react-icons/md';
 import { useGetAllBranchesQuery, useDeleteBranchMutation } from '../../../features/api/branchApi';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -221,6 +222,21 @@ const Branches = () => {
       month: 'short',
       day: 'numeric',
     });
+  };
+
+  // Format working hours
+  const formatWorkingHours = (branch) => {
+    if (!branch || !branch.workingHours) return 'Not set';
+    return `${branch.workingHours.start} - ${branch.workingHours.end}`;
+  };
+
+  // Format working days
+  const formatWorkingDays = (workingDays) => {
+    if (!workingDays || !Array.isArray(workingDays) || workingDays.length === 0) return 'Not set';
+    if (workingDays.length === 7) return 'Every day';
+    if (workingDays.length === 6 && !workingDays.includes('Sunday')) return 'Mon-Sat';
+    if (workingDays.length === 5 && workingDays.includes('Monday') && workingDays.includes('Friday')) return 'Mon-Fri';
+    return workingDays.slice(0, 3).join(', ') + (workingDays.length > 3 ? '...' : '');
   };
 
   if (error) {
@@ -425,6 +441,7 @@ const Branches = () => {
                       <Th>Branch Name</Th>
                       <Th>Address</Th>
                       <Th>Contact</Th>
+                      <Th>Working Hours</Th>
                       <Th>Status</Th>
                       <Th>Created</Th>
                       <Th>Actions</Th>
@@ -462,6 +479,27 @@ const Branches = () => {
                             {branch.email && (
                               <Text fontSize="sm" color="blue.500">
                                 {branch.email}
+                              </Text>
+                            )}
+                          </VStack>
+                        </Td>
+                        <Td>
+                          <VStack align="start" spacing={1}>
+                            <HStack spacing={1}>
+                              <Icon as={TimeIcon} boxSize={3} color="gray.500" />
+                              <Text fontSize="sm" fontWeight="medium">
+                                {formatWorkingHours(branch)}
+                              </Text>
+                            </HStack>
+                            <HStack spacing={1}>
+                              <Icon as={MdSchedule} boxSize={3} color="gray.500" />
+                              <Text fontSize="xs" color="gray.600">
+                                {formatWorkingDays(branch?.workingDays)}
+                              </Text>
+                            </HStack>
+                            {branch?.slotDuration && (
+                              <Text fontSize="xs" color="gray.500">
+                                {branch.slotDuration}min slots
                               </Text>
                             )}
                           </VStack>
@@ -531,6 +569,7 @@ const Branches = () => {
                       <Th>Branch Name</Th>
                       <Th>Address</Th>
                       <Th>Contact</Th>
+                      <Th>Working Hours</Th>
                       <Th>Status</Th>
                       <Th>Created</Th>
                       <Th>Actions</Th>
@@ -761,6 +800,111 @@ const Branches = () => {
                             {selectedBranch.email}
                           </Text>
                         </HStack>
+                      )}
+                    </VStack>
+                  </CardBody>
+                </Card>
+
+                {/* Working Hours Information */}
+                <Card bg={cardBg} borderColor={borderColor} borderRadius="lg">
+                  <CardHeader pb={3}>
+                    <HStack>
+                      <Icon as={MdSchedule} w={5} h={5} color="#3AC0E7" />
+                      <Text fontWeight="semibold" fontSize="lg">
+                        Working Hours & Slots
+                      </Text>
+                    </HStack>
+                  </CardHeader>
+                  <CardBody pt={0}>
+                    <VStack spacing={4} align="stretch">
+                      {/* Working Days */}
+                      <Box>
+                        <Text fontSize="sm" color="gray.600" mb={2}>
+                          Working Days
+                        </Text>
+                        <HStack spacing={2} wrap="wrap">
+                          {selectedBranch?.dailyWorkingHours ? (
+                            Object.keys(selectedBranch.dailyWorkingHours)
+                              .filter(day => selectedBranch.dailyWorkingHours[day]?.isWorking)
+                              .map((day) => (
+                                <Badge key={day} colorScheme="blue" variant="solid" size="sm" px={3} py={1} borderRadius="md">
+                                  {day.toUpperCase()}
+                                </Badge>
+                              ))
+                          ) : selectedBranch?.workingDays && selectedBranch.workingDays.length > 0 ? (
+                            selectedBranch.workingDays.map((day) => (
+                              <Badge key={day} colorScheme="blue" variant="solid" size="sm" px={3} py={1} borderRadius="md">
+                                {day.toUpperCase()}
+                              </Badge>
+                            ))
+                          ) : (
+                            <Text fontSize="sm" color="gray.500">Not set</Text>
+                          )}
+                        </HStack>
+                      </Box>
+                      
+                      {/* Daily Working Hours */}
+                      {selectedBranch?.dailyWorkingHours ? (
+                        <Box>
+                          <Text fontSize="sm" color="gray.600" mb={2}>
+                            Daily Working Hours
+                          </Text>
+                          <VStack spacing={2} align="stretch">
+                            {Object.keys(selectedBranch.dailyWorkingHours)
+                              .filter(day => selectedBranch.dailyWorkingHours[day]?.isWorking)
+                              .map((day) => {
+                                const dayHours = selectedBranch.dailyWorkingHours[day];
+                                return (
+                                  <HStack key={day} justify="space-between" p={2} bg="blue.50" borderRadius="md" border="1px solid" borderColor="blue.200">
+                                    <Text fontSize="sm" fontWeight="medium" color="blue.700">
+                                      {day}
+                                    </Text>
+                                    <Text fontSize="sm" fontWeight="bold" color="blue.800">
+                                      {dayHours?.start || '09:00'} - {dayHours?.end || '17:00'}
+                                    </Text>
+                                  </HStack>
+                                );
+                              })}
+                          </VStack>
+                        </Box>
+                      ) : (
+                        <Box>
+                          <Text fontSize="sm" color="gray.600" mb={1}>
+                            Working Hours
+                          </Text>
+                          <Text fontWeight="medium">
+                            {formatWorkingHours(selectedBranch)}
+                          </Text>
+                        </Box>
+                      )}
+                      
+                      {/* Slot Duration */}
+                      <Box>
+                        <Text fontSize="sm" color="gray.600" mb={1}>
+                          Slot Duration
+                        </Text>
+                        <Text fontWeight="medium">
+                          {selectedBranch?.slotDuration ? `${selectedBranch.slotDuration} minutes` : 'Not set'}
+                        </Text>
+                      </Box>
+                      
+                      {/* Break Times */}
+                      {selectedBranch?.breakTimes && Array.isArray(selectedBranch.breakTimes) && selectedBranch.breakTimes.length > 0 && (
+                        <Box>
+                          <Text fontSize="sm" color="gray.600" mb={2}>
+                            Break Times
+                          </Text>
+                          <VStack spacing={2} align="stretch">
+                            {selectedBranch.breakTimes.map((breakTime, index) => (
+                              <HStack key={index} p={2} bg="gray.50" borderRadius="md" border="1px solid" borderColor="gray.200">
+                                <Icon as={MdAccessTime} boxSize={3} color="gray.500" />
+                                <Text fontSize="sm" fontWeight="medium">
+                                  {breakTime?.start || '00:00'} - {breakTime?.end || '00:00'}
+                                </Text>
+                              </HStack>
+                            ))}
+                          </VStack>
+                        </Box>
                       )}
                     </VStack>
                   </CardBody>

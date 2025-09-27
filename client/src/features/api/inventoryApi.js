@@ -41,18 +41,34 @@ export const inventoryApi = createApi({
         url: "", 
         method: "POST", 
         body: data, 
-        credentials: "include" 
+        credentials: "include",
+        // Don't set Content-Type for FormData, let browser set it
+        prepareHeaders: (headers, { body }) => {
+          if (body instanceof FormData) {
+            // Don't set Content-Type for FormData
+            return headers;
+          }
+          return headers;
+        }
       }),
       invalidatesTags: ["Inventory"],
     }),
     
     // Update inventory
     update: builder.mutation({
-      query: ({ id, ...data }) => ({ 
+      query: ({ id, body, ...data }) => ({ 
         url: `/${id}`, 
         method: "PUT", 
-        body: data, 
-        credentials: "include" 
+        body: body || data, 
+        credentials: "include",
+        // Don't set Content-Type for FormData, let browser set it
+        prepareHeaders: (headers, { body }) => {
+          if (body instanceof FormData) {
+            // Don't set Content-Type for FormData
+            return headers;
+          }
+          return headers;
+        }
       }),
       invalidatesTags: (result, error, { id }) => [
         { type: "Inventory", id },

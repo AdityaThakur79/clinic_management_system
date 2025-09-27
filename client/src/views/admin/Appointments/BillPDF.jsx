@@ -330,7 +330,7 @@ const BillPDF = ({ appointment }) => {
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <View style={styles.logoContainer}>
-              <Image style={styles.logo} src={`${typeof window !== 'undefined' ? window.location.origin : ''}/aartiket_logo.jpeg`} />
+              <Image style={styles.logo} src="/aartiket_logo.jpeg" />
               <View style={styles.clinicInfo}>
                 <Text style={styles.clinicName}>Aartiket Speech & Hearing Care</Text>
                 <Text style={styles.clinicSubtitle}>Hearing test, hearing aid trial and fitting, speech therapy</Text>

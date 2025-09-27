@@ -10,6 +10,7 @@ import {
 } from '../controllers/inventory.js';
 import { isAuthenticated } from '../middlewares/isAuthenticated.js';
 import { isSuperAdmin } from '../middlewares/isSuperAdmin.js';
+import upload from '../utils/common/Uploads.js';
 
 const router = express.Router();
 
@@ -17,7 +18,7 @@ const router = express.Router();
 router.use(isAuthenticated);
 
 // Create inventory - SuperAdmin only
-router.post('/', createInventory);
+router.post('/', upload, createInventory);
 
 // List inventories
 router.get('/', listInventories);
@@ -32,7 +33,7 @@ router.patch('/:id/stock',  updateStock);
 router.get('/:id', getInventoryById);
 
 // Update inventory - SuperAdmin only
-router.put('/:id', updateInventory);
+router.put('/:id', upload, updateInventory);
 
 // Delete inventory - SuperAdmin only
 router.delete('/:id', deleteInventory);

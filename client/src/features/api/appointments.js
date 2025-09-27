@@ -83,6 +83,17 @@ export const appointmentsApi = createApi({
       }),
       invalidatesTags: ['Appointment'],
     }),
+
+    // Assign doctor to appointment
+    assignDoctorToAppointment: builder.mutation({
+      query: ({ appointmentId, doctorId }) => ({
+        url: '/assign-doctor',
+        method: 'POST',
+        body: { appointmentId, doctorId },
+        credentials: 'include',
+      }),
+      invalidatesTags: ['Appointment'],
+    }),
   }),
 });
 
@@ -94,4 +105,5 @@ export const {
   useCreateAppointmentMutation,
   useUpdateAppointmentStatusMutation,
   useDeleteAppointmentMutation,
+  useAssignDoctorToAppointmentMutation,
 } = appointmentsApi;
