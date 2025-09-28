@@ -10,6 +10,7 @@ import initialTheme from './theme/theme';
 import { useState, useEffect } from 'react';
 import { publicRoutes, adminRoutes } from './config/routes';
 import Lenis from 'lenis';
+import AuthInitializer from './components/AuthInitializer';
 
 // Component to handle scroll to top on route changes
 function ScrollToTop() {
@@ -65,35 +66,37 @@ export default function Main() {
   return (
     <Provider store={store}>
       <ChakraProvider theme={currentTheme}>
-        <ScrollToTop />
-        <Routes>
-          {/* Public Routes */}
-          {publicRoutes.map((route) => (
-            <Route key={route.path} path={route.path} element={route.element} />
-          ))}
-          
-          {/* Auth Routes */}
-          <Route path="auth/*" element={<AuthLayout />} />
-          
-          {/* Admin Routes */}
-          <Route
-            path="admin/*"
-            element={
-              <AdminLayout theme={currentTheme} setTheme={setCurrentTheme} />
-            }
-          />
-          
-          {/* RTL Routes */}
-          <Route
-            path="rtl/*"
-            element={
-              <RTLLayout theme={currentTheme} setTheme={setCurrentTheme} />
-            }
-          />
-          
-          {/* Default redirect to sign-in */}
-          <Route path="/" element={<Navigate to="/auth/sign-in" replace />} />
-        </Routes>
+        <AuthInitializer>
+          <ScrollToTop />
+          <Routes>
+            {/* Public Routes */}
+            {publicRoutes.map((route) => (
+              <Route key={route.path} path={route.path} element={route.element} />
+            ))}
+            
+            {/* Auth Routes */}
+            <Route path="auth/*" element={<AuthLayout />} />
+            
+            {/* Admin Routes */}
+            <Route
+              path="admin/*"
+              element={
+                <AdminLayout theme={currentTheme} setTheme={setCurrentTheme} />
+              }
+            />
+            
+            {/* RTL Routes */}
+            <Route
+              path="rtl/*"
+              element={
+                <RTLLayout theme={currentTheme} setTheme={setCurrentTheme} />
+              }
+            />
+            
+            {/* Default redirect to sign-in */}
+            <Route path="/" element={<Navigate to="/auth/sign-in" replace />} />
+          </Routes>
+        </AuthInitializer>
       </ChakraProvider>
     </Provider>
   );

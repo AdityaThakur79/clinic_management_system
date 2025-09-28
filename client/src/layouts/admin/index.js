@@ -28,11 +28,11 @@ export default function Dashboard(props) {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectUser);
 
-  // Load user data on component mount
-  const { data: userData, isLoading: userLoading } = useLoadUserQuery(
+  // Load user data on component mount - always check authentication
+  const { data: userData, isLoading: userLoading, error: userError } = useLoadUserQuery(
     undefined,
     {
-      skip: isAuthenticated, // Skip if already authenticated
+      skip: false, // Always check authentication status
     },
   );
 
@@ -49,8 +49,13 @@ export default function Dashboard(props) {
 
   // Check authentication on mount
   useEffect(() => {
-    // Authentication check is handled by the redirect below
-  }, [isAuthenticated, userLoading]);
+    // Handle authentication error
+    if (userError && userError.status === 401) {
+      // Clear localStorage and redirect to login
+      localStorage.removeItem('auth');
+      window.location.href = '/auth/sign-in';
+    }
+  }, [userError]);
 
   // Show loading spinner while checking authentication or RBAC
   if (userLoading || rbacLoading) {
@@ -61,8 +66,8 @@ export default function Dashboard(props) {
     );
   }
 
-  // Redirect to sign-in if not authenticated
-  if (!isAuthenticated || !user) {
+  // Redirect to sign-in if not authenticated or if authentication check failed
+  if (!isAuthenticated || !user || (userError && userError.status === 401)) {
     return <Navigate to="/auth/sign-in" replace />;
   }
   // functions for changing the states from components

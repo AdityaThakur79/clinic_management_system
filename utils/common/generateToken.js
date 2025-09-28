@@ -13,7 +13,7 @@ export const generateToken = (res, user, message) => {
     .status(200)
     .cookie("token", token, {
       httpOnly: true,
-      sameSite: "lax",
+      sameSite:none, // Use 'none' for cross-site requests in production
       maxAge: 24 * 60 * 60 * 1000,
       secure: process.env.NODE_ENV === 'production' // Use secure cookies in production
     })

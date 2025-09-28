@@ -268,7 +268,7 @@ export const logoutController = async (req, res) => {
       maxAge: 0,
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
-      sameSite: "lax"
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     }).json({
       message: "Logged Out Successfully",
       success: true,

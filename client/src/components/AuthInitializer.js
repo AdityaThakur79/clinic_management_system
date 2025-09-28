@@ -7,27 +7,21 @@ const AuthInitializer = ({ children }) => {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(state => state.auth.user);
   
-  // Only try to load user if we have auth state but no user data
-  const shouldLoadUser = isAuthenticated && !user;
-  
+  // Always check authentication status on app load
   const { data, error, isLoading } = useLoadUserQuery(undefined, {
-    skip: !shouldLoadUser,
+    skip: false, // Always check authentication
   });
 
   useEffect(() => {
-    if (error) {
-      // Only clear auth state if it's a 401 (unauthorized) error
-
-      if (error.status === 401) {
-
-        localStorage.removeItem('auth');
-        window.location.reload();
-      }
+    if (error && error.status === 401) {
+      // Clear auth state if authentication fails
+      localStorage.removeItem('auth');
+      // Don't reload, let the app handle the redirect naturally
     }
   }, [error]);
 
-  // Show loading while checking authentication
-  if (shouldLoadUser && isLoading) {
+  // Show loading while checking authentication (only briefly)
+  if (isLoading && !isAuthenticated) {
     return (
       <div style={{ 
         display: 'flex', 
