@@ -3,7 +3,10 @@ import { BASE_URL } from "../../utils/BaseUrl";
 
 export const inventoryApi = createApi({
   reducerPath: "inventoryApi",
-  baseQuery: fetchBaseQuery({ baseUrl: BASE_URL + "/inventory" }),
+  baseQuery: fetchBaseQuery({ 
+    baseUrl: BASE_URL + "/inventory",
+    credentials: 'include'
+  }),
   tagTypes: ["Inventory"],
   endpoints: (builder) => ({
     // List inventories with filters

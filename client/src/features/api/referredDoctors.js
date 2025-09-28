@@ -3,7 +3,10 @@ import { BASE_URL } from "../../utils/BaseUrl";
 
 export const referredDoctorsApi = createApi({
   reducerPath: "referredDoctorsApi",
-  baseQuery: fetchBaseQuery({ baseUrl: BASE_URL + "/referred-doctors" }),
+  baseQuery: fetchBaseQuery({ 
+    baseUrl: BASE_URL + "/referred-doctors",
+    credentials: 'include'
+  }),
   tagTypes: ["ReferredDoctor"],
   endpoints: (builder) => ({
     list: builder.query({

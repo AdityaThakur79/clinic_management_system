@@ -6,9 +6,8 @@ export const billsApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: BASE_URL + '/bills',
     credentials: 'include',
-    prepareHeaders: (headers, { getState }) => {
-      const token = getState().auth.token;
-      if (token) headers.set('authorization', `Bearer ${token}`);
+    prepareHeaders: (headers) => {
+      headers.set('Content-Type', 'application/json');
       return headers;
     },
   }),

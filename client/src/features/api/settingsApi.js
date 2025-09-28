@@ -3,7 +3,10 @@ import { BASE_URL } from "../../utils/BaseUrl";
 
 export const settingsApi = createApi({
   reducerPath: "settingsApi",
-  baseQuery: fetchBaseQuery({ baseUrl: BASE_URL + "/settings" }),
+  baseQuery: fetchBaseQuery({ 
+    baseUrl: BASE_URL + "/settings",
+    credentials: 'include'
+  }),
   tagTypes: ["Settings"],
   endpoints: (builder) => ({
     // Get all settings

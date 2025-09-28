@@ -5,11 +5,9 @@ export const patientApi = createApi({
   reducerPath: 'patientApi',
   baseQuery: fetchBaseQuery({
     baseUrl: BASE_URL + "/patients",
-    prepareHeaders: (headers, { getState }) => {
-      const token = getState().auth.token;
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
+    credentials: 'include',
+    prepareHeaders: (headers) => {
+      headers.set('Content-Type', 'application/json');
       return headers;
     },
   }),

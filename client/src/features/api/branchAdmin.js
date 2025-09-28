@@ -3,7 +3,10 @@ import { BASE_URL } from "../../utils/BaseUrl";
 
 export const branchAdminApi = createApi({
   reducerPath: "branchAdminApi",
-  baseQuery: fetchBaseQuery({ baseUrl: BASE_URL + "/branch-admin" }),
+  baseQuery: fetchBaseQuery({ 
+    baseUrl: BASE_URL + "/branch-admin",
+    credentials: 'include'
+  }),
   tagTypes: ["BranchAdmin"],
   endpoints: (builder) => ({
     // ✅ Create Branch Admin

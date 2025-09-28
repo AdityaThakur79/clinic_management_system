@@ -5,11 +5,9 @@ export const appointmentsApi = createApi({
   reducerPath: 'appointmentsApi',
   baseQuery: fetchBaseQuery({
     baseUrl: BASE_URL + "/appointments",
-    prepareHeaders: (headers, { getState }) => {
-      const token = getState().auth.token;
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
+    credentials: 'include',
+    prepareHeaders: (headers) => {
+      headers.set('Content-Type', 'application/json');
       return headers;
     },
   }),

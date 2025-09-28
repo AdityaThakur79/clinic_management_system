@@ -3,7 +3,10 @@ import { BASE_URL } from "../../utils/BaseUrl";
 
 export const appointmentCommissionApi = createApi({
   reducerPath: "appointmentCommissionApi",
-  baseQuery: fetchBaseQuery({ baseUrl: BASE_URL + "/appointments" }),
+  baseQuery: fetchBaseQuery({ 
+    baseUrl: BASE_URL + "/appointments",
+    credentials: 'include'
+  }),
   tagTypes: ["AppointmentCommission"],
   endpoints: (builder) => ({
     addCommission: builder.mutation({

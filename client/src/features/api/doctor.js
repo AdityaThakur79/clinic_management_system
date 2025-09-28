@@ -3,7 +3,10 @@ import { BASE_URL } from "../../utils/BaseUrl";
 
 export const doctorApi = createApi({
   reducerPath: "doctorApi",
-  baseQuery: fetchBaseQuery({ baseUrl: BASE_URL + "/doctor" }),
+  baseQuery: fetchBaseQuery({ 
+    baseUrl: BASE_URL + "/doctor",
+    credentials: 'include'
+  }),
   tagTypes: ["Doctor"],
   endpoints: (builder) => ({
     // ✅ Create Doctor
