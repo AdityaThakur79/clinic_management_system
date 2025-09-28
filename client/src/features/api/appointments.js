@@ -43,6 +43,14 @@ export const appointmentsApi = createApi({
       }),
     }),
 
+    // Get availability for multiple dates (7 days)
+    getMultipleDateAvailability: builder.query({
+      query: ({ branchId, startDate, days = 7 }) => ({
+        url: '/availability/multiple',
+        params: { branchId, startDate, days },
+      }),
+    }),
+
     // Get appointment by ID
     getAppointmentById: builder.query({
       query: (id) => ({
@@ -101,6 +109,7 @@ export const {
   useGetAllAppointmentsQuery,
   useGetTodayAppointmentsQuery,
   useGetAvailabilityQuery,
+  useGetMultipleDateAvailabilityQuery,
   useGetAppointmentByIdQuery,
   useCreateAppointmentMutation,
   useUpdateAppointmentStatusMutation,

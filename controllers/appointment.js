@@ -160,6 +160,111 @@ const generateBranchSlots = (branch, date) => {
   return slots;
 };
 
+export const getMultipleDateAvailability = async (req, res) => {
+  try {
+    const { branchId, startDate, days = 7 } = req.query;
+    
+    if (!branchId || !startDate) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "branchId and startDate are required" 
+      });
+    }
+
+    // Get branch details
+    const branch = await Branch.findById(branchId);
+    if (!branch) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Branch not found" 
+      });
+    }
+
+    const start = new Date(startDate);
+    const results = [];
+
+    for (let i = 0; i < days; i++) {
+      const currentDate = new Date(start);
+      currentDate.setDate(start.getDate() + i);
+      
+      const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+      
+      // Check if branch is open on this day
+      const dayWorkingHours = branch.dailyWorkingHours?.[dayName];
+      const isWorkingDay = dayWorkingHours?.isWorking || branch.workingDays?.includes(dayName);
+      
+      if (!isWorkingDay) {
+        results.push({
+          date: currentDate.toISOString().split('T')[0],
+          availableSlots: [],
+          bookedTimeSlots: [],
+          isWorkingDay: false,
+          message: `Branch is closed on ${dayName}`
+        });
+        continue;
+      }
+
+      const dayStart = new Date(currentDate);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+
+      // Get all appointments for this branch and date
+      const appointments = await Appointment.find({
+        branchId,
+        date: { $gte: dayStart, $lt: dayEnd },
+      }).select("timeSlot");
+
+      // Generate available slots based on branch working hours
+      const availableSlots = generateBranchSlots(branch, currentDate);
+      
+      // Get booked slots
+      const normalizeTime = (t) => {
+        if (!t || typeof t !== 'string') return t;
+        const base = t.includes('-') ? t.split('-')[0] : t;
+        const [hStr = '', mStr = ''] = base.split(':');
+        const hours = String(parseInt(hStr, 10)).padStart(2, '0');
+        const minutes = String(parseInt(mStr, 10)).padStart(2, '0');
+        return `${hours}:${minutes}`;
+      };
+
+      const bookedTimeSlots = appointments.map(apt => normalizeTime(apt.timeSlot));
+      
+      // Filter out booked slots
+      const finalAvailableSlots = availableSlots
+        .filter(slot => !bookedTimeSlots.includes(normalizeTime(slot)))
+        .map(slot => ({
+          time: slot,
+          isAvailable: true,
+          isBooked: false
+        }));
+
+      results.push({
+        date: currentDate.toISOString().split('T')[0],
+        availableSlots: finalAvailableSlots,
+        bookedTimeSlots,
+        isWorkingDay: true
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: results,
+      branchId,
+      startDate,
+      days: parseInt(days)
+    });
+
+  } catch (error) {
+    console.error("Error getting multiple date availability:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message
+    });
+  }
+};
+
 export const createAppointment = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();

@@ -1,5 +1,5 @@
 import express from "express";
-import { createAppointment, getAvailability, getAllAppointments, getTodayAppointments, getAppointmentById, updateAppointmentStatus, assignDoctorToAppointment, deleteAppointment } from "../controllers/appointment.js";
+import { createAppointment, getAvailability, getMultipleDateAvailability, getAllAppointments, getTodayAppointments, getAppointmentById, updateAppointmentStatus, assignDoctorToAppointment, deleteAppointment } from "../controllers/appointment.js";
 import { addAppointmentCommission } from "../controllers/appointmentCommission.js";
 import { isAuthenticated } from "../middlewares/isAuthenticated.js";
 
@@ -7,6 +7,7 @@ const router = express.Router();
 
 // Public routes
 router.get("/availability", getAvailability);
+router.get("/availability/multiple", getMultipleDateAvailability);
 router.post("/", createAppointment);
 
 // Protected routes

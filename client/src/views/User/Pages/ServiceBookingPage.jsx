@@ -41,9 +41,8 @@ import {
   StarIcon,
   ArrowBackIcon
 } from '@chakra-ui/icons';
-import { useCreateAppointmentMutation } from '../../../features/api/appointments';
+import { useCreateAppointmentMutation, useGetMultipleDateAvailabilityQuery } from '../../../features/api/appointments';
 import { useGetAllBranchesQuery } from '../../../features/api/branchApi';
-import { useGetAvailabilityQuery } from '../../../features/api/appointments';
 import { servicesData } from '../../../data/servicesData';
 import Navbar from '../Components/Navbar';
 import Footer from '../Components/Footer';
@@ -87,14 +86,22 @@ const ServiceBookingPage = () => {
   const branchId = selectedBranchId || branchesData?.branches?.[0]?._id || '';
   const branchName = selectedBranchName || branchesData?.branches?.[0]?.branchName || '';
 
-  // Get availability for selected date
-  const { data: availabilityData, refetch: refetchAvailability } = useGetAvailabilityQuery(
+  // Get multiple date availability using RTK Query
+  const today = new Date();
+  const startDate = today.toISOString().split('T')[0];
+  
+  const { 
+    data: multipleAvailabilityData, 
+    isLoading: isLoadingAvailability,
+    error: availabilityError 
+  } = useGetMultipleDateAvailabilityQuery(
     {
       branchId: branchId,
-      date: selectedDateISO,
+      startDate: startDate,
+      days: 7
     },
     {
-      skip: !branchId || !selectedDateISO,
+      skip: !branchId
     }
   );
 
@@ -111,62 +118,43 @@ const ServiceBookingPage = () => {
     setAvailableSlots([]);
   };
 
-  // Generate time slots for the next 7 days based on branch availability
-  const generateTimeSlots = async () => {
-    if (!branchId) return;
+  // Process multiple date availability data from RTK Query
+  const processAvailabilityData = () => {
+    if (!multipleAvailabilityData?.data) return;
     
     const slots = [];
     const today = new Date();
 
-    for (let i = 0; i < 7; i++) {
+    multipleAvailabilityData.data.forEach((dayData, index) => {
       const currentDate = new Date(today);
-      currentDate.setDate(today.getDate() + i);
+      currentDate.setDate(today.getDate() + index);
 
-      const y = currentDate.getFullYear();
-      const m = String(currentDate.getMonth() + 1).padStart(2, '0');
-      const d = String(currentDate.getDate()).padStart(2, '0');
-      const dateISO = `${y}-${m}-${d}`;
-
-      try {
-        // Fetch availability for this specific date from backend
-        const response = await fetch(
-          `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/api/appointments/availability?branchId=${branchId}&date=${dateISO}`
-        );
-        const data = await response.json();
-
-        if (data.success && data.availableSlots && data.availableSlots.length > 0) {
-          const daySlots = data.availableSlots.map(slot => ({
-            datetime: new Date(currentDate),
-            time: slot.time,
-            date: dateISO,
-            isAvailable: slot.isAvailable,
-            isBooked: slot.isBooked
-          }));
-          slots.push(daySlots);
-        } else {
-          // If branch is closed or no slots available, add empty array
-
-          slots.push([]);
-        }
-      } catch (error) {
-
+      if (dayData.isWorkingDay && dayData.availableSlots && dayData.availableSlots.length > 0) {
+        const daySlots = dayData.availableSlots.map(slot => ({
+          datetime: new Date(currentDate),
+          time: slot.time,
+          date: dayData.date,
+          isAvailable: slot.isAvailable,
+          isBooked: slot.isBooked
+        }));
+        slots.push(daySlots);
+      } else {
+        // If branch is closed or no slots available, add empty array
         slots.push([]);
       }
-    }
+    });
 
     setAvailableSlots(slots);
 
     // If no date selected yet, initialize selectedDateISO to first available day
-    try {
-      if (!selectedDateISO) {
-        const firstDayWithSlots = slots.find(dayArr => dayArr.length > 0);
-        if (firstDayWithSlots && firstDayWithSlots[0]?.datetime) {
-          const first = firstDayWithSlots[0].datetime;
-          const initISO = `${first.getFullYear()}-${String(first.getMonth()+1).padStart(2,'0')}-${String(first.getDate()).padStart(2,'0')}`;
-          setSelectedDateISO(initISO);
-        }
+    if (!selectedDateISO) {
+      const firstDayWithSlots = slots.find(dayArr => dayArr.length > 0);
+      if (firstDayWithSlots && firstDayWithSlots[0]?.datetime) {
+        const first = firstDayWithSlots[0].datetime;
+        const initISO = `${first.getFullYear()}-${String(first.getMonth()+1).padStart(2,'0')}-${String(first.getDate()).padStart(2,'0')}`;
+        setSelectedDateISO(initISO);
       }
-    } catch (_) {}
+    }
   };
 
   // Handle date selection
@@ -176,19 +164,15 @@ const ServiceBookingPage = () => {
       setSelectedDateISO(selectedSlot.datetime.toISOString().split('T')[0]);
       setSelectedDateIndex(index);
       setSelectedTime(''); // Reset selected time when changing date
-      // Refetch availability for the new date
-      refetchAvailability();
     }
   };
 
-  // Regenerate slots when branch changes
+  // Process availability data when it changes
   useEffect(() => {
-    if (branchId) {
-
-      generateTimeSlots();
+    if (multipleAvailabilityData?.data) {
+      processAvailabilityData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [branchId]);
+  }, [multipleAvailabilityData]);
 
   // Set default branch when branches data loads
   useEffect(() => {
@@ -277,8 +261,6 @@ const ServiceBookingPage = () => {
           isClosable: true,
         });
         
-        // Refresh availability
-        refetchAvailability();
         setSelectedTime('');
       } else {
         toast({

@@ -667,7 +667,7 @@ const BlogDetail = () => {
                           transform: "translateY(-2px)",
                           boxShadow: "0 10px 25px rgba(43, 168, 209, 0.3)"
                         }}
-                        onClick={() => window.open('https://aartiketspechandhearincare.in', '_blank')}
+                        onClick={() => window.open('https://aartiketspechandhearingcare.in', '_blank')}
                         leftIcon={<Icon as={MdLanguage} />}
                       >
                         Visit Our Website
