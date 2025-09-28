@@ -7,9 +7,11 @@ const AuthInitializer = ({ children }) => {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(state => state.auth.user);
   
-  // Always check authentication status on app load
+  // Only check authentication if we have auth state but no user data
+  const shouldCheckAuth = isAuthenticated && !user;
+  
   const { data, error, isLoading } = useLoadUserQuery(undefined, {
-    skip: false, // Always check authentication
+    skip: !shouldCheckAuth, // Only check when needed
   });
 
   useEffect(() => {
@@ -21,7 +23,7 @@ const AuthInitializer = ({ children }) => {
   }, [error]);
 
   // Show loading while checking authentication (only briefly)
-  if (isLoading && !isAuthenticated) {
+  if (shouldCheckAuth && isLoading) {
     return (
       <div style={{ 
         display: 'flex', 

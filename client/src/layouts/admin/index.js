@@ -28,11 +28,11 @@ export default function Dashboard(props) {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectUser);
 
-  // Load user data on component mount - always check authentication
+  // Load user data on component mount - only if needed
   const { data: userData, isLoading: userLoading, error: userError } = useLoadUserQuery(
     undefined,
     {
-      skip: false, // Always check authentication status
+      skip: isAuthenticated && user, // Skip if already authenticated and have user data
     },
   );
 
