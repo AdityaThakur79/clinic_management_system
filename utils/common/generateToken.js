@@ -15,7 +15,7 @@ export const generateToken = (res, user, message) => {
       httpOnly: true,
       sameSite: "lax",
       maxAge: 24 * 60 * 60 * 1000,
-      secure: false // Set to false for localhost development
+      secure: process.env.NODE_ENV === 'production' // Use secure cookies in production
     })
     .json({
       success: true,

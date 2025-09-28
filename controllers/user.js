@@ -264,7 +264,12 @@ export const verifyOTPController = async (req, res) => {
  
 export const logoutController = async (req, res) => {
   try {
-    return res.status(200).cookie("token", "", { maxAge: 0 }).json({
+    return res.status(200).cookie("token", "", { 
+      maxAge: 0,
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: "lax"
+    }).json({
       message: "Logged Out Successfully",
       success: true,
     });
