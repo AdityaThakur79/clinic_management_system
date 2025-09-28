@@ -129,7 +129,7 @@ const ServiceBookingPage = () => {
       const currentDate = new Date(today);
       currentDate.setDate(today.getDate() + index);
 
-      if (dayData.isWorkingDay && dayData.availableSlots && dayData.availableSlots.length > 0) {
+      if (dayData.isWorkingDay && dayData.availableSlots) {
         const daySlots = dayData.availableSlots.map(slot => ({
           datetime: new Date(currentDate),
           time: slot.time,
@@ -560,29 +560,36 @@ const ServiceBookingPage = () => {
                         <Box w="full" overflow="hidden">
                           <HStack spacing={{ base: 1, md: 2 }} wrap="wrap" justify="flex-start" w="full">
                             {availableSlots.map((daySlots, index) => {
-                              const hasAvailableSlots = daySlots.length > 0;
+                              const hasSlots = daySlots.length > 0;
+                              const hasAvailableSlots = daySlots.some(slot => slot.isAvailable);
                               const isSelected = selectedDateIndex === index;
                               
                               return (
                                 <Button
                                   key={index}
                                   onClick={() => {
-                                    if (hasAvailableSlots) {
+                                    if (hasSlots) {
                                       handleDateSelection(index);
                                     }
                                   }}
                                   variant={isSelected ? "solid" : "outline"}
-                                  colorScheme={isSelected ? "brand" : hasAvailableSlots ? "gray" : "red"}
+                                  colorScheme={
+                                    isSelected 
+                                      ? "brand" 
+                                      : hasSlots 
+                                        ? (hasAvailableSlots ? "gray" : "orange")
+                                        : "red"
+                                  }
                                   minW={{ base: "45px", sm: "55px", md: "65px" }}
                                   h={{ base: "45px", sm: "55px", md: "65px" }}
                                   flexDirection="column"
                                   rounded="full"
-                                  isDisabled={!hasAvailableSlots}
-                                  opacity={hasAvailableSlots ? 1 : 0.4}
+                                  isDisabled={!hasSlots}
+                                  opacity={hasSlots ? 1 : 0.4}
                                   size={{ base: "xs", sm: "sm" }}
                                   mb={{ base: 1, md: 0 }}
                                   _hover={{
-                                    transform: hasAvailableSlots ? "scale(1.05)" : "none",
+                                    transform: hasSlots ? "scale(1.05)" : "none",
                                     transition: "all 0.2s ease"
                                   }}
                                 >
@@ -592,9 +599,14 @@ const ServiceBookingPage = () => {
                                   <Text fontSize={{ base: "xs", sm: "sm", md: "md" }} fontWeight="bold">
                                     {daySlots[0] && daySlots[0].datetime.getDate()}
                                   </Text>
-                                  {!hasAvailableSlots && (
+                                  {!hasSlots && (
                                     <Text fontSize={{ base: "2xs", sm: "xs" }} color="red.500">
-                                      Unavailable
+                                      Closed
+                                    </Text>
+                                  )}
+                                  {hasSlots && !hasAvailableSlots && (
+                                    <Text fontSize={{ base: "2xs", sm: "xs" }} color="orange.500">
+                                      Full
                                     </Text>
                                   )}
                                 </Button>
@@ -668,7 +680,7 @@ const ServiceBookingPage = () => {
                           </Box>
                           {availableSlots[selectedDateIndex]?.length === 0 && (
                             <Text color="gray.500" fontSize={{ base: "xs", md: "sm" }} mt={2}>
-                              No available time slots for this day
+                              No time slots available for this day (Branch closed)
                             </Text>
                           )}
                         </>

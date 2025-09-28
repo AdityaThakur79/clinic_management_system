@@ -31,6 +31,7 @@ import {
 } from 'react-icons/md';
 import { useCreateBranchAdminMutation } from '../../../features/api/branchAdmin';
 import { useGetAllBranchesQuery } from '../../../features/api/branchApi';
+import { useNavigate } from 'react-router-dom';
 
 const AddBranchAdmin = () => {
   const [formData, setFormData] = useState({
@@ -50,6 +51,7 @@ const AddBranchAdmin = () => {
   const [bannerImage, setBannerImage] = useState(null);
 
   const toast = useToast();
+  const navigate = useNavigate();
   const [createBranchAdmin, { isLoading: isSubmitting }] =
     useCreateBranchAdminMutation();
 
@@ -198,6 +200,9 @@ const AddBranchAdmin = () => {
       setSelectedBranch(null);
       setProfilePhoto(null);
       setBannerImage(null);
+
+      // Navigate to branch admins list
+      navigate('/admin/branch-admin/all');
     } catch (error) {
 
       toast({

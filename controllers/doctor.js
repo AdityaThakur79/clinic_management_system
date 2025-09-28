@@ -21,7 +21,8 @@ export const createDoctor = async (req, res) => {
       bio,
       languages,
       availableDays,
-      availableTimeSlots
+      availableTimeSlots,
+      status
     } = req.body;
 
     // Validation
@@ -105,7 +106,7 @@ export const createDoctor = async (req, res) => {
       photoUrlPublicId: finalPhotoUrlPublicId,
       bannerUrl: finalBannerUrl,
       bannerUrlPublicId: finalBannerUrlPublicId,
-      status: true,
+      status: status || "active",
       degree,
       specialization,
       perSessionCharge: Number(perSessionCharge),

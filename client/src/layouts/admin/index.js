@@ -17,6 +17,8 @@ import { useRBAC } from '../../hooks/useRBAC';
 import routes from '../../routes.js';
 import { adminRoutes } from '../../config/routes';
 import TodayModal from '../../components/TodayModal';
+import InventoryThresholdNotification from '../../components/InventoryThresholdNotification';
+import { useInventoryThresholdAlert } from '../../hooks/useInventoryThresholdAlert';
 
 // Custom Chakra theme
 export default function Dashboard(props) {
@@ -38,6 +40,9 @@ export default function Dashboard(props) {
 
   // RBAC hook for filtered routes
   const { filteredRoutes, isLoading: rbacLoading } = useRBAC();
+
+  // Inventory threshold alert hook
+  const { showAlert, dismissAlert, alertData } = useInventoryThresholdAlert();
 
   // states and functions
   const [fixed] = useState(false);
@@ -276,6 +281,12 @@ export default function Dashboard(props) {
                 pt="50px"
               >
                 <TodayModal />
+                {showAlert && (
+                  <InventoryThresholdNotification 
+                    alertData={alertData} 
+                    onDismiss={dismissAlert} 
+                  />
+                )}
                 <Routes>
                   {/* Filtered routes based on user role */}
                   {getRoutes(filteredRoutes)}

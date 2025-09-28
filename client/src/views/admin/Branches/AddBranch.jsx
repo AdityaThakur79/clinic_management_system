@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -41,6 +42,7 @@ import {
 import { useCreateBranchMutation } from '../../../features/api/branchApi';
 
 const AddBranch = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     branchName: '',
     address: '',
@@ -216,6 +218,9 @@ const AddBranch = () => {
         breakTimes: []
       });
       setErrors({});
+
+      // Navigate to branches list
+      navigate('/admin/branches/all');
     } catch (error) {
 
       toast({

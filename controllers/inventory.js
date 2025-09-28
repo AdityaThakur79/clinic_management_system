@@ -586,6 +586,17 @@ export const updateStock = async (req, res) => {
 
     await inventory.save();
 
+    // Check thresholds after stock update (run in background)
+    try {
+      const { checkAndSendInventoryAlerts } = await import('../services/inventoryThresholdService.js');
+      // Only check for this specific item's branch
+      checkAndSendInventoryAlerts(inventory.branchId.toString()).catch(error => {
+        console.error('Background threshold check failed:', error);
+      });
+    } catch (error) {
+      console.error('Error importing threshold service:', error);
+    }
+
     return res.json({ 
       success: true, 
       inventory,
@@ -699,6 +710,89 @@ export const getInventoryAnalytics = async (req, res) => {
     });
   } catch (error) {
 
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const checkInventoryThresholds = async (req, res) => {
+  try {
+    const { branchId } = req.query;
+    
+    // Fetch user data from database
+    const user = await User.findById(req.user.userId).populate('branch');
+    if (!user) {
+      return res.status(401).json({ success: false, message: "User not found" });
+    }
+
+    console.log('👤 Current user:', { name: user.name, email: user.email, role: user.role, status: user.status });
+
+    // Import the service dynamically to avoid circular dependencies
+    const { checkInventoryThresholds: checkThresholds, getInventoryThresholdStats } = await import('../services/inventoryThresholdService.js');
+
+    // Determine branch ID for the check
+    let finalBranchId = null;
+    if (user.role !== 'superAdmin') {
+      const userBranchId = user.branch?._id || user.branch;
+      finalBranchId = branchId || userBranchId;
+    } else if (branchId) {
+      finalBranchId = branchId;
+    }
+
+    // Check thresholds
+    const lowStockItems = await checkThresholds(finalBranchId);
+    
+    // Get statistics
+    const statsResult = await getInventoryThresholdStats(finalBranchId);
+
+    return res.json({
+      success: true,
+      lowStockItems,
+      statistics: statsResult.stats,
+      message: `Found ${lowStockItems.length} items at or below threshold`
+    });
+
+  } catch (error) {
+    console.error('Error checking inventory thresholds:', error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const sendInventoryAlerts = async (req, res) => {
+  try {
+    const { branchId } = req.query;
+    
+    // Fetch user data from database
+    const user = await User.findById(req.user.userId).populate('branch');
+    if (!user) {
+      return res.status(401).json({ success: false, message: "User not found" });
+    }
+
+    console.log('👤 Current user:', { name: user.name, email: user.email, role: user.role, status: user.status });
+
+    // Import the service dynamically to avoid circular dependencies
+    const { checkAndSendInventoryAlerts } = await import('../services/inventoryThresholdService.js');
+
+    // Determine branch ID for the check
+    let finalBranchId = null;
+    if (user.role !== 'superAdmin') {
+      const userBranchId = user.branch?._id || user.branch;
+      finalBranchId = branchId || userBranchId;
+    } else if (branchId) {
+      finalBranchId = branchId;
+    }
+
+    // Check and send alerts
+    const result = await checkAndSendInventoryAlerts(finalBranchId);
+
+    return res.json({
+      success: result.success,
+      message: result.message,
+      itemsCount: result.itemsCount,
+      alertResult: result.alertResult
+    });
+
+  } catch (error) {
+    console.error('Error sending inventory alerts:', error);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };

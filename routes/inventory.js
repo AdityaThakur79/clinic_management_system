@@ -6,7 +6,9 @@ import {
   updateInventory,
   deleteInventory,
   updateStock,
-  getInventoryAnalytics
+  getInventoryAnalytics,
+  checkInventoryThresholds,
+  sendInventoryAlerts
 } from '../controllers/inventory.js';
 import { isAuthenticated } from '../middlewares/isAuthenticated.js';
 import { isSuperAdmin } from '../middlewares/isSuperAdmin.js';
@@ -25,6 +27,12 @@ router.get('/', listInventories);
 
 // Get inventory analytics - SuperAdmin only
 router.get('/analytics',  getInventoryAnalytics);
+
+// Check inventory thresholds
+router.get('/thresholds/check', checkInventoryThresholds);
+
+// Send inventory alerts
+router.post('/thresholds/alerts', sendInventoryAlerts);
 
 // Update stock - SuperAdmin only (must come before /:id route)
 router.patch('/:id/stock',  updateStock);

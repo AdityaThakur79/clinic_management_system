@@ -416,9 +416,7 @@ const UpdateDoctor = () => {
         });
 
         // Navigate back to doctors list
-        setTimeout(() => {
-          navigate('/admin/doctors/all');
-        }, 1000);
+        navigate('/admin/doctors/all');
       } else {
         throw new Error(result.message || 'Failed to update doctor');
       }

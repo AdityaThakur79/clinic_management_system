@@ -330,7 +330,7 @@ const Contact = () => {
                     </Button>
                     <Button
                       as={Link}
-                      to="/doctors"
+                      to="/book-an-appointment"
                       bg="white"
                       color="#0C2F4D"
                       fontWeight="semibold"

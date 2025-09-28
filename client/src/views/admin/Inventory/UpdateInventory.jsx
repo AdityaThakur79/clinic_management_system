@@ -114,14 +114,14 @@ const UpdateInventory = () => {
   const borderColor = useColorModeValue('gray.200', 'gray.600');
   const headerBg = useColorModeValue('gray.50', 'gray.700');
   const userRole = user?.role;
-  const userBranchId = user?.branch?._id || user?.branch || '';
+  const userBranchId = user?.branch?._id || user?.branch || null;
   const isScopedToBranch = !!userBranchId && (userRole === 'branchAdmin' || userRole === 'doctor');
   const [selectedBranch, setSelectedBranch] = useState(null);
 
   // Handle branch selection
   const handleBranchChange = (e) => {
     const branchId = e.target.value;
-    const branch = branchesData?.branches?.find((b) => b._id === branchId);
+    const branch = branchesData?.branches?.find((b) => b && b._id === branchId);
     
     setFormData((prev) => ({ ...prev, branchId: branchId }));
     setSelectedBranch(branch);
@@ -176,7 +176,7 @@ const UpdateInventory = () => {
         threshold: inv.threshold || 5,
         costPrice: inv.costPrice || 0,
         sellingPrice: inv.sellingPrice || 0,
-        branchId: typeof inv.branchId === 'object' && inv.branchId._id ? inv.branchId._id : (inv.branchId || ''),
+        branchId: typeof inv.branchId === 'object' && inv.branchId?._id ? inv.branchId._id : (inv.branchId || ''),
         supplier: {
           name: inv.supplier?.name || '',
           contact: inv.supplier?.contact || '',
@@ -208,10 +208,10 @@ const UpdateInventory = () => {
         troubleshooting: inv.troubleshooting || [{ issue: '', solution: '' }],
         notes: inv.notes || ''
       });
-      console.log('Form data initialized with branchId:', typeof inv.branchId === 'object' && inv.branchId._id ? inv.branchId._id : (inv.branchId || ''));
+      console.log('Form data initialized with branchId:', typeof inv.branchId === 'object' && inv.branchId?._id ? inv.branchId._id : (inv.branchId || ''));
       
       // Set initial selected branch if we have populated branch data
-      if (typeof inv.branchId === 'object' && inv.branchId.branchName) {
+      if (typeof inv.branchId === 'object' && inv.branchId?.branchName) {
         setSelectedBranch(inv.branchId);
 
       }
@@ -221,7 +221,7 @@ const UpdateInventory = () => {
   // Set selectedBranch when branches are loaded and we have a branchId
   useEffect(() => {
     if (branchesData?.branches && formData.branchId && !selectedBranch) {
-      const branch = branchesData.branches.find((b) => b._id === formData.branchId);
+      const branch = branchesData.branches.find((b) => b && b._id === formData.branchId);
       if (branch) {
         setSelectedBranch(branch);
 
@@ -561,10 +561,10 @@ const UpdateInventory = () => {
       });
       
       // Reset selected branch
-      if (typeof inv.branchId === 'object' && inv.branchId.branchName) {
+      if (typeof inv.branchId === 'object' && inv.branchId?.branchName) {
         setSelectedBranch(inv.branchId);
       } else if (inv.branchId) {
-        const branch = branchesData?.branches?.find((b) => b._id === inv.branchId);
+        const branch = branchesData?.branches?.find((b) => b && b._id === inv.branchId);
         setSelectedBranch(branch || null);
       } else {
         setSelectedBranch(null);
@@ -748,10 +748,10 @@ const UpdateInventory = () => {
                       >
                         <option value="">Select branch</option>
                         {branchesData?.branches?.map(branch => {
-
+                          if (!branch || !branch._id) return null;
                           return (
                             <option key={branch._id} value={branch._id}>
-                              {branch.branchName} - {branch.address}
+                              {branch?.branchName || 'Unknown Branch'} - {branch?.address || 'No Address'}
                             </option>
                           );
                         })}
@@ -766,11 +766,11 @@ const UpdateInventory = () => {
                       <HStack>
                         <Icon as={MdBusiness} w={5} h={5} color="#2BA8D1" />
                         <Text fontWeight="semibold" color="blue.700">
-                          Selected Branch: {selectedBranch.branchName}
+                          Selected Branch: {selectedBranch?.branchName || 'No Branch Selected'}
                         </Text>
                       </HStack>
                       <Text fontSize="sm" color="blue.600" mt={1}>
-                        {selectedBranch.address}
+                        {selectedBranch?.address || 'No Address Available'}
                       </Text>
                     </Box>
                   )}

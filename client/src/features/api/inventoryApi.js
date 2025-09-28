@@ -102,6 +102,41 @@ export const inventoryApi = createApi({
       }),
       invalidatesTags: ["Inventory"],
     }),
+
+    // Check inventory thresholds
+    checkThresholds: builder.query({
+      query: (params) => {
+        // Filter out null/undefined values to prevent "null" string in URL
+        const cleanParams = {};
+        if (params?.branchId && params.branchId !== null && params.branchId !== 'null') {
+          cleanParams.branchId = params.branchId;
+        }
+        return { 
+          url: "/thresholds/check", 
+          params: cleanParams, 
+          credentials: "include" 
+        };
+      },
+      providesTags: ["Inventory"],
+    }),
+
+    // Send inventory alerts
+    sendAlerts: builder.mutation({
+      query: (params) => {
+        // Filter out null/undefined values
+        const cleanParams = {};
+        if (params?.branchId && params.branchId !== null && params.branchId !== 'null') {
+          cleanParams.branchId = params.branchId;
+        }
+        return { 
+          url: "/thresholds/alerts", 
+          method: "POST", 
+          body: cleanParams, 
+          credentials: "include" 
+        };
+      },
+      invalidatesTags: ["Inventory"],
+    }),
   }),
 });
 
@@ -112,6 +147,8 @@ export const {
   useCreateMutation: useCreateInventoryMutation,
   useUpdateMutation: useUpdateInventoryMutation,
   useUpdateStockMutation: useUpdateInventoryStockMutation,
-  useRemoveMutation: useDeleteInventoryMutation
+  useRemoveMutation: useDeleteInventoryMutation,
+  useCheckThresholdsQuery: useCheckInventoryThresholdsQuery,
+  useSendAlertsMutation: useSendInventoryAlertsMutation
 } = inventoryApi;
 

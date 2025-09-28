@@ -426,7 +426,7 @@ const AllReferredDoctors = () => {
                       <Th>Specialization</Th>
                       <Th>Patients</Th>
                       <Th>Earnings</Th>
-                      <Th>Commission</Th>
+                      
                       <Th>Status</Th>
                       <Th>Actions</Th>
                     </Tr>
@@ -482,11 +482,7 @@ const AllReferredDoctors = () => {
                             </Text>
                           </VStack>
                         </Td>
-                        <Td>
-                          <Text fontSize="sm">
-                            {rd.commissionRate}%
-                          </Text>
-                        </Td>
+                        
                         <Td>
                           <Badge
                             colorScheme={getStatusColor(rd.isActive)}

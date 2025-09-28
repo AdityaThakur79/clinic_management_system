@@ -14,7 +14,9 @@ import {
   useListInventoriesQuery, 
   useDeleteInventoryMutation,
   useUpdateInventoryStockMutation,
-  useGetInventoryAnalyticsQuery
+  useGetInventoryAnalyticsQuery,
+  useCheckInventoryThresholdsQuery,
+  useSendInventoryAlertsMutation
 } from '../../../features/api/inventoryApi';
 import { useGetAllBranchesQuery } from '../../../features/api/branchApi';
 import { 
@@ -57,7 +59,7 @@ const Inventories = () => {
   // Get current user for role-based filtering
   const user = useSelector((state) => state.auth.user);
   const userRole = user?.role;
-  const userBranchId = user?.branch?._id || user?.branch || '';
+  const userBranchId = user?.branch?._id || user?.branch || null;
 
   const { data, isFetching, refetch, error, isLoading } = useListInventoriesQuery({ 
     page: currentPage, 
@@ -75,6 +77,7 @@ const Inventories = () => {
   const { data: branchesData } = useGetAllBranchesQuery({ page: 1, limit: 100, search: '' });
   const [deleteInventory, { isLoading: isDeleting }] = useDeleteInventoryMutation();
   const [updateStock, { isLoading: isUpdatingStock }] = useUpdateInventoryStockMutation();
+  const [sendAlerts, { isLoading: isSendingAlerts }] = useSendInventoryAlertsMutation();
 
   const cardBg = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
@@ -129,6 +132,17 @@ const Inventories = () => {
   };
 
   const handleStockUpdateClick = (inventory) => {
+    if (!inventory || !inventory._id) {
+      toast({
+        title: 'Error',
+        description: 'Invalid inventory item selected.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    
     setInventoryForStockUpdate(inventory);
     setStockUpdateData({
       operation: 'add',
@@ -140,6 +154,17 @@ const Inventories = () => {
 
   const handleStockUpdate = async () => {
     try {
+      if (!inventoryForStockUpdate?._id) {
+        toast({
+          title: 'Error',
+          description: 'No inventory item selected for stock update.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
       await updateStock({
         id: inventoryForStockUpdate._id,
         ...stockUpdateData
@@ -162,6 +187,28 @@ const Inventories = () => {
         description: error?.data?.message || 'Failed to update stock.',
         status: 'error',
         duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleSendInventoryAlerts = async () => {
+    try {
+      const result = await sendAlerts({ branchId: userBranchId }).unwrap();
+      
+      toast({
+        title: 'Inventory Alerts Sent!',
+        description: `Alerts sent to ${result.alertResult?.results?.length || 0} recipients for ${result.itemsCount || 0} items.`,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: 'Failed to send alerts',
+        description: error?.data?.message || 'Something went wrong while sending alerts.',
+        status: 'error',
+        duration: 5000,
         isClosable: true,
       });
     }
@@ -197,7 +244,7 @@ const Inventories = () => {
   // Handle select all
   const handleSelectAll = (checked) => {
     if (checked) {
-      setSelectedInventories(data?.inventories?.map(inv => inv._id) || []);
+      setSelectedInventories(data?.inventories?.filter(inv => inv && inv._id).map(inv => inv._id) || []);
     } else {
       setSelectedInventories([]);
     }
@@ -296,6 +343,21 @@ const Inventories = () => {
               }}
             >
               Refresh
+            </Button>
+            <Button
+              leftIcon={<WarningIcon />}
+              variant="outline"
+              colorScheme="orange"
+              onClick={handleSendInventoryAlerts}
+              isLoading={isSendingAlerts}
+              _hover={{ 
+                bg: "orange.500", 
+                color: "white",
+                transform: "translateY(-2px)",
+                boxShadow: "0 10px 25px rgba(255, 140, 0, 0.3)"
+              }}
+            >
+              Check Thresholds
             </Button>
             <Button
               leftIcon={<Icon as={MdAdd} />}
@@ -529,7 +591,11 @@ const Inventories = () => {
                     </Tr>
                   </Thead>
                   <Tbody>
-                    {data?.inventories?.map((inventory) => (
+                    {data?.inventories?.map((inventory) => {
+                      if (!inventory || !inventory._id) {
+                        return null; // Skip invalid inventory items
+                      }
+                      return (
                       <Tr key={inventory._id}>
                         <Td>
                           <Checkbox
@@ -556,11 +622,7 @@ const Inventories = () => {
                           <Text fontSize="sm" fontWeight="medium">
                             {inventory.branchId?.branchName || 'N/A'}
                           </Text>
-                          {inventory.branchId?.address && (
-                            <Text fontSize="xs" color="gray.500">
-                              {inventory.branchId.address}
-                            </Text>
-                          )}
+                          
                         </Td>
                         <Td>
                           <VStack align="start" spacing={1}>
@@ -726,7 +788,8 @@ const Inventories = () => {
                           </HStack>
                         </Td>
                       </Tr>
-                    ))}
+                      );
+                    })}
                   </Tbody>
                   <Thead>
                     <Tr>
@@ -950,9 +1013,12 @@ const Inventories = () => {
         <Modal isOpen={isStockModalOpen} onClose={onStockModalClose}>
           <ModalOverlay />
           <ModalContent>
-            <ModalHeader>Update Stock - {inventoryForStockUpdate?.deviceName}</ModalHeader>
+            <ModalHeader>Update Stock - {inventoryForStockUpdate?.deviceName || 'Unknown Item'}</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
+              {!inventoryForStockUpdate ? (
+                <Text color="red.500">No inventory item selected for stock update.</Text>
+              ) : (
               <VStack spacing={4} align="stretch">
                 <FormControl>
                   <FormLabel>Operation</FormLabel>
@@ -1003,6 +1069,7 @@ const Inventories = () => {
                   </Box>
                 </Alert>
               </VStack>
+              )}
             </ModalBody>
             <ModalFooter>
               <Button variant="outline" mr={3} onClick={onStockModalClose}>

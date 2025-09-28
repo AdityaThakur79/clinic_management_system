@@ -229,15 +229,14 @@ export const getMultipleDateAvailability = async (req, res) => {
       };
 
       const bookedTimeSlots = appointments.map(apt => normalizeTime(apt.timeSlot));
+      const bookedSlotsSet = new Set(bookedTimeSlots);
       
-      // Filter out booked slots
-      const finalAvailableSlots = availableSlots
-        .filter(slot => !bookedTimeSlots.includes(normalizeTime(slot)))
-        .map(slot => ({
-          time: slot,
-          isAvailable: true,
-          isBooked: false
-        }));
+      // Show ALL slots (both available and booked) with their status
+      const finalAvailableSlots = availableSlots.map(slot => ({
+        time: slot,
+        isAvailable: !bookedSlotsSet.has(normalizeTime(slot)),
+        isBooked: bookedSlotsSet.has(normalizeTime(slot))
+      }));
 
       results.push({
         date: currentDate.toISOString().split('T')[0],
@@ -938,15 +937,16 @@ export const getTodayAppointments = async (req, res) => {
   try {
     const { branchId, doctorId } = req.query;
 
-    // Get today's date range
+    // Get today's date range - use local date to match appointment creation
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const tomorrowStart = new Date(todayStart);
+    tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+
 
     // Build filter for today's appointments
     const filter = {
-      date: { $gte: today, $lt: tomorrow }
+      date: { $gte: todayStart, $lt: tomorrowStart }
     };
 
     if (branchId) filter.branchId = branchId;
@@ -959,6 +959,7 @@ export const getTodayAppointments = async (req, res) => {
       .populate('branchId', 'branchName address')
       .populate('referredDoctorId', 'name clinicName')
       .sort({ timeSlot: 1 });
+
 
     // Group by status
     const grouped = {
