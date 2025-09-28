@@ -27,6 +27,8 @@ const AddService = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    price: '',
+    category: 'other',
     isActive: 'active',
   });
 
@@ -47,6 +49,9 @@ const AddService = () => {
   const validateForm = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = 'Service name is required';
+    if (formData.price && (isNaN(formData.price) || parseFloat(formData.price) < 0)) {
+      newErrors.price = 'Price must be a valid positive number';
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -68,6 +73,8 @@ const AddService = () => {
       const payload = {
         name: formData.name.trim(),
         description: formData.description,
+        price: formData.price ? parseFloat(formData.price) : 0,
+        category: formData.category,
         isActive: formData.isActive === 'active',
       };
       const result = await createService(payload).unwrap();
@@ -78,7 +85,13 @@ const AddService = () => {
         duration: 5000,
         isClosable: true,
       });
-      setFormData({ name: '', description: '', isActive: 'active' });
+      setFormData({ 
+        name: '', 
+        description: '', 
+        price: '',
+        category: 'other',
+        isActive: 'active' 
+      });
       setErrors({});
       setTimeout(() => {
         navigate('/admin/services/all');
@@ -172,7 +185,7 @@ const AddService = () => {
                     value={formData.description}
                     onChange={handleInputChange}
                     placeholder="Enter a short description of the service"
-                    rows={4}
+                    rows={3}
                     borderRadius="lg"
                     border="2px solid"
                     borderColor="gray.200"
@@ -184,12 +197,65 @@ const AddService = () => {
                   />
                 </FormControl>
 
+                <FormControl isInvalid={errors.price}>
+                  <FormLabel fontWeight="600" color="gray.700" mb={2}>
+                    Price (₹)
+                  </FormLabel>
+                  <Input
+                    name="price"
+                    type="number"
+                    value={formData.price}
+                    onChange={handleInputChange}
+                    placeholder="0"
+                    borderRadius="lg"
+                    border="2px solid"
+                    borderColor="gray.200"
+                    _focus={{ borderColor: '#3AC0E7', boxShadow: '0 0 0 3px rgba(58, 192, 231, 0.1)' }}
+                    _hover={{ borderColor: 'gray.300' }}
+                    h="48px"
+                    fontSize="md"
+                  />
+                  <FormErrorMessage>{errors.price}</FormErrorMessage>
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel fontWeight="600" color="gray.700" mb={2}>
+                    Category
+                  </FormLabel>
+                  <Select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleInputChange}
+                    borderRadius="lg"
+                    border="2px solid"
+                    borderColor="gray.200"
+                    _focus={{ borderColor: '#3AC0E7', boxShadow: '0 0 0 3px rgba(58, 192, 231, 0.1)' }}
+                    _hover={{ borderColor: 'gray.300' }}
+                    h="48px"
+                    fontSize="md"
+                  >
+                    <option value="consultation">Consultation</option>
+                    <option value="treatment">Treatment</option>
+                    <option value="medicine">Medicine</option>
+                    <option value="test">Test</option>
+                    <option value="hearing_aid">Hearing Aid</option>
+                    <option value="other">Other</option>
+                  </Select>
+                </FormControl>
+
+
                 {/* Actions */}
                 <HStack spacing={6} justify="flex-end" pt={2}>
                   <Button
                     variant="outline"
                     onClick={() => {
-                      setFormData({ name: '', description: '', isActive: 'active' });
+                      setFormData({ 
+                        name: '', 
+                        description: '', 
+                        price: '',
+                        category: 'other',
+                        isActive: 'active' 
+                      });
                       setErrors({});
                     }}
                     size="lg"

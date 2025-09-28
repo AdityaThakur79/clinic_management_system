@@ -21,7 +21,8 @@ app.use(
       "http://localhost:5173",
       "http://127.0.0.1:3000",
       "http://127.0.0.1:8080",
-      "https://aartiket-speech-and-hearing-care.onrender.com"
+      "https://aartiket-speech-and-hearing-care.onrender.com",
+      "https://aartiketspeechandhearingcare.in"
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -49,6 +50,7 @@ import inventoryRoutes from "./routes/inventory.js";
 import searchRoutes from "./routes/search.js";
 import enquiryRoutes from "./routes/enquiry.js";
 import settingsRoutes from "./routes/settings.js";
+import blogRoutes from "./routes/blog.js";
 
 app.use("/api/user", userRoutes);
 app.use("/api/branch", branchRoutes);
@@ -65,6 +67,7 @@ app.use("/api/inventory", inventoryRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/enquiry", enquiryRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/blogs", blogRoutes);
 
 // Serve static files from uploads directory
 const __filename = fileURLToPath(import.meta.url);
@@ -102,5 +105,7 @@ if (clientDistExists) {
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
-
+  console.log(` Server is running on port ${PORT}`);
+  console.log(` Frontend available at: http://localhost:${PORT}`);
+  console.log(` API endpoints available at: http://localhost:${PORT}/api`);
 });

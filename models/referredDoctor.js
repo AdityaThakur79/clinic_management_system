@@ -27,9 +27,9 @@ const referredDoctorSchema = new mongoose.Schema(
       appointmentsCount: { type: Number, default: 0 }
     }],
     
-    // Commission details
-    commissionRate: { type: Number, default: 10 }, // Percentage
-    commissionAmount: { type: Number, default: 0 },
+    // Commission tracking (removed fixed commission - now based on individual appointments)
+    totalCommissionEarned: { type: Number, default: 0 },
+    totalCommissionPaid: { type: Number, default: 0 },
     
     // Contact details
     email: { type: String, trim: true, lowercase: true },

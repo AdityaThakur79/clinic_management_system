@@ -14,8 +14,7 @@ const AddReferredDoctor = () => {
     email: '', 
     address: '', 
     specialization: '', 
-    branchId: '', 
-    commissionRate: 10 
+    branchId: ''
   });
   const [createRefDoc, { isLoading }] = useCreateReferredDoctorMutation();
   const { data: branchesData } = useGetAllBranchesQuery({ page: 1, limit: 100, isActive: true });
@@ -177,32 +176,6 @@ const AddReferredDoctor = () => {
                 </FormControl>
               </Box>
 
-              {/* Commission Settings */}
-              <Box>
-                <Text fontSize="lg" fontWeight="bold" mb={4} color={brandColor}>
-                  <Icon as={MdAttachMoney} mr={2} color={brandColor} />
-                  Commission Settings
-                </Text>
-                <FormControl>
-                  <FormLabel>Commission Rate (%)</FormLabel>
-                  <NumberInput 
-                    value={form.commissionRate} 
-                    onChange={(value) => setForm({ ...form, commissionRate: parseFloat(value) || 0 })}
-                    min={0}
-                    max={100}
-                    precision={2}
-                  >
-                    <NumberInputField borderRadius="lg" />
-                    <NumberInputStepper>
-                      <NumberIncrementStepper />
-                      <NumberDecrementStepper />
-                    </NumberInputStepper>
-                  </NumberInput>
-                  <Text fontSize="sm" color="gray.600" mt={1}>
-                    Default commission rate for this referred doctor
-                  </Text>
-                </FormControl>
-              </Box>
 
               <HStack justify="flex-end" pt={4}>
                 <Button 

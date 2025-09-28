@@ -34,6 +34,13 @@ const appointmentSchema = new mongoose.Schema(
     // Completion details
     completedAt: { type: Date },
     completedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    
+    // Commission details for referred doctors
+    commissionAmount: { type: Number, default: 0 },
+    commissionPaid: { type: Boolean, default: false },
+    commissionPaidAt: { type: Date },
+    commissionPaidBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    commissionNotes: { type: String, trim: true },
   },
   { timestamps: true }
 );

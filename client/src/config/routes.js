@@ -28,6 +28,8 @@ import HearingAidDevice from '../views/User/HearingAidDevice';
 import LocationSEO from '../views/User/Pages/LocationSEO';
 import BookAppointment from '../views/User/Pages/BookAppointment';
 import ServiceBookingPage from '../views/User/Pages/ServiceBookingPage';
+import Blogs from '../views/User/Pages/Blogs';
+import BlogDetail from '../views/User/Pages/BlogDetail';
 import Settings from '../views/admin/Settings/Settings';
 
 // Public Routes (No authentication required)
@@ -109,6 +111,18 @@ export const publicRoutes = [
     path: '/mumbai/:areaSlug',
     element: <LocationSEO />,
     name: 'Mumbai Locality SEO',
+    showInNav: false,
+  },
+  {
+    path: '/blogs',
+    element: <Blogs />,
+    name: 'Blogs',
+    showInNav: true,
+  },
+  {
+    path: '/blogs/:slug',
+    element: <BlogDetail />,
+    name: 'Blog Detail',
     showInNav: false,
   },
 ];

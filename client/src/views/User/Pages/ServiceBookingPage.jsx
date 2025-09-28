@@ -235,6 +235,14 @@ const ServiceBookingPage = () => {
         timeSlot: selectedTime,
         serviceDuration: service.duration || 30,
         notes: formData.notes,
+        // Include service details from frontend data
+        serviceDetails: {
+          importance: service.detailedContent?.overview || service.description,
+          benefits: service.detailedContent?.benefits || [],
+          duration: service.detailedContent?.duration || service.duration || '30 minutes',
+          preparationInstructions: service.detailedContent?.preparation?.join(', ') || 'Please arrive 15 minutes early',
+          detailedInfo: service.detailedContent?.whatToExpect?.join(', ') || service.detailedContent?.process?.join(', ') || service.description,
+        },
         patient: {
           name: formData.name,
           email: formData.email,

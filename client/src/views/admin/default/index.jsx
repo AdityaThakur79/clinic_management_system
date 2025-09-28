@@ -142,17 +142,17 @@ export default function UserReports() {
       ) : (
         <>
           <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap="20px" mb="20px">
-            <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm"><Text fontWeight="700" color={textSecondary}>Total Patients</Text><Text fontSize="2xl" color={textPrimary}>{totals.totalPatients || 0}</Text></Box>
-            <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm"><Text fontWeight="700" color={textSecondary}>Appointments</Text><Text fontSize="2xl" color={textPrimary}>{totals.totalAppointments || 0}</Text></Box>
-            <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm"><Text fontWeight="700" color={textSecondary}>Completed</Text><Text fontSize="2xl" color={textPrimary}>{totals.completedAppointments || 0}</Text></Box>
-            <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm"><Text fontWeight="700" color={textSecondary}>Total Billed</Text><Text fontSize="2xl" color={textPrimary}>₹{Number(showTotalBilled).toLocaleString('en-IN')}</Text></Box>
+            <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm"><Text fontWeight="700" color={textSecondary}>Total Patients</Text><Box fontSize="2xl" color={textPrimary}>{totals.totalPatients || 0}</Box></Box>
+            <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm"><Text fontWeight="700" color={textSecondary}>Appointments</Text><Box fontSize="2xl" color={textPrimary}>{totals.totalAppointments || 0}</Box></Box>
+            <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm"><Text fontWeight="700" color={textSecondary}>Completed</Text><Box fontSize="2xl" color={textPrimary}>{totals.completedAppointments || 0}</Box></Box>
+            <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm"><Text fontWeight="700" color={textSecondary}>Total Billed</Text><Box fontSize="2xl" color={textPrimary}>₹{Number(showTotalBilled).toLocaleString('en-IN')}</Box></Box>
           </SimpleGrid>
 
           <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap="20px" mb="20px">
-            <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm"><Text fontWeight="700" color={textSecondary}>Total Paid</Text><Text fontSize="2xl" color={textPrimary}>₹{Number(showTotalPaid).toLocaleString('en-IN')}</Text></Box>
-            <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm"><Text fontWeight="700" color={textSecondary}>Outstanding</Text><Text fontSize="2xl" color={textPrimary}>₹{Number(showOutstanding).toLocaleString('en-IN')}</Text></Box>
-            <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm"><Text fontWeight="700" color={textSecondary}>Wallet Patients</Text><Text fontSize="2xl" color={textPrimary}>{showWalletPatients}</Text></Box>
-            <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm"><Text fontWeight="700" color={textSecondary}>Wallet Collected</Text><Text fontSize="2xl" color={textPrimary}>₹{Number(showWalletCollected).toLocaleString('en-IN')}</Text></Box>
+            <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm"><Text fontWeight="700" color={textSecondary}>Total Paid</Text><Box fontSize="2xl" color={textPrimary}>₹{Number(showTotalPaid).toLocaleString('en-IN')}</Box></Box>
+            <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm"><Text fontWeight="700" color={textSecondary}>Outstanding</Text><Box fontSize="2xl" color={textPrimary}>₹{Number(showOutstanding).toLocaleString('en-IN')}</Box></Box>
+            <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm"><Text fontWeight="700" color={textSecondary}>Wallet Patients</Text><Box fontSize="2xl" color={textPrimary}>{showWalletPatients}</Box></Box>
+            <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm"><Text fontWeight="700" color={textSecondary}>Wallet Collected</Text><Box fontSize="2xl" color={textPrimary}>₹{Number(showWalletCollected).toLocaleString('en-IN')}</Box></Box>
           </SimpleGrid>
           <SimpleGrid columns={{ base: 1, md: 2 }} gap="20px" mt="20px">
             <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm">

@@ -164,7 +164,7 @@ export const createAppointment = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const { branchId, service, date, timeSlot, notes, referredDoctorId, patient, patientId, servicePrice, serviceDuration } = req.body;
+    const { branchId, service, date, timeSlot, notes, referredDoctorId, patient, patientId, servicePrice, serviceDuration, serviceDetails } = req.body;
 
     // Validate required fields
     if (!branchId || !service || !date || !timeSlot) {
@@ -258,6 +258,8 @@ export const createAppointment = async (req, res) => {
     session.endSession();
     // Send notifications in background (non-blocking)
     try {
+      // Service details will be passed from frontend
+      
       const [populatedAppointment, populatedBranch] = await Promise.all([
         Appointment.findById(appointmentDoc._id)
           .populate('patientId', 'name email contact')
@@ -269,65 +271,428 @@ export const createAppointment = async (req, res) => {
       (async () => {
         try {
           const superAdminEmail = process.env.SUPERADMIN_EMAIL || process.env.ADMIN_EMAIL;
-          const formatDate = (d) => new Date(d).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+          const formatDate = (d) => new Date(d).toLocaleDateString('en-IN', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            weekday: 'long'
+          });
           const patientEmail = populatedAppointment?.patientId?.email;
           const toSend = [
             { to: patientEmail, role: 'Patient' },
             { to: superAdminEmail, role: 'SuperAdmin' },
           ].filter(e => !!e.to);
-
-          const subject = `Appointment Confirmed - ${populatedAppointment?.service} - ${formatDate(populatedAppointment?.date)} ${populatedAppointment?.timeSlot}`;
+      
+          const subject = `✅ Appointment Confirmed - ${populatedAppointment?.service} - ${formatDate(populatedAppointment?.date)} ${populatedAppointment?.timeSlot}`;
+          
           const html = `
             <!doctype html>
             <html>
             <head>
               <meta charset="utf-8"/>
               <meta name="viewport" content="width=device-width, initial-scale=1"/>
-              <title>Appointment Confirmed</title>
+              <title>Appointment Confirmed - Aartiket Speech and Hearing Care</title>
               <style>
-                body{margin:0;background:#f5fbff;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;color:#0C2F4D}
-                .container{max-width:640px;margin:0 auto;padding:24px}
-                .card{background:#fff;border-radius:16px;box-shadow:0 10px 25px rgba(12,47,77,.08);overflow:hidden}
-                .header{background:linear-gradient(135deg,#2BA8D1,#3AC0E7);color:#fff;padding:28px;text-align:center}
-                .title{margin:0;font-size:22px}
-                .sub{margin:6px 0 0 0;opacity:.95}
-                .content{padding:24px}
-                .row{display:flex;justify-content:space-between;gap:12px;margin:8px 0}
-                .label{font-weight:600;color:#2BA8D1}
-                .val{color:#0C2F4D}
-                .cta{display:inline-block;margin-top:16px;background:#2BA8D1;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;box-shadow:0 6px 16px rgba(43,168,209,.35)}
-                .footer{text-align:center;color:#42607a;font-size:12px;padding:18px}
-                @media (max-width:480px){.row{flex-direction:column;align-items:flex-start}}
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body {
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                  line-height: 1.6;
+                  color: #333;
+                  background-color: white;
+                }
+                .container {
+                  max-width: 600px;
+                  margin: 0 auto;
+                  background: white;
+                  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                }
+                
+                /* Header with Cover Image */
+                .header {
+                  position: relative;
+                  background: #2BA8D1;
+                  text-align: center;
+                  color: white;
+                  overflow: hidden;
+                }
+                .cover-image {
+                  width: 100%;
+                  height: 250px;
+                  object-fit: cover;
+                  object-position: center;
+                  display: block;
+                }
+                .header-overlay {
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  right: 0;
+                  bottom: 0;
+                  background: rgba(43, 168, 209, 0.85);
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  align-items: center;
+                  padding: 20px;
+                }
+                .clinic-name {
+                  font-size: 24px;
+                  font-weight: bold;
+                  margin-bottom: 8px;
+                }
+                .confirmation-badge {
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 8px;
+                  background: rgba(255,255,255,0.2);
+                  padding: 8px 16px;
+                  border-radius: 20px;
+                  font-weight: 600;
+                }
+                
+                /* Content */
+                .content {
+                  padding: 30px;
+                }
+                .success-message {
+                  text-align: center;
+                  margin-bottom: 30px;
+                  padding: 20px;
+                  background: #f0f9ff;
+                  border-radius: 12px;
+                  border: 2px solid #2BA8D1;
+                }
+                .success-title {
+                  font-size: 22px;
+                  color: #2BA8D1;
+                  font-weight: bold;
+                  margin-bottom: 8px;
+                }
+                .success-text {
+                  color: #666;
+                  font-size: 16px;
+                }
+                
+                /* Appointment Details */
+                .appointment-details {
+                  background: #f8fafc;
+                  border-radius: 12px;
+                  padding: 24px;
+                  margin-bottom: 30px;
+                  border: 1px solid #e2e8f0;
+                }
+                .details-title {
+                  font-size: 18px;
+                  color: #2BA8D1;
+                  font-weight: bold;
+                  margin-bottom: 16px;
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                }
+                .detail-item {
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  padding: 12px 0;
+                  border-bottom: 1px solid #e2e8f0;
+                }
+                .detail-item:last-child {
+                  border-bottom: none;
+                }
+                .detail-label {
+                  font-weight: 600;
+                  color: #64748b;
+                }
+                .detail-value {
+                  font-weight: 600;
+                  color: #1a365d;
+                  text-align: right;
+                }
+                .highlight {
+                  color: #2BA8D1;
+                  font-weight: bold;
+                }
+                
+                 /* Action Buttons */
+                 .actions {
+                   margin-bottom: 30px;
+                   text-align: center;
+                 }
+                 .btn {
+                   display: inline-block;
+                   min-width: 160px;
+                   padding: 14px 24px;
+                   border-radius: 8px;
+                   text-decoration: none;
+                   font-weight: 600;
+                   text-align: center;
+                   margin: 0 10px 10px 10px;
+                 }
+                 .btn-primary {
+                   background: white;
+                   color: #2BA8D1;
+                   border: 2px solid #2BA8D1;
+                 }
+                 .btn-primary:hover {
+                   background: #2BA8D1;
+                   color: white;
+                   transform: translateY(-2px);
+                 }
+                 .btn-secondary {
+                   background: white;
+                   color: #2BA8D1;
+                   border: 2px solid #2BA8D1;
+                 }
+                 .btn-secondary:hover {
+                   background: #2BA8D1;
+                   color: white;
+                   transform: translateY(-2px);
+                 }
+                 
+                 /* Service Information */
+                 .service-info {
+                   background: #f8fafc;
+                   border-radius: 12px;
+                   padding: 24px;
+                   margin-bottom: 24px;
+                   border: 2px solid #e2e8f0;
+                 }
+                 .service-title {
+                   font-size: 18px;
+                   font-weight: bold;
+                   color: #2BA8D1;
+                   margin-bottom: 16px;
+                   display: flex;
+                   align-items: center;
+                   gap: 8px;
+                 }
+                 .service-details {
+                   display: grid;
+                   grid-template-columns: 1fr;
+                   gap: 16px;
+                 }
+                 @media (min-width: 600px) {
+                   .service-details {
+                     grid-template-columns: repeat(2, 1fr);
+                   }
+                 }
+                 .service-section {
+                   background: white;
+                   padding: 16px;
+                   border-radius: 8px;
+                   border-left: 4px solid #2BA8D1;
+                 }
+                 .section-title {
+                   font-size: 14px;
+                   font-weight: bold;
+                   color: #1a365d;
+                   margin-bottom: 8px;
+                 }
+                 .section-content {
+                   font-size: 14px;
+                   color: #64748b;
+                   line-height: 1.5;
+                   margin: 0;
+                 }
+                 .benefits-list {
+                   margin: 0;
+                   padding-left: 16px;
+                 }
+                 .benefits-list li {
+                   font-size: 14px;
+                   color: #64748b;
+                   margin-bottom: 4px;
+                 }
+                
+                /* Quick Info */
+                .quick-info {
+                  background: #f0f9ff;
+                  border-radius: 8px;
+                  padding: 20px;
+                  margin-bottom: 20px;
+                }
+                .info-title {
+                  font-weight: bold;
+                  color: #2BA8D1;
+                  margin-bottom: 12px;
+                }
+                .info-list {
+                  list-style: none;
+                  padding: 0;
+                }
+                .info-list li {
+                  padding: 4px 0;
+                  color: #64748b;
+                  position: relative;
+                  padding-left: 20px;
+                }
+                .info-list li::before {
+                  content: '•';
+                  color: #2BA8D1;
+                  font-weight: bold;
+                  position: absolute;
+                  left: 0;
+                }
+                
+                /* Footer */
+                .footer {
+                  background: #2BA8D1;
+                  color: white;
+                  padding: 24px 30px;
+                  text-align: center;
+                }
+                .footer-title {
+                  font-size: 18px;
+                  font-weight: bold;
+                  margin-bottom: 8px;
+                }
+                .footer-text {
+                  opacity: 0.9;
+                  font-size: 14px;
+                  line-height: 1.5;
+                }
+                 .contact-info {
+                   margin-top: 16px;
+                   text-align: center;
+                 }
+                .contact-item {
+                  font-size: 14px;
+                  opacity: 0.9;
+                  display: inline-block;
+                  margin: 0 10px;
+                }
+                .contact-item a {
+                  color: white;
+                  text-decoration: none;
+                }
+                
+                @media (max-width: 600px) {
+                  .content { padding: 20px; }
+                  .footer { padding: 20px; }
+                  .btn { min-width: auto; margin: 5px; }
+                  .detail-item { display: block; }
+                  .detail-label { display: block; margin-bottom: 4px; }
+                  .detail-value { text-align: left; margin-left: 4px; }
+                  .contact-item { display: block; margin: 5px 0; }
+                }
               </style>
             </head>
             <body>
               <div class="container">
-                <div class="card">
-                  <div class="header">
-                    <h1 class="title">Appointment Confirmed</h1>
-                    <p class="sub">Your visit has been scheduled successfully</p>
+                <!-- Header with Cover Image -->
+                <div class="header">
+                  <img src="https://res.cloudinary.com/dydzcpu4w/image/upload/v1759043284/popup_modal_banner_uuc7wq.jpg" alt="Aartiket Speech and Hearing Care" class="cover-image" />
+                  
+                </div>
+      
+                <!-- Main Content -->
+                <div class="content">
+                  <!-- Success Message -->
+                  <div class="success-message">
+                    <h2 class="success-title">Your Appointment is Confirmed!</h2>
+                    <p class="success-text">Thank you for choosing us. We look forward to helping you with your hearing and speech needs.</p>
                   </div>
-                  <div class="content">
-                    <div class="row"><span class="label">Service</span><span class="val">${populatedAppointment?.service}</span></div>
-                    <div class="row"><span class="label">Date</span><span class="val">${formatDate(populatedAppointment?.date)}</span></div>
-                    <div class="row"><span class="label">Time</span><span class="val">${populatedAppointment?.timeSlot}</span></div>
-                    <div class="row"><span class="label">Branch</span><span class="val">${populatedAppointment?.branchId?.branchName || populatedBranch?.branchName}</span></div>
-                    <div class="row"><span class="label">Address</span><span class="val">${populatedAppointment?.branchId?.address || populatedBranch?.address}</span></div>
-                    <div class="row"><span class="label">Charges</span><span class="val">₹${populatedAppointment?.charges || 'TBD'}</span></div>
-                    <a class="cta" href="https://maps.google.com/?q=${encodeURIComponent(populatedAppointment?.branchId?.address || populatedBranch?.address || '')}" target="_blank" rel="noreferrer">Open in Maps</a>
+      
+                  <!-- Appointment Details -->
+                  <div class="appointment-details">
+                    <h3 class="details-title">
+                     
+                      Appointment Details
+                    </h3>
+                    <div class="detail-item">
+                      <span class="detail-label">Service</span>
+                      <span class="detail-value highlight">${populatedAppointment?.service}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Date</span>
+                      <span class="detail-value">${formatDate(populatedAppointment?.date)}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Time</span>
+                      <span class="detail-value">${populatedAppointment?.timeSlot}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Branch</span>
+                      <span class="detail-value">${populatedAppointment?.branchId?.branchName || populatedBranch?.branchName}</span>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Address</span>
+                      <span class="detail-value">${populatedAppointment?.branchId?.address || populatedBranch?.address}</span>
+                    </div>
                   </div>
-                  <div class="footer">
-                    <div>Need help? Call <a href="tel:+917977483031" style="color:#2BA8D1;text-decoration:none">+91 79774 83031</a> or email <a href="mailto:aartiketspeechandhearing@gmail.com" style="color:#2BA8D1;text-decoration:none">aartiketspeechandhearing@gmail.com</a></div>
+      
+                  <!-- Action Buttons -->
+                  <div class="actions">
+                    <a class="btn btn-primary" href="https://maps.google.com/?q=${encodeURIComponent(populatedAppointment?.branchId?.address || populatedBranch?.address || '')}" target="_blank">
+                      📍 Get Directions
+                    </a>
+                    <a class="btn btn-secondary" href="tel:+917977483031">
+                      📞 Call Clinic
+                    </a>
+                  </div>
+      
+
+                  ${serviceDetails ? `
+                  <!-- Service Information -->
+                  <div class="service-info">
+                    <h3 class="service-title">📋 About Your Service</h3>
+                    <div class="service-details">
+                      <div class="service-section">
+                        <h4 class="section-title">Why This Service is Important:</h4>
+                        <p class="section-content">${serviceDetails.importance}</p>
+                      </div>
+                      <div class="service-section">
+                        <h4 class="section-title">What to Expect:</h4>
+                        <p class="section-content">${serviceDetails.detailedInfo}</p>
+                      </div>
+                      ${serviceDetails.preparationInstructions ? `
+                      <div class="service-section">
+                        <h4 class="section-title">Preparation Instructions:</h4>
+                        <p class="section-content">${serviceDetails.preparationInstructions}</p>
+                      </div>
+                      ` : ''}
+                      ${serviceDetails.benefits && serviceDetails.benefits.length > 0 ? `
+                      <div class="service-section">
+                        <h4 class="section-title">Benefits:</h4>
+                        <ul class="benefits-list">
+                          ${serviceDetails.benefits.map(benefit => `<li>${benefit}</li>`).join('')}
+                        </ul>
+                      </div>
+                      ` : ''}
+                    </div>
+                  </div>
+                  ` : ''}
+
+                  <!-- Quick Info -->
+                  <div class="quick-info">
+                    <div class="info-title">Before Your Visit:</div>
+                    <ul class="info-list">
+                      <li>Arrive 15 minutes early</li>
+                      <li>Bring valid ID and medical reports</li>
+                      <li>List current medications</li>
+                    </ul>
+                  </div>
+                </div>
+      
+                <!-- Footer -->
+                <div class="footer">
+                  <h3 class="footer-title">Need Help?</h3>
+                  <p class="footer-text">Contact us for any questions or to reschedule your appointment.</p>
+                  <div class="contact-info">
+                    <div class="contact-item">📞 <a href="tel:+917977483031">+91 79774 83031</a></div>
+                    <div class="contact-item">✉️ <a href="mailto:aartiketspeechandhearing@gmail.com">Email Us</a></div>
+                    <div class="contact-item">⏰ Mon-Sat, 9:00 AM - 6:00 PM</div>
                   </div>
                 </div>
               </div>
             </body>
             </html>
           `;
-
+      
           await Promise.all(toSend.map(({ to }) => sendEmail({ to, subject, html })));
         } catch (e) {
-
+          console.error('Email sending failed:', e);
         }
       })();
 
@@ -352,6 +717,12 @@ export const createAppointment = async (req, res) => {
           //       formatDate(populatedAppointment?.date),
           //       populatedAppointment?.timeSlot,
           //       populatedAppointment?.branchId?.branchName || '',
+          //       populatedAppointment?.branchId?.address || '',
+          //       populatedAppointment?.charges || 'TBD',
+          //       serviceDetails?.importance || 'Important for your health',
+          //       serviceDetails?.benefits?.join(', ') || 'Improved health outcomes',
+          //       serviceDetails?.duration || '30 minutes',
+          //       serviceDetails?.preparationInstructions || 'Please arrive 15 minutes early',
           //     ],
           //     source: 'api'
           //   };

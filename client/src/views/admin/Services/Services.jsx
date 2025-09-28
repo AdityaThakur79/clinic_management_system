@@ -32,6 +32,16 @@ import {
   Tooltip,
   Alert,
   AlertIcon,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  List,
+  ListItem,
+  ListIcon,
 } from '@chakra-ui/react';
 import {
   SearchIcon,
@@ -41,6 +51,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   EditIcon,
+  ViewIcon,
 } from '@chakra-ui/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { useGetAllServicesQuery, useDeleteServiceMutation } from '../../../features/api/service';
@@ -53,8 +64,10 @@ const Services = () => {
   const [pageSize, setPageSize] = useState(10);
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [selectedService, setSelectedService] = useState(null);
 
   const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const cardBg = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
@@ -94,6 +107,11 @@ const Services = () => {
     } catch (err) {
       toast({ title: 'Error', description: err?.data?.message || 'Failed to delete service.', status: 'error', duration: 3000 });
     }
+  };
+
+  const handleViewService = (service) => {
+    setSelectedService(service);
+    onOpen();
   };
 
   if (error) {
@@ -220,6 +238,16 @@ const Services = () => {
                         </Td>
                         <Td>
                           <HStack spacing={1}>
+                            <Tooltip label="View Details">
+                              <IconButton
+                                icon={<ViewIcon />}
+                                aria-label="View"
+                                size="sm"
+                                variant="ghost"
+                                colorScheme="blue"
+                                onClick={() => handleViewService(s)}
+                              />
+                            </Tooltip>
                             <Tooltip label="Edit Service">
                               <IconButton
                                 icon={<EditIcon />}
@@ -280,6 +308,147 @@ const Services = () => {
             </CardBody>
           </Card>
         )}
+
+        {/* Service Details Modal */}
+        <Modal isOpen={isOpen} onClose={onClose} size="4xl" scrollBehavior="inside">
+          <ModalOverlay />
+          <ModalContent maxH="90vh">
+            <ModalHeader>
+              <VStack align="start" spacing={2}>
+                <Text fontSize="xl" fontWeight="bold">{selectedService?.name}</Text>
+                <HStack spacing={2}>
+                  <Badge colorScheme={getStatusColor(selectedService?.isActive)} variant="subtle" borderRadius="full" px={3} py={1}>
+                    {selectedService?.isActive ? 'Active' : 'Inactive'}
+                  </Badge>
+                  <Badge colorScheme="blue" variant="outline" borderRadius="full" px={3} py={1}>
+                    {selectedService?.category || 'Other'}
+                  </Badge>
+                  <Text fontSize="sm" color="gray.600">
+                    ₹{selectedService?.price || 0}
+                  </Text>
+                </HStack>
+              </VStack>
+            </ModalHeader>
+            <ModalCloseButton />
+
+            <ModalBody overflowY="auto">
+              <VStack spacing={6} align="stretch">
+                {/* Basic Information */}
+                <Box>
+                  <Text fontSize="lg" fontWeight="semibold" mb={3} color="#2BA8D1">Basic Information</Text>
+                  <VStack spacing={3} align="stretch">
+                    <Box>
+                      <Text fontSize="sm" fontWeight="medium" color="gray.600">Description</Text>
+                      <Text fontSize="sm" color="gray.800">{selectedService?.description || 'No description provided'}</Text>
+                    </Box>
+                    {selectedService?.duration && (
+                      <Box>
+                        <Text fontSize="sm" fontWeight="medium" color="gray.600">Duration</Text>
+                        <Text fontSize="sm" color="gray.800">{selectedService.duration}</Text>
+                      </Box>
+                    )}
+                  </VStack>
+                </Box>
+
+                {/* Why This Service is Important */}
+                {selectedService?.importance && (
+                  <Box>
+                    <Text fontSize="lg" fontWeight="semibold" mb={3} color="#2BA8D1">Why This Service is Important</Text>
+                    <Text fontSize="sm" color="gray.800" lineHeight="1.6">{selectedService.importance}</Text>
+                  </Box>
+                )}
+
+                {/* Detailed Information */}
+                {selectedService?.detailedInfo && (
+                  <Box>
+                    <Text fontSize="lg" fontWeight="semibold" mb={3} color="#2BA8D1">What to Expect</Text>
+                    <Text fontSize="sm" color="gray.800" lineHeight="1.6">{selectedService.detailedInfo}</Text>
+                  </Box>
+                )}
+
+                {/* Preparation Instructions */}
+                {selectedService?.preparationInstructions && (
+                  <Box>
+                    <Text fontSize="lg" fontWeight="semibold" mb={3} color="#2BA8D1">Preparation Instructions</Text>
+                    <Text fontSize="sm" color="gray.800" lineHeight="1.6">{selectedService.preparationInstructions}</Text>
+                  </Box>
+                )}
+
+                {/* Benefits */}
+                {selectedService?.benefits && selectedService.benefits.length > 0 && (
+                  <Box>
+                    <Text fontSize="lg" fontWeight="semibold" mb={3} color="#2BA8D1">Benefits</Text>
+                    <List spacing={2}>
+                      {selectedService.benefits.map((benefit, index) => (
+                        <ListItem key={index} fontSize="sm" color="gray.800">
+                          <ListIcon color="#2BA8D1" />
+                          {benefit}
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Box>
+                )}
+
+                {/* Service Details */}
+                <Box>
+                  <Text fontSize="lg" fontWeight="semibold" mb={3} color="#2BA8D1">Service Details</Text>
+                  <VStack spacing={3} align="stretch">
+                    <Box>
+                      <Text fontSize="sm" fontWeight="medium" color="gray.600">Category</Text>
+                      <Text fontSize="sm" color="gray.800">{selectedService?.category || 'Other'}</Text>
+                    </Box>
+                    <Box>
+                      <Text fontSize="sm" fontWeight="medium" color="gray.600">Price</Text>
+                      <Text fontSize="sm" color="gray.800">₹{selectedService?.price || 0}</Text>
+                    </Box>
+                    <Box>
+                      <Text fontSize="sm" fontWeight="medium" color="gray.600">Created</Text>
+                      <Text fontSize="sm" color="gray.800">{formatDate(selectedService?.createdAt)}</Text>
+                    </Box>
+                    <Box>
+                      <Text fontSize="sm" fontWeight="medium" color="gray.600">Last Updated</Text>
+                      <Text fontSize="sm" color="gray.800">{formatDate(selectedService?.updatedAt)}</Text>
+                    </Box>
+                  </VStack>
+                </Box>
+              </VStack>
+            </ModalBody>
+
+            <ModalFooter>
+              <HStack spacing={3}>
+                <Button 
+                  variant="outline" 
+                  borderColor="#2BA8D1"
+                  color="#2BA8D1"
+                  onClick={onClose} 
+                  _hover={{ 
+                    bg: "#2BA8D1", 
+                    color: "white",
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 10px 25px rgba(43, 168, 209, 0.3)"
+                  }}
+                >
+                  Close
+                </Button>
+                <Button
+                  bg="#2BA8D1"
+                  color="white"
+                  _hover={{ 
+                    bg: '#0C2F4D',
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 10px 25px rgba(43, 168, 209, 0.3)"
+                  }}
+                  onClick={() => {
+                    onClose();
+                    navigate('/admin/service/update', { state: { serviceId: selectedService?._id } });
+                  }}
+                >
+                  Edit Service
+                </Button>
+              </HStack>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       </VStack>
     </Box>
   );

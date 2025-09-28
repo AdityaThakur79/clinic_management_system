@@ -32,7 +32,13 @@ const UpdateService = () => {
 
   const serviceId = location.state?.serviceId;
 
-  const [formData, setFormData] = useState({ name: '', description: '', isActive: 'active' });
+  const [formData, setFormData] = useState({ 
+    name: '', 
+    description: '', 
+    price: '',
+    category: 'other',
+    isActive: 'active' 
+  });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
@@ -55,6 +61,8 @@ const UpdateService = () => {
           setFormData({
             name: s.name || '',
             description: s.description || '',
+            price: s.price || '',
+            category: s.category || 'other',
             isActive: s.isActive ? 'active' : 'inactive',
           });
         } else {
@@ -78,6 +86,9 @@ const UpdateService = () => {
   const validateForm = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = 'Service name is required';
+    if (formData.price && (isNaN(formData.price) || parseFloat(formData.price) < 0)) {
+      newErrors.price = 'Price must be a valid positive number';
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -93,11 +104,13 @@ const UpdateService = () => {
         id: serviceId,
         name: formData.name.trim(),
         description: formData.description,
+        price: formData.price ? parseFloat(formData.price) : 0,
+        category: formData.category,
         isActive: formData.isActive === 'active',
       };
       const res = await updateService(payload).unwrap();
       toast({ title: 'Service Updated', description: res?.message || 'Service updated successfully.', status: 'success', duration: 4000 });
-      navigate('/admin/services');
+      navigate('/admin/services/all');
     } catch (err) {
       toast({ title: 'Update Failed', description: err?.data?.message || 'Failed to update service.', status: 'error', duration: 3000 });
     }
@@ -109,7 +122,7 @@ const UpdateService = () => {
         <Center py={20}>
           <VStack spacing={4}>
             <Text>No service selected for update.</Text>
-            <Button as={Link} to="/admin/services" leftIcon={<MdArrowBack />}>Back to Services</Button>
+            <Button as={Link} to="/admin/services/all" leftIcon={<MdArrowBack />}>Back to Services</Button>
           </VStack>
         </Center>
       </Box>
@@ -176,20 +189,92 @@ const UpdateService = () => {
               <VStack spacing={6} align="stretch">
                 <FormControl isInvalid={errors.name}>
                   <FormLabel fontWeight="600" color="gray.700" mb={2}>Service Name *</FormLabel>
-                  <Input name="name" value={formData.name} onChange={handleInputChange} placeholder="Enter service name" />
+                  <Input 
+                    name="name" 
+                    value={formData.name} 
+                    onChange={handleInputChange} 
+                    placeholder="Enter service name"
+                    borderRadius="lg"
+                    border="2px solid"
+                    borderColor="gray.200"
+                    _focus={{ borderColor: '#3AC0E7', boxShadow: '0 0 0 3px rgba(58, 192, 231, 0.1)' }}
+                    h="48px"
+                  />
                   <FormErrorMessage>{errors.name}</FormErrorMessage>
                 </FormControl>
+
                 <FormControl>
                   <FormLabel fontWeight="600" color="gray.700" mb={2}>Status</FormLabel>
-                  <Select name="isActive" value={formData.isActive} onChange={handleInputChange}>
+                  <Select 
+                    name="isActive" 
+                    value={formData.isActive} 
+                    onChange={handleInputChange}
+                    borderRadius="lg"
+                    border="2px solid"
+                    borderColor="gray.200"
+                    _focus={{ borderColor: '#3AC0E7', boxShadow: '0 0 0 3px rgba(58, 192, 231, 0.1)' }}
+                    h="48px"
+                  >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                   </Select>
                 </FormControl>
+
                 <FormControl>
                   <FormLabel fontWeight="600" color="gray.700" mb={2}>Description</FormLabel>
-                  <Textarea name="description" value={formData.description} onChange={handleInputChange} rows={4} placeholder="Enter description" />
+                  <Textarea 
+                    name="description" 
+                    value={formData.description} 
+                    onChange={handleInputChange} 
+                    rows={3} 
+                    placeholder="Enter description"
+                    borderRadius="lg"
+                    border="2px solid"
+                    borderColor="gray.200"
+                    _focus={{ borderColor: '#3AC0E7', boxShadow: '0 0 0 3px rgba(58, 192, 231, 0.1)' }}
+                    py={4}
+                    resize="vertical"
+                  />
                 </FormControl>
+
+                <FormControl isInvalid={errors.price}>
+                  <FormLabel fontWeight="600" color="gray.700" mb={2}>Price (₹)</FormLabel>
+                  <Input
+                    name="price"
+                    type="number"
+                    value={formData.price}
+                    onChange={handleInputChange}
+                    placeholder="0"
+                    borderRadius="lg"
+                    border="2px solid"
+                    borderColor="gray.200"
+                    _focus={{ borderColor: '#3AC0E7', boxShadow: '0 0 0 3px rgba(58, 192, 231, 0.1)' }}
+                    h="48px"
+                  />
+                  <FormErrorMessage>{errors.price}</FormErrorMessage>
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel fontWeight="600" color="gray.700" mb={2}>Category</FormLabel>
+                  <Select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleInputChange}
+                    borderRadius="lg"
+                    border="2px solid"
+                    borderColor="gray.200"
+                    _focus={{ borderColor: '#3AC0E7', boxShadow: '0 0 0 3px rgba(58, 192, 231, 0.1)' }}
+                    h="48px"
+                  >
+                    <option value="consultation">Consultation</option>
+                    <option value="treatment">Treatment</option>
+                    <option value="medicine">Medicine</option>
+                    <option value="test">Test</option>
+                    <option value="hearing_aid">Hearing Aid</option>
+                    <option value="other">Other</option>
+                  </Select>
+                </FormControl>
+
                 <HStack spacing={4} justify="flex-end" pt={2}>
                   <Button as={Link} to="/admin/services/all" variant="outline"   _hover={{ 
                   bg: "#2BA8D1", 

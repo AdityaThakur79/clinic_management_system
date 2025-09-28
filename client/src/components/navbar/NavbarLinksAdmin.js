@@ -1,6 +1,7 @@
 // Chakra Imports
 import {
   Avatar,
+  Box,
   Button,
   Flex,
   Icon,
@@ -265,9 +266,9 @@ export default function HeaderLinks(props) {
             >
               👋&nbsp; Hey, {user?.name}
               {user?.role ? (
-                <Text display="block" fontSize="xs" fontWeight="600" color={textColorBrand} mt="2px">
+                <Box display="block" fontSize="xs" fontWeight="600" color={textColorBrand} mt="2px">
                   {user.role}
-                </Text>
+                </Box>
               ) : null}
             </Text>
           </Flex>

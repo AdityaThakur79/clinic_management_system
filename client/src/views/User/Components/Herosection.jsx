@@ -20,7 +20,7 @@ const headers = [
   {
     title: 'Aartiket Speech & Hearing Care',
     subtitle:
-      'Comprehensive hearing tests, hearing aid trials & fitting, speech therapy — in Mumbai',
+      'Premier hearing care center offering comprehensive audiometry tests, hearing aid trials & fitting, speech therapy for all ages',
     image: assets.service_1,
     primaryColor: '#2BA8D1',
     secondaryColor: '#3AC0E7',
@@ -31,7 +31,7 @@ const headers = [
   {
     title: 'Expert Hearing Aid Solutions',
     subtitle:
-      'Professional hearing aid trials, fitting and programming for all ages — in Mumbai',
+      'Professional hearing aid trials, fitting and programming for all ages — personalized care and advanced technology solutions',
     image: assets.service_2,
     primaryColor: '#2BA8D1',
     secondaryColor: '#3AC0E7',
@@ -42,7 +42,7 @@ const headers = [
   {
     title: 'Comprehensive Speech Therapy',
     subtitle:
-      'Advanced speech therapy & hearing care for children and adults — across Mumbai',
+      'Advanced speech therapy & hearing care for children and adults — trusted by families for personalized treatment plans',
     image: assets.service_10,
     primaryColor: '#2BA8D1',
     secondaryColor: '#3AC0E7',
@@ -53,7 +53,7 @@ const headers = [
   {
     title: 'Advanced Hearing Technology',
     subtitle:
-      'State‑of‑the‑art hearing technology, ITC devices and discreet solutions — in Mumbai',
+      'State‑of‑the‑art hearing technology, ITC devices and discreet solutions — most trusted hearing care specialists',
     image: assets.image4,
     primaryColor: '#2BA8D1',
     secondaryColor: '#3AC0E7',
@@ -303,7 +303,7 @@ const HeroSection = () => {
                     {/* CTA Button */}
                     <Button
                       as={Link}
-                      to="/doctors"
+                      to="/book-an-appointment"
                       size={{ base: 'md', md: 'lg' }}
                       bg={`linear-gradient(135deg, ${item.primaryColor} 0%, ${item.secondaryColor} 100%)`}
                       color="white"

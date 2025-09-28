@@ -51,8 +51,7 @@ const AllDoctors = () => {
         key: 'showDoctorsOnAboutPage',
         value: !showDoctorsOnAboutPage
       }).unwrap();
-      
-      
+
       toast({
         title: 'Setting Updated',
         description: `Doctors will ${!showDoctorsOnAboutPage ? 'be shown' : 'not be shown'} on the About page`,
@@ -164,7 +163,7 @@ const AllDoctors = () => {
       setPagination(result.pagination || {});
     } catch (err) {
       setError(err);
-      console.error('Error fetching doctors:', err);
+      // Error fetching doctors
     } finally {
       setIsLoading(false);
     }
@@ -186,12 +185,10 @@ const AllDoctors = () => {
 
   // Handlers
   const handleViewDoctor = (doctor) => {
-    console.log('Selected doctor data:', doctor);
-    console.log('Available time slots:', doctor?.availableTimeSlots);
-    console.log('Available time slots type:', typeof doctor?.availableTimeSlots);
+    // Selected doctor data
     if (doctor?.availableTimeSlots) {
       Object.entries(doctor.availableTimeSlots).forEach(([day, slots]) => {
-        console.log(`${day}:`, slots, 'Type:', typeof slots, 'Is Array:', Array.isArray(slots));
+        // Day slots data
       });
     }
     setSelectedDoctor(doctor);
@@ -505,7 +502,6 @@ const AllDoctors = () => {
             )}
           </CardBody>
 
-          
         </Card>
 
         {/* Pagination */}
@@ -738,13 +734,13 @@ const AllDoctors = () => {
                                   // Check if it's a MongoDB ObjectId (24 character hex string)
                                   const isObjectId = /^[0-9a-fA-F]{24}$/.test(slot);
                                   if (isObjectId) {
-                                    console.log(`Filtered out ObjectId: ${slot} for day: ${day}`);
+                                    // Filtered out ObjectId
                                     return false;
                                   }
                                   // Check if it's a valid time format (basic check)
                                   const isTimeFormat = /^(\d{1,2}:\d{2}|\d{1,2}:\d{2}\s*(AM|PM|am|pm))/.test(slot);
                                   if (!isTimeFormat && slot.length > 10) {
-                                    console.log(`Filtered out non-time string: ${slot} for day: ${day}`);
+                                    // Filtered out non-time string
                                     return false;
                                   }
                                   return true;
@@ -752,7 +748,7 @@ const AllDoctors = () => {
                                 return true;
                               });
                               
-                              console.log(`Day: ${day}, Original slots:`, slotsArray, 'Valid slots:', validSlots);
+                              // Day slots processing
                               
                               return (
                                 <Box key={day} p={3} bg="gray.50" borderRadius="md">

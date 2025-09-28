@@ -2,7 +2,14 @@ import { Service } from "../models/services.js";
 
 export const createServiceController = async (req, res) => {
   try {
-    const { name, description = "", price = 0, category = "other", isActive = true } = req.body || {};
+    const { 
+      name, 
+      description = "", 
+      price = 0, 
+      category = "other", 
+      isActive = true 
+    } = req.body || {};
+    
     if (!name) {
       return res.status(400).json({ success: false, message: "Name is required" });
     }

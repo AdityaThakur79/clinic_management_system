@@ -34,6 +34,18 @@ export const referredDoctorsApi = createApi({
       query: ({ id, year }) => ({ url: `/${id}/payments`, params: { year }, credentials: 'include' }),
       providesTags: (result, error, { id }) => [{ type: 'ReferredDoctor', id }],
     }),
+    getEarnings: builder.query({
+      query: ({ id, ...params }) => ({ url: `/${id}/earnings`, params, credentials: 'include' }),
+      providesTags: (result, error, { id }) => [{ type: 'ReferredDoctor', id }],
+    }),
+    getAppointments: builder.query({
+      query: ({ id, ...params }) => ({ url: `/${id}/appointments`, params, credentials: 'include' }),
+      providesTags: (result, error, { id }) => [{ type: 'ReferredDoctor', id }],
+    }),
+    getCommissionSummary: builder.query({
+      query: ({ id, ...params }) => ({ url: `/${id}/commission-summary`, params, credentials: 'include' }),
+      providesTags: (result, error, { id }) => [{ type: 'ReferredDoctor', id }],
+    }),
   }),
 });
 
@@ -45,5 +57,8 @@ export const {
   useGetDetailsQuery: useGetReferredDoctorDetailsQuery,
   useAddPaymentMutation,
   useListPaymentsQuery,
+  useGetEarningsQuery,
+  useGetAppointmentsQuery,
+  useGetCommissionSummaryQuery,
 } = referredDoctorsApi;
 

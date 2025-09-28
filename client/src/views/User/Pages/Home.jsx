@@ -16,6 +16,8 @@ import TopDoctors from '../Components/TopDoctors'
 import HearingAidDevices from '../Components/HearingAidDevices'
 import HearingAidBrands from '../Components/HearingAidBrands'
 import PopupAppointmentModal from '../Components/PopupAppointmentModal'
+import BlogSection from '../Components/BlogSection'
+
 
 const Home = () => {
   const [isVisible, setIsVisible] = React.useState({});
@@ -49,13 +51,14 @@ const Home = () => {
       <HeroSection/>
       <About1/>
       <WhyChooseUs/>
-      <TopDoctors/>
+      {/* <TopDoctors/> */}
+      <PricingSection/>
       <HearingAidBrands/>
       {/* <HearingAidDevices/> */}
-      <PricingSection/>
       <Services/>
       <Process/>
       <About3/>
+      <BlogSection/>
       <Testimonials/>
       <CTA/>
       <Footer/>

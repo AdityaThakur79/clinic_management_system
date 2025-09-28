@@ -76,6 +76,9 @@ import UpdateInventory from './views/admin/Inventory/UpdateInventory';
 import InventoryDetail from './views/admin/Inventory/InventoryDetail.jsx';
 import GlobalSearch from './views/admin/Search/GlobalSearch.jsx';
 import Settings from './views/admin/Settings/Settings';
+import AllBlogs from './views/admin/Blogs/AllBlogs';
+import CreateBlog from './views/admin/Blogs/CreateBlog';
+import UpdateBlog from './views/admin/Blogs/UpdateBlog';
 import { SettingsIcon } from '@chakra-ui/icons';
 
 // NEW CLINIC MANAGEMENT ROUTES
@@ -383,18 +386,18 @@ const routes = [
         roles: ['superAdmin', 'branchAdmin'],
       },
       {
-        name: 'Analytics',
-        layout: '/admin',
-        path: '/referred-doctors/:id/analytics',
-        component: <ReferredDoctorAnalytics />,
-        roles: ['superAdmin', 'branchAdmin'],
-        hidden: true,
-      },
-      {
         name: 'Update Referred Doctor',
         layout: '/admin',
         path: '/referred-doctors/update',
         component: <UpdateReferredDoctor />,
+        roles: ['superAdmin', 'branchAdmin'],
+        hidden: true,
+      },
+      {
+        name: 'Referred Doctor Analytics',
+        layout: '/admin',
+        path: '/referred-doctors/:id/analytics',
+        component: <ReferredDoctorAnalytics />,
         roles: ['superAdmin', 'branchAdmin'],
         hidden: true,
       },
@@ -505,6 +508,41 @@ const routes = [
         layout: '/admin',
         path: '/reminders/create',
         component: <CreateReminder />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
+        hidden: true,
+      },
+    ],
+  },
+
+  // Blogs Section
+  {
+    name: 'Blogs',
+    layout: '/admin',
+    path: '/blogs',
+    icon: <Icon as={MdAssignment} width="20px" height="20px" color="inherit" />,
+    component: <AllBlogs />,
+    roles: ['superAdmin', 'branchAdmin', 'doctor'],
+    children: [
+      {
+        name: 'All Blogs',
+        layout: '/admin',
+        path: '/blogs/all',
+        component: <AllBlogs />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
+      },
+      {
+        name: 'Create Blog',
+        layout: '/admin',
+        path: '/blogs/create',
+        component: <CreateBlog />,
+        roles: ['superAdmin', 'branchAdmin', 'doctor'],
+        hidden: true,
+      },
+      {
+        name: 'Update Blog',
+        layout: '/admin',
+        path: '/blogs/edit/:id',
+        component: <UpdateBlog />,
         roles: ['superAdmin', 'branchAdmin', 'doctor'],
         hidden: true,
       },

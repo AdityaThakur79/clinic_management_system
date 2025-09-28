@@ -16,6 +16,7 @@ const imageFields = [
   "profileImage",
   "bannerImage",
   "deviceImage",
+  "featuredImage",
 ];
 
 const videoFields = ["videoUpload"];
@@ -39,6 +40,11 @@ const storage = new CloudinaryStorage({
     // Special handling for device images
     if (file.fieldname === "deviceImage") {
       folder = "inventory";
+    }
+    
+    // Special handling for blog featured images
+    if (file.fieldname === "featuredImage") {
+      folder = "blogs";
     }
 
     return {
@@ -67,6 +73,7 @@ const upload = multer({
   { name: "profileImage", maxCount: 1 },
   { name: "bannerImage", maxCount: 1 },
   { name: "deviceImage", maxCount: 1 },
+  { name: "featuredImage", maxCount: 1 },
 ]);
 
 export default upload;

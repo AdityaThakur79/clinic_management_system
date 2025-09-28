@@ -12,8 +12,7 @@ export const createReferredDoctor = async (req, res) => {
       branchId, 
       email, 
       address, 
-      specialization, 
-      commissionRate = 10 
+      specialization
     } = req.body;
     
     if (!name) return res.status(400).json({ success: false, message: "Name is required" });
@@ -25,8 +24,7 @@ export const createReferredDoctor = async (req, res) => {
       branchId,
       email,
       address,
-      specialization,
-      commissionRate
+      specialization
     });
     
     return res.status(201).json({ success: true, referredDoctor: doc });
@@ -153,8 +151,7 @@ export const updateReferredDoctor = async (req, res) => {
       isActive, 
       email, 
       address, 
-      specialization, 
-      commissionRate 
+      specialization
     } = req.body;
     
     const doc = await ReferredDoctor.findByIdAndUpdate(
@@ -167,8 +164,7 @@ export const updateReferredDoctor = async (req, res) => {
         isActive, 
         email, 
         address, 
-        specialization, 
-        commissionRate 
+        specialization
       },
       { new: true }
     );
@@ -226,30 +222,36 @@ export const backfillReferredDoctorData = async (req, res) => {
 
     // Sum completed appointment bills for this referred doctor
     const appts = await Appointment.find({ referredDoctorId: referredDoctorId, status: 'completed' }).select('billId');
-    const billIds = appts.map(a => a.billId).filter(Boolean);
-    let totalEarnings = 0;
-    if (billIds.length) {
-      const bills = await Bill.find({ _id: { $in: billIds } }).select('totalAmount');
-      const gross = bills.reduce((s, b) => s + (b.totalAmount || 0), 0);
-      const rate = doc.commissionRate || 10;
-      totalEarnings = (gross * rate) / 100;
-      doc.totalEarningsFromReferred = totalEarnings;
-      doc.commissionAmount = totalEarnings; // running total
-    }
+    // Calculate total commission earned from appointments
+    const totalCommissionEarned = await Appointment.aggregate([
+      { $match: { referredDoctorId: doc._id } },
+      { $group: { _id: null, total: { $sum: "$commissionAmount" } } }
+    ]);
+    doc.totalCommissionEarned = totalCommissionEarned[0]?.total || 0;
 
-    // Rebuild monthlyEarnings
+    // Calculate total commission paid
+    const totalCommissionPaid = await Appointment.aggregate([
+      { $match: { referredDoctorId: doc._id, commissionPaid: true } },
+      { $group: { _id: null, total: { $sum: "$commissionAmount" } } }
+    ]);
+    doc.totalCommissionPaid = totalCommissionPaid[0]?.total || 0;
+
+    // Rebuild monthlyEarnings based on actual commission amounts
     doc.monthlyEarnings = [];
     const monthlyAgg = await Appointment.aggregate([
-      { $match: { referredDoctorId: doc._id, status: 'completed' } },
-      { $lookup: { from: 'bills', localField: 'billId', foreignField: '_id', as: 'b' } },
-      { $unwind: '$b' },
+      { $match: { referredDoctorId: doc._id } },
       { $addFields: { month: { $dateToString: { format: '%Y-%m', date: '$createdAt' } } } },
-      { $group: { _id: '$month', total: { $sum: '$b.totalAmount' }, count: { $sum: 1 } } },
+      { $group: { _id: '$month', totalCommission: { $sum: '$commissionAmount' }, count: { $sum: 1 } } },
       { $sort: { _id: 1 } }
     ]);
     monthlyAgg.forEach(m => {
-      const earnings = ((m.total || 0) * (doc.commissionRate || 10)) / 100;
-      doc.monthlyEarnings.push({ month: m._id, year: parseInt(m._id.split('-')[0], 10), earnings, patientsCount: 0, appointmentsCount: m.count });
+      doc.monthlyEarnings.push({ 
+        month: m._id, 
+        year: parseInt(m._id.split('-')[0], 10), 
+        earnings: m.totalCommission || 0, 
+        patientsCount: 0, 
+        appointmentsCount: m.count 
+      });
     });
 
     await doc.save();
@@ -320,14 +322,124 @@ export const getReferredDoctorDetails = async (req, res) => {
       monthlyStats,
       statistics: {
         totalPatients: referredDoctor.patientsReferredCount,
-        totalEarnings: referredDoctor.totalEarningsFromReferred || ((liveRevenue * (referredDoctor.commissionRate || 10)) / 100),
-        totalPaid: referredDoctor.totalPaidToDoctor,
-        pendingAmount: referredDoctor.totalEarningsFromReferred - referredDoctor.totalPaidToDoctor,
-        commissionRate: referredDoctor.commissionRate
+        totalEarnings: referredDoctor.totalCommissionEarned || 0,
+        totalPaid: referredDoctor.totalCommissionPaid || 0,
+        pendingAmount: (referredDoctor.totalCommissionEarned || 0) - (referredDoctor.totalCommissionPaid || 0)
       }
     });
   } catch (error) {
 
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Get referred doctor earnings with appointment details
+export const getReferredDoctorEarnings = async (req, res) => {
+  try {
+    const { referredDoctorId } = req.params;
+    const { page = 1, limit = 10, from = "", to = "" } = req.query;
+    
+    const numericPage = Math.max(parseInt(page, 10) || 1, 1);
+    const numericLimit = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
+    
+    // Find the referred doctor
+    const referredDoctor = await ReferredDoctor.findById(referredDoctorId)
+      .populate('branchId', 'branchName address');
+    
+    if (!referredDoctor) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Referred doctor not found" 
+      });
+    }
+    
+    // Build filter for appointments
+    const filter = { referredDoctorId };
+    if (from || to) {
+      filter.date = {};
+      if (from) filter.date.$gte = new Date(from);
+      if (to) filter.date.$lte = new Date(to);
+    }
+    
+    // Get appointments with commission details
+    const appointments = await Appointment.find(filter)
+      .populate('patientId', 'name email contact')
+      .populate('billId', 'totalAmount')
+      .populate('branchId', 'branchName address')
+      .populate('doctorId', 'name')
+      .sort({ date: -1, createdAt: -1 })
+      .skip((numericPage - 1) * numericLimit)
+      .limit(numericLimit);
+    
+    // Get total count
+    const totalAppointments = await Appointment.countDocuments(filter);
+    
+    // Calculate earnings summary - use manual calculation instead of aggregation
+    const allAppointments = await Appointment.find(filter).populate('billId');
+    
+    // Calculate statistics manually
+    const totalAppointmentsCount = allAppointments.length;
+    let totalBillAmount = 0;
+    let totalCommissionEarned = 0;
+    
+    allAppointments.forEach(appointment => {
+      // Add commission amount
+      totalCommissionEarned += appointment.commissionAmount || 0;
+      
+      // Add bill amount or charges
+      if (appointment.billId && appointment.billId.totalAmount) {
+        totalBillAmount += appointment.billId.totalAmount;
+      } else {
+        totalBillAmount += appointment.charges || 0;
+      }
+    });
+    
+    const earningsSummary = [{
+      totalAppointments: totalAppointmentsCount,
+      totalBillAmount,
+      totalCommissionEarned
+    }];
+    
+    const summary = earningsSummary[0] || {
+      totalAppointments: 0,
+      totalBillAmount: 0,
+      totalCommissionEarned: 0
+    };
+
+    // Get referred doctor's payment data to calculate actual paid and pending amounts
+    const totalCommissionPaid = referredDoctor?.totalPaidToDoctor || 0;
+    const pendingCommission = Math.max(0, summary.totalCommissionEarned - totalCommissionPaid);
+
+    // Add the calculated values to summary
+    summary.totalCommissionPaid = totalCommissionPaid;
+    summary.pendingCommission = pendingCommission;
+    summary.paidAppointments = summary.totalAppointments; // All appointments with commission are considered "paid" through the payment system
+    summary.pendingAppointments = 0; // No pending appointments since we use separate payment tracking
+    
+    return res.status(200).json({
+      success: true,
+      referredDoctor: {
+        _id: referredDoctor._id,
+        name: referredDoctor.name,
+        clinicName: referredDoctor.clinicName,
+        contact: referredDoctor.contact,
+        email: referredDoctor.email,
+        specialization: referredDoctor.specialization,
+        branchId: referredDoctor.branchId,
+        isActive: referredDoctor.isActive
+      },
+      appointments,
+      summary,
+      pagination: {
+        currentPage: numericPage,
+        totalPages: Math.ceil(totalAppointments / numericLimit),
+        totalAppointments,
+        hasNext: numericPage < Math.ceil(totalAppointments / numericLimit),
+        hasPrev: numericPage > 1
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching referred doctor earnings:', error);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };

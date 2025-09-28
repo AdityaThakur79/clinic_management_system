@@ -18,7 +18,6 @@ const UpdateReferredDoctor = () => {
     address: '', 
     specialization: '', 
     branchId: '', 
-    commissionRate: 10, 
     isActive: true 
   });
   const [updateRefDoc, { isLoading }] = useUpdateReferredDoctorMutation();
@@ -44,7 +43,6 @@ const UpdateReferredDoctor = () => {
         address: referredDoctor.address || '',
         specialization: referredDoctor.specialization || '',
         branchId: referredDoctor.branchId?._id || referredDoctor.branchId || '',
-        commissionRate: referredDoctor.commissionRate || 10,
         isActive: referredDoctor.isActive !== false,
       });
     }
@@ -199,32 +197,6 @@ const UpdateReferredDoctor = () => {
                 </FormControl>
               </Box>
 
-              {/* Commission Settings */}
-              <Box>
-                <Text fontSize="lg" fontWeight="bold" mb={4} color={brandColor}>
-                  <Icon as={MdAttachMoney} mr={2} color={brandColor} />
-                  Commission Settings
-                </Text>
-                <FormControl>
-                  <FormLabel>Commission Rate (%)</FormLabel>
-                  <NumberInput 
-                    value={form.commissionRate} 
-                    onChange={(value) => setForm({ ...form, commissionRate: parseFloat(value) || 0 })}
-                    min={0}
-                    max={100}
-                    precision={2}
-                  >
-                    <NumberInputField borderRadius="lg" />
-                    <NumberInputStepper>
-                      <NumberIncrementStepper />
-                      <NumberDecrementStepper />
-                    </NumberInputStepper>
-                  </NumberInput>
-                  <Text fontSize="sm" color="gray.600" mt={1}>
-                    Commission rate for this referred doctor
-                  </Text>
-                </FormControl>
-              </Box>
 
               {/* Status Settings */}
               <Box>

@@ -26,7 +26,8 @@ import {
   FaAddressBook,
   FaInstagram,
   FaFacebook,
-  FaYoutube
+  FaYoutube,
+  FaBlog
 } from "react-icons/fa";
 import { PhoneIcon } from "@chakra-ui/icons";
 
@@ -119,7 +120,8 @@ const Footer = () => {
                   { name: "Home", to: "/", icon: FaHome },
                   { name: "About Us", to: "/about", icon: FaUser },
                   { name: "Our Services", to: "/services", icon: FaCogs },
-                  { name: "Book Appointment", to: "/doctors", icon: FaHospital },
+                  { name: "Blogs", to: "/blogs", icon: FaBlog },
+                  { name: "Book Appointment", to: "/book-an-appointment", icon: FaHospital },
                   { name: "Contact Us", to: "/contact", icon: FaAddressBook },
                 ].map((link) => (
                   <NavLink key={link.to} to={link.to}>
