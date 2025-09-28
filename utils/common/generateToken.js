@@ -11,9 +11,9 @@ export const generateToken = (res, user, message) => {
 
   const cookieOptions = {
     httpOnly: true,
-    sameSite: 'lax', // Temporarily use 'lax' for testing
+    sameSite: 'none', // Required for cross-origin cookies
     maxAge: 24 * 60 * 60 * 1000,
-    secure: false, // Temporarily disable secure for testing
+    secure: true, // Required when sameSite is 'none'
     path: '/' // Explicitly set path
   };
   

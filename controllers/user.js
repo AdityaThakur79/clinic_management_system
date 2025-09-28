@@ -269,9 +269,9 @@ export const logoutController = async (req, res) => {
   try {
     return res.status(200).cookie("token", "", { 
       maxAge: 0,
-      secure: false, // Temporarily disable secure for testing
+      secure: true, // Required when sameSite is 'none'
       httpOnly: true,
-      sameSite: 'lax', // Temporarily use 'lax' for testing
+      sameSite: 'none', // Required for cross-origin cookies
       path: '/'
     }).json({
       message: "Logged Out Successfully",
