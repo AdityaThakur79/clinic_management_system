@@ -4,6 +4,15 @@ const isAuthenticated = async (req, res, next) => {
   try {
     // Authentication middleware - checking cookies and headers
     
+    // Debug: Log what we're receiving
+    console.log('=== AUTH DEBUG ===');
+    console.log('URL:', req.url);
+    console.log('Method:', req.method);
+    console.log('Cookies:', req.cookies);
+    console.log('Authorization header:', req.headers.authorization);
+    console.log('All headers:', Object.keys(req.headers));
+    console.log('==================');
+    
     let token = req.cookies.token;
     if (!token && req.headers && req.headers.authorization) {
       const [scheme, value] = req.headers.authorization.split(' ');
@@ -13,11 +22,14 @@ const isAuthenticated = async (req, res, next) => {
     // Token found
 
     if (!token) {
+      console.log('❌ No token found in request');
       return res.status(401).json({
         message: "No token provided",
         success: false,
       });
     }
+    
+    console.log('✅ Token found:', token.substring(0, 20) + '...');
 
     if (!process.env.SECRETKEY) {
       return res.status(500).json({

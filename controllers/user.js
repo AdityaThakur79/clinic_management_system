@@ -212,6 +212,9 @@ export const loginController = async (req, res) => {
         message: "Incorrect email or password",
       });
     }
+    
+    console.log('🔐 Setting cookie for user:', user.email);
+    console.log('🌍 Environment:', process.env.NODE_ENV);
     generateToken(res, user, `Welcome back ${user.name}`);
   } catch (error) {
 
@@ -266,9 +269,10 @@ export const logoutController = async (req, res) => {
   try {
     return res.status(200).cookie("token", "", { 
       maxAge: 0,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Temporarily disable secure for testing
       httpOnly: true,
-      sameSite: 'lax'
+      sameSite: 'lax', // Temporarily use 'lax' for testing
+      path: '/'
     }).json({
       message: "Logged Out Successfully",
       success: true,

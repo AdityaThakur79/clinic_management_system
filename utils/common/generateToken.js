@@ -9,14 +9,20 @@ export const generateToken = (res, user, message) => {
     }
   );
 
+  const cookieOptions = {
+    httpOnly: true,
+    sameSite: 'lax', // Temporarily use 'lax' for testing
+    maxAge: 24 * 60 * 60 * 1000,
+    secure: false, // Temporarily disable secure for testing
+    path: '/' // Explicitly set path
+  };
+  
+  console.log('🍪 Cookie options:', cookieOptions);
+  console.log('🔑 Token length:', token.length);
+  
   return res
     .status(200)
-    .cookie("token", token, {
-      httpOnly: true,
-      sameSite: 'lax', // Use 'lax' for better compatibility
-      maxAge: 24 * 60 * 60 * 1000,
-      secure: process.env.NODE_ENV === 'production' // Use secure cookies in production
-    })
+    .cookie("token", token, cookieOptions)
     .json({
       success: true,
       message,
