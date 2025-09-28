@@ -21,4 +21,3 @@ export const analyticsApi = createApi({
 
 export const { useGetOverviewQuery } = analyticsApi;
 
-

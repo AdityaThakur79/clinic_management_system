@@ -116,7 +116,7 @@ const UpdateBranch = () => {
           setFetchError('Branch not found');
         }
       } catch (error) {
-        console.error('Error fetching branch details:', error);
+
         setFetchError(error?.data?.message || 'Failed to fetch branch details');
       } finally {
         setIsLoading(false);
@@ -255,7 +255,7 @@ const UpdateBranch = () => {
       navigate('/admin/branches/all');
       
     } catch (error) {
-      console.error('Error updating branch:', error);
+
       toast({
         title: 'Update Failed',
         description: error?.data?.message || 'Failed to update branch. Please try again.',

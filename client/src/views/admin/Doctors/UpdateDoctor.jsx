@@ -123,7 +123,6 @@ const UpdateDoctor = () => {
     }
   }, [branchesData]);
 
-
   useEffect(() => {
     const fetchDoctorData = async () => {
       if (!doctorId) {
@@ -169,7 +168,7 @@ const UpdateDoctor = () => {
           setFetchError('Doctor not found');
         }
       } catch (error) {
-        console.error('Error fetching doctor:', error);
+
         setFetchError(error?.data?.message || 'Failed to fetch doctor details');
       } finally {
         setIsLoading(false);
@@ -357,7 +356,6 @@ const UpdateDoctor = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-
     // Check if doctor ID exists
     if (!doctorId) {
       toast({
@@ -425,8 +423,7 @@ const UpdateDoctor = () => {
         throw new Error(result.message || 'Failed to update doctor');
       }
     } catch (error) {
-      console.error('Error updating doctor:', error);
-      
+
       let errorMessage = 'Failed to update doctor. Please try again.';
       
       if (error?.data?.message) {

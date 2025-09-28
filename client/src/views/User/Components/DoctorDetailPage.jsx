@@ -82,16 +82,14 @@ const DoctorDetailPage = () => {
       
       if (result.success && result.doctor) {
         setDoctor(result.doctor);
-        console.log('Doctor data:', result.doctor);
-        console.log('Available days:', result.doctor.availableDays);
-        console.log('Available time slots:', result.doctor.availableTimeSlots);
+
         generateTimeSlots(result.doctor);
       } else {
         setError('Doctor not found');
       }
     } catch (err) {
       setError(err?.data?.message || 'Failed to fetch doctor details');
-      console.error('Error fetching doctor:', err);
+
     } finally {
       setIsLoading(false);
     }
@@ -109,10 +107,6 @@ const DoctorDetailPage = () => {
       start: 9, // 9:00 AM
       end: 17   // 5:00 PM
     };
-    
-    console.log('Generating slots for doctor:', docInfo.name);
-    console.log('Available days:', availableDays);
-    console.log('Consultation time:', consultationTime, 'minutes');
 
     for (let i = 0; i < 7; i++) {
       const currentDate = new Date(today);

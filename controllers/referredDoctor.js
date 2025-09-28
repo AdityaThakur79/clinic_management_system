@@ -31,7 +31,7 @@ export const createReferredDoctor = async (req, res) => {
     
     return res.status(201).json({ success: true, referredDoctor: doc });
   } catch (error) {
-    console.error("createReferredDoctor error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -101,7 +101,7 @@ export const listReferredDoctors = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("listReferredDoctors error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -118,7 +118,7 @@ export const addCommissionPayment = async (req, res) => {
     await doc.save();
     return res.json({ success: true, payment: doc.payments[doc.payments.length - 1], totalPaidToDoctor: doc.totalPaidToDoctor });
   } catch (e) {
-    console.error('addCommissionPayment error', e);
+
     return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
@@ -137,7 +137,7 @@ export const listCommissionPayments = async (req, res) => {
     payments.sort((a,b)=> new Date(b.date) - new Date(a.date));
     return res.json({ success: true, payments });
   } catch (e) {
-    console.error('listCommissionPayments error', e);
+
     return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
@@ -175,7 +175,7 @@ export const updateReferredDoctor = async (req, res) => {
     if (!doc) return res.status(404).json({ success: false, message: "Not found" });
     return res.json({ success: true, referredDoctor: doc });
   } catch (error) {
-    console.error("updateReferredDoctor error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -203,7 +203,7 @@ export const deleteReferredDoctor = async (req, res) => {
     
     return res.json({ success: true, message: "Referred doctor deleted successfully" });
   } catch (error) {
-    console.error("deleteReferredDoctor error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -255,7 +255,7 @@ export const backfillReferredDoctorData = async (req, res) => {
     await doc.save();
     return res.json({ success: true, updated: { patients: doc.patientsReferredCount, totalEarnings: doc.totalEarningsFromReferred } });
   } catch (e) {
-    console.error('backfillReferredDoctorData error', e);
+
     return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
@@ -327,9 +327,8 @@ export const getReferredDoctorDetails = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("getReferredDoctorDetails error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
 

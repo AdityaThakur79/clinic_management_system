@@ -2,11 +2,15 @@ import jwt from "jsonwebtoken";
 
 const isAuthenticated = async (req, res, next) => {
   try {
+    // Authentication middleware - checking cookies and headers
+    
     let token = req.cookies.token;
     if (!token && req.headers && req.headers.authorization) {
       const [scheme, value] = req.headers.authorization.split(' ');
       if (scheme && scheme.toLowerCase() === 'bearer' && value) token = value;
     }
+
+    // Token found
 
     if (!token) {
       return res.status(401).json({
@@ -23,11 +27,12 @@ const isAuthenticated = async (req, res, next) => {
     }
 
     const decode = jwt.verify(token, process.env.SECRETKEY);
+    // Token decoded successfully
     req.id = decode.userId;
     req.user = decode;
     next();
   } catch (error) {
-    console.log("JWT Verify Error:", error.message);
+    // JWT verification error
     return res.status(401).json({
       message: "Authentication failed",
       success: false,
@@ -59,7 +64,7 @@ const isEmployeeAuthenticated = async (req, res, next) => {
     req.employee = decode;
     next();
   } catch (error) {
-    console.log("Employee JWT Verify Error:", error.message);
+    // Employee JWT verification error
     return res.status(401).json({
       message: "Employee authentication failed",
       success: false,

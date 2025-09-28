@@ -134,7 +134,7 @@ const AllAppointments = () => {
         }).unwrap();
         setDoctors(result.doctors || []);
       } catch (error) {
-        console.error('Error fetching doctors:', error);
+
       }
     };
     fetchDoctors();

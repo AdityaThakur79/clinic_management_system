@@ -20,7 +20,6 @@ import Footer from "../Components/Footer";
 // Using servicesData from centralized data file
 
 const Services = () => {
-  
 
   return (
     <>
@@ -103,7 +102,6 @@ const Services = () => {
           })}
         </Grid>
 
-       
       </Container>
     </Box>
     <CTA/>

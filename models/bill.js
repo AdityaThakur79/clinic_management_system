@@ -89,9 +89,7 @@ const billSchema = new mongoose.Schema(
 
 // Pre-save middleware to calculate totals
 billSchema.pre('save', function(next) {
-  console.log("Bill pre-save middleware running");
-  console.log("Services:", this.services);
-  
+
   // Calculate services total with dynamic pricing
   const servicesTotal = this.services ? this.services.reduce((sum, service) => {
     let servicePrice = parseFloat(service.actualPrice) || parseFloat(service.basePrice) || 0;
@@ -104,8 +102,7 @@ billSchema.pre('save', function(next) {
         servicePrice = servicePrice - service.discount;
       }
     }
-    
-    console.log(`Service ${service.name}: basePrice=${service.basePrice}, actualPrice=${service.actualPrice}, finalPrice=${servicePrice}`);
+
     return sum + Math.max(0, servicePrice);
   }, 0) : 0;
   
@@ -115,9 +112,7 @@ billSchema.pre('save', function(next) {
     const price = parseFloat(d.unitPrice) || 0;
     return sum + Math.max(0, qty * price);
   }, 0) : 0;
-  
-  console.log("Services total:", servicesTotal);
-  
+
   // Calculate subtotal including all fees, services and devices
   this.subtotal = this.consultationFee + this.treatmentFee + this.medicineFee + 
                   this.otherCharges + this.hearingAidFee + this.audiometryFee + servicesTotal + devicesTotal;
@@ -137,23 +132,13 @@ billSchema.pre('save', function(next) {
   // Calculate final total
   this.totalAmount = taxableAmount + this.tax;
   this.remainingAmount = this.totalAmount - this.paidAmount;
-  
-  console.log("Calculated values:", {
-    subtotal: this.subtotal,
-    discountAmount: discountAmount,
-    tax: this.tax,
-    totalAmount: this.totalAmount,
-    remainingAmount: this.remainingAmount
-  });
-  
+
   next();
 });
 
 // Generate bill number
 billSchema.pre('save', function(next) {
-  console.log("Bill number pre-save middleware running");
-  console.log("Current billNumber:", this.billNumber);
-  
+
   if (!this.billNumber) {
     const date = new Date();
     const year = date.getFullYear();
@@ -161,7 +146,7 @@ billSchema.pre('save', function(next) {
     const day = String(date.getDate()).padStart(2, '0');
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     this.billNumber = `BILL-${year}${month}${day}-${random}`;
-    console.log("Generated bill number:", this.billNumber);
+
   }
   next();
 });

@@ -43,4 +43,3 @@ appointmentSchema.index({ branchId: 1, date: 1, timeSlot: 1 }, { unique: true })
 
 export default mongoose.models.Appointment || mongoose.model("Appointment", appointmentSchema);
 
-

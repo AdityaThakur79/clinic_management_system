@@ -6,7 +6,8 @@ import {
   Alert, AlertIcon, AlertTitle, AlertDescription, Modal, ModalOverlay, ModalContent,
   ModalHeader, ModalBody, ModalFooter, ModalCloseButton, useColorModeValue, TableContainer,
   Drawer, DrawerBody, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerContent,
-  DrawerCloseButton, Avatar, Icon
+  DrawerCloseButton, Avatar, Icon,
+  Switch
 } from '@chakra-ui/react';
 import {
   SearchIcon, AddIcon, EditIcon, DeleteIcon, ViewIcon, RepeatIcon,
@@ -17,10 +18,12 @@ import { MdBusiness } from 'react-icons/md';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   useGetAllDoctorsMutation,
-  useDeleteDoctorMutation
+  useDeleteDoctorMutation,
+  useUpdateDoctorMutation
 } from '../../../features/api/doctor';
 import { useGetAllBranchesQuery } from '../../../features/api/branchApi';
 import { useSelector } from 'react-redux';
+import { useGetSettingsQuery, useUpdateSpecificSettingMutation } from '../../../features/api/settingsApi';
 
 const AllDoctors = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,6 +35,82 @@ const AllDoctors = () => {
   const [pageSize, setPageSize] = useState(10);
   const [selectedDoctors, setSelectedDoctors] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Get doctors config from context
+  // Get settings
+  const { data: settingsData, isLoading: isSettingsLoading } = useGetSettingsQuery();
+  const [updateSpecificSetting, { isLoading: isUpdatingSetting }] = useUpdateSpecificSettingMutation();
+  const [updateDoctor, { isLoading: isUpdatingDoctor }] = useUpdateDoctorMutation();
+  
+  const showDoctorsOnAboutPage = settingsData?.settings?.displaySettings?.showDoctorsOnAboutPage ?? true;
+
+  const handleShowDoctorsToggle = async () => {
+    try {
+      const result = await updateSpecificSetting({
+        section: 'displaySettings',
+        key: 'showDoctorsOnAboutPage',
+        value: !showDoctorsOnAboutPage
+      }).unwrap();
+      
+      
+      toast({
+        title: 'Setting Updated',
+        description: `Doctors will ${!showDoctorsOnAboutPage ? 'be shown' : 'not be shown'} on the About page`,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update setting',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleStatusToggle = async (doctorId, currentStatus) => {
+    try {
+      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+      
+      const formData = new FormData();
+      formData.append('id', doctorId);
+      formData.append('status', newStatus);
+      
+      await updateDoctor(formData).unwrap();
+      
+      toast({
+        title: 'Status Updated',
+        description: `Doctor status changed to ${newStatus}`,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      
+      // Refresh the doctors list
+      if (getAllDoctors) {
+        getAllDoctors({
+          page: currentPage,
+          limit: pageSize,
+          search: searchTerm,
+          branch: branchFilter,
+          status: statusFilter,
+          sortBy,
+          sortOrder
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update doctor status',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isDrawerOpen, onOpen: onDrawerOpen, onClose: onDrawerClose } = useDisclosure();
@@ -225,6 +304,23 @@ const AllDoctors = () => {
               Add Doctor
             </Button>
           </HStack>
+          
+          {/* Show Doctors Configuration */}
+          <HStack spacing={4} align="center">
+            <Text fontSize="sm" fontWeight="medium" color="gray.600">
+              Show Doctors on About Page:
+            </Text>
+            <Switch
+              isChecked={showDoctorsOnAboutPage}
+              onChange={handleShowDoctorsToggle}
+              colorScheme="blue"
+              size="lg"
+              isDisabled={isUpdatingSetting}
+            />
+            <Text fontSize="sm" color="gray.600">
+              {showDoctorsOnAboutPage ? 'Enabled' : 'Disabled'}
+            </Text>
+          </HStack>
         </Flex>
 
         {/* Search & Filters */}
@@ -358,9 +454,18 @@ const AllDoctors = () => {
                         <Td>{doc.branch?.branchName || 'N/A'}</Td>
                         <Td>{doc.specialization || 'N/A'}</Td>
                         <Td>
-                          <Badge colorScheme={getStatusInfo(doc.status).color} variant="subtle" borderRadius="full" px={3} py={1}>
-                            {getStatusInfo(doc.status).text}
-                          </Badge>
+                          <HStack spacing={2} align="center">
+                            <Switch
+                              isChecked={doc.status === 'active' || doc.status === true}
+                              onChange={() => handleStatusToggle(doc._id, doc.status)}
+                              colorScheme="blue"
+                              size="sm"
+                              isDisabled={isUpdatingDoctor}
+                            />
+                            <Text fontSize="xs" color="gray.600">
+                              {doc.status === 'active' || doc.status === true ? 'Active' : 'Inactive'}
+                            </Text>
+                          </HStack>
                         </Td>
                         <Td><Text fontSize="sm" color="gray.600">{formatDate(doc.createdAt)}</Text></Td>
                         <Td>
@@ -465,14 +570,28 @@ const AllDoctors = () => {
           <DrawerContent>
             <DrawerCloseButton />
             <DrawerHeader borderBottomWidth="1px">
-              <HStack>
-                <Avatar size="md" src={selectedDoctor?.photoUrl} name={selectedDoctor?.name} bg="#2BA8D1" color="white" />
-                <VStack align="start" spacing={0}>
-                  <Text fontSize="xl" fontWeight="bold">{selectedDoctor?.name}</Text>
-                  <Badge colorScheme={getStatusInfo(selectedDoctor?.status).color} variant="subtle" borderRadius="full" px={3} py={1}>
-                    {getStatusInfo(selectedDoctor?.status).text}
-                  </Badge>
-                </VStack>
+              <HStack justify="space-between" align="center">
+                <HStack>
+                  <Avatar size="md" src={selectedDoctor?.photoUrl} name={selectedDoctor?.name} bg="#2BA8D1" color="white" />
+                  <VStack align="start" spacing={0}>
+                    <Text fontSize="xl" fontWeight="bold">{selectedDoctor?.name}</Text>
+                    <Text fontSize="sm" color="gray.600">{selectedDoctor?.specialization}</Text>
+                  </VStack>
+                </HStack>
+                <HStack spacing={3} align="center">
+                  <Text fontSize="sm" color="gray.600">Status:</Text>
+                  <Switch
+                    isChecked={selectedDoctor?.status === 'active' || selectedDoctor?.status === true}
+                    onChange={() => handleStatusToggle(selectedDoctor?._id, selectedDoctor?.status)}
+                    colorScheme="blue"
+                    size="lg"
+                    isDisabled={isUpdatingDoctor}
+                  />
+                  <Text fontSize="sm" color="gray.600">
+                    {selectedDoctor?.status === 'active' || selectedDoctor?.status === true ? 'Active' : 'Inactive'}
+                  </Text>
+                  {isUpdatingDoctor && <Spinner size="sm" />}
+                </HStack>
               </HStack>
             </DrawerHeader>
 
@@ -662,10 +781,20 @@ const AllDoctors = () => {
 
                       {/* Status */}
                       <Box>
-                        <Text fontSize="sm" color="gray.600" mb={1}>Current Status</Text>
-                        <Badge colorScheme={getStatusInfo(selectedDoctor?.status).color} variant="subtle" borderRadius="full" px={3} py={1}>
-                          {getStatusInfo(selectedDoctor?.status).text}
-                        </Badge>
+                        <Text fontSize="sm" color="gray.600" mb={2}>Status</Text>
+                        <HStack spacing={3} align="center">
+                          <Switch
+                            isChecked={selectedDoctor?.status === 'active' || selectedDoctor?.status === true}
+                            onChange={() => handleStatusToggle(selectedDoctor?._id, selectedDoctor?.status)}
+                            colorScheme="blue"
+                            size="lg"
+                            isDisabled={isUpdatingDoctor}
+                          />
+                          <Text fontSize="sm" color="gray.600">
+                            {selectedDoctor?.status === 'active' || selectedDoctor?.status === true ? 'Active' : 'Inactive'}
+                          </Text>
+                          {isUpdatingDoctor && <Spinner size="sm" />}
+                        </HStack>
                       </Box>
                     </VStack>
                   </CardBody>

@@ -55,7 +55,7 @@ export const createBranchController = async (req, res) => {
       branch,
     });
   } catch (err) {
-    console.error("Error creating branch:", err);
+
     res.status(500).json({
       success: false,
       message: "Internal server error.",
@@ -106,7 +106,7 @@ export const getAllBranchesController = async (req, res) => {
       totalPage: Math.ceil(total / limit),
     });
   } catch (err) {
-    console.error("Error fetching branches:", err);
+
     res.status(500).json({
       success: false,
       message: "Something went wrong while fetching branches",
@@ -133,7 +133,7 @@ export const getBranchByIdController = async (req, res) => {
       branch,
     });
   } catch (err) {
-    console.error("Error fetching branch:", err);
+
     res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -206,7 +206,7 @@ export const updateBranchController = async (req, res) => {
       branch,
     });
   } catch (err) {
-    console.error("Error updating branch:", err);
+
     res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -232,7 +232,7 @@ export const deleteBranchController = async (req, res) => {
       message: "Branch deleted successfully",
     });
   } catch (err) {
-    console.error("Error deleting branch:", err);
+
     res.status(500).json({
       success: false,
       message: "Internal server error",

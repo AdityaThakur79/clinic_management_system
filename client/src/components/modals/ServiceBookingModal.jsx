@@ -112,8 +112,6 @@ const ServiceBookingModal = ({
     const slots = [];
     const today = new Date();
 
-    console.log('Generating slots for branch:', branchId);
-
     for (let i = 0; i < 7; i++) {
       const currentDate = new Date(today);
       currentDate.setDate(today.getDate() + i);
@@ -144,7 +142,7 @@ const ServiceBookingModal = ({
           slots.push([]);
         }
       } catch (error) {
-        console.error('Error fetching availability for', dateISO, error);
+
         slots.push([]);
       }
     }
@@ -263,8 +261,7 @@ const ServiceBookingModal = ({
       setSelectedTime('');
       setSelectedDateIndex(0);
     } catch (error) {
-      console.error('Booking error:', error);
-      
+
       // Handle specific conflict error
       if (error?.data?.message?.includes('no longer available')) {
         toast({

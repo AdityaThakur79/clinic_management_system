@@ -88,7 +88,7 @@ export const createBranchAdmin = async (req, res) => {
       branchAdmin: branchAdminResponse,
     });
   } catch (error) {
-    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to create branch admin",
@@ -144,7 +144,7 @@ export const getAllBranchAdmins = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to fetch branch admins",
@@ -173,7 +173,7 @@ export const getBranchAdminById = async (req, res) => {
       branchAdmin,
     });
   } catch (error) {
-    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to fetch branch admin",
@@ -275,7 +275,7 @@ export const updateBranchAdmin = async (req, res) => {
       branchAdmin: updatedBranchAdmin,
     });
   } catch (error) {
-    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to update branch admin",
@@ -311,7 +311,7 @@ export const deleteBranchAdmin = async (req, res) => {
       message: "Branch Admin deleted successfully",
     });
   } catch (error) {
-    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to delete branch admin",
@@ -334,7 +334,7 @@ export const getBranchAdminsByBranch = async (req, res) => {
       branchAdmins,
     });
   } catch (error) {
-    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to fetch branch admins by branch",

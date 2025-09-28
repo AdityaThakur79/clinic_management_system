@@ -263,7 +263,6 @@ const About3 = () => {
             </VStack>
           </GridItem>
 
-    
         </Grid>
       </Container>
     </Box>

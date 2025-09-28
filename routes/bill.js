@@ -10,4 +10,3 @@ router.get('/:id', isAuthenticated, getBillById);
 
 export default router;
 
-

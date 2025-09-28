@@ -44,9 +44,6 @@ function SignIn() {
     isSuccess: loginIsSuccess 
   }] = useLoginUserMutation();
 
-  console.log("SignIn component - isAuthenticated:", isAuthenticated);
-  console.log("SignIn component - user:", user);
-
   // Chakra color mode
   const textColor = useColorModeValue("#3AC0E7", "white");
   const textColorSecondary = "gray.400";
@@ -82,13 +79,10 @@ function SignIn() {
   // Handle login mutation results
   useEffect(() => {
     if (loginIsSuccess && loginData) {
-      console.log("Login success in component, data:", loginData);
-      console.log("Dispatching userLoggedIn action with user:", loginData.user);
-      
+
       // Dispatch the action to update Redux state
       dispatch(userLoggedIn({ user: loginData.user }));
-      
-      console.log("Current isAuthenticated:", isAuthenticated);
+
       toast({
         title: "Login successful!",
         description: "Welcome back!",
@@ -98,7 +92,7 @@ function SignIn() {
       });
       // Add a small delay to ensure state is updated
       setTimeout(() => {
-        console.log("Navigating to dashboard...");
+
         navigate("/admin/dashboard/overview");
       }, 100);
     }

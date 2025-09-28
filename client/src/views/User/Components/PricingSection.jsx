@@ -45,7 +45,6 @@ const PricingSection = () => {
       overflow="hidden"
     >
       {/* Background Circles */}
-  
 
       {/* Content */}
       <Box maxW="6xl" mx="auto" px={4} position="relative" zIndex={10}>

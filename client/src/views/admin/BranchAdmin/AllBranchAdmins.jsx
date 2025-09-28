@@ -139,7 +139,7 @@ const AllBranchAdmins = () => {
       setPagination(result.pagination || {});
     } catch (err) {
       setError(err);
-      console.error('Error fetching branch admins:', err);
+
     } finally {
       setIsLoading(false);
     }
@@ -793,7 +793,6 @@ const AllBranchAdmins = () => {
                     </Box>
                   </CardBody>
                 </Card>
-
 
                 {/* Additional Information */}
                 <Card bg={cardBg} borderColor={borderColor} borderRadius="lg">

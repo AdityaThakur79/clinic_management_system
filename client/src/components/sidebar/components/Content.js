@@ -20,13 +20,15 @@ function SidebarContent(props) {
   return (
     <Flex
       direction="column"
-      height="100%"
       pt="25px"
       px="16px"
       borderRadius="30px"
+      pb="40px"
+      minH="120vh"
+      w="100%"
     >
       <Brand isCollapsed={isCollapsed} />
-      <Stack direction="column" mb="auto" mt="8px">
+      <Stack direction="column" mt="8px">
         <Box ps="20px" pe={{ md: '16px', '2xl': '1px' }}>
           <Links
             routes={routes}

@@ -11,7 +11,6 @@ import { useState, useEffect } from 'react';
 import { publicRoutes, adminRoutes } from './config/routes';
 import Lenis from 'lenis';
 
-
 // Component to handle scroll to top on route changes
 function ScrollToTop() {
   const location = useLocation();

@@ -33,7 +33,6 @@ import {
   ArrowBackIcon
 } from '@chakra-ui/icons';
 import { useGetAvailabilityQuery } from '../../../features/api/appointments';
-import AppointmentFormModal from '../../../components/modals/AppointmentFormModal';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import CTA from './CTA';
@@ -49,9 +48,7 @@ const ServiceDetailPage = () => {
   const [selectedDateIndex, setSelectedDateIndex] = useState(0);
   const [selectedTime, setSelectedTime] = useState('');
   const [availableSlots, setAvailableSlots] = useState([]);
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [selectedDateISO, setSelectedDateISO] = useState('');
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
 
   // Get availability for selected date
   const branchIdForQuery = service?.branchId || '64f8b8e1a1b2c3d4e5f6g7h8'; // Default branch ID - should be dynamic
@@ -78,6 +75,7 @@ const ServiceDetailPage = () => {
   const mockService = {
     id: id,
     name: "Hearing Tests (Audiometry - PTA)",
+    slug: "hearing-tests-audiometry-pta",
     description: "Comprehensive hearing assessments using audiometry (PTA) to accurately diagnose hearing conditions in all age groups.",
     image: "/api/placeholder/300/400",
     category: "Diagnostics",
@@ -133,7 +131,7 @@ const ServiceDetailPage = () => {
       setService(mockService);
     } catch (err) {
       setError(err?.data?.message || 'Failed to fetch service details');
-      console.error('Error fetching service:', err);
+
     } finally {
       setIsLoading(false);
     }
@@ -143,8 +141,6 @@ const ServiceDetailPage = () => {
   const generateTimeSlots = async () => {
     const slots = [];
     const today = new Date();
-
-    console.log('Generating slots for branch:', branchIdForQuery);
 
     for (let i = 0; i < 7; i++) {
       const currentDate = new Date(today);
@@ -176,7 +172,7 @@ const ServiceDetailPage = () => {
           slots.push([]);
         }
       } catch (error) {
-        console.error('Error fetching availability for', dateISO, error);
+
         slots.push([]);
       }
     }
@@ -196,7 +192,7 @@ const ServiceDetailPage = () => {
     } catch (_) {}
   };
 
-  // Handle appointment booking
+  // Handle appointment booking - redirect to book service page
   const handleBookAppointment = () => {
     if (!selectedTime) {
       toast({
@@ -208,12 +204,13 @@ const ServiceDetailPage = () => {
       return;
     }
 
-    // Set selected date and time for modal
+    // Navigate to book service page with selected date and time as URL parameters
     const selectedSlot = availableSlots[selectedDateIndex]?.find(slot => slot.time === selectedTime);
-    if (selectedSlot) {
-      setSelectedDateISO(selectedSlot.datetime.toISOString().split('T')[0]);
-      setSelectedTimeSlot(selectedTime);
-      setIsBookingModalOpen(true);
+    if (selectedSlot && service?.slug) {
+      const dateParam = selectedSlot.datetime.toISOString().split('T')[0];
+      const timeParam = selectedTime;
+      
+      navigate(`/book-service/${service.slug}?date=${dateParam}&time=${timeParam}`);
     }
   };
 
@@ -229,15 +226,14 @@ const ServiceDetailPage = () => {
     }
   };
 
-  // Handle booking success/conflict
-  const handleBookingSuccess = (type) => {
-    if (type === 'conflict') {
-      // Refresh availability when there's a conflict
-      refetchAvailability();
-      setSelectedTime('');
-      setIsBookingModalOpen(false);
-    }
-  };
+  // Handle booking success/conflict - no longer needed since we redirect
+  // const handleBookingSuccess = (type) => {
+  //   if (type === 'conflict') {
+  //     // Refresh availability when there's a conflict
+  //     refetchAvailability();
+  //     setSelectedTime('');
+  //   }
+  // };
 
   // Regenerate slots whenever branch is available
   useEffect(() => {
@@ -567,19 +563,6 @@ const ServiceDetailPage = () => {
       </Box>
    
       <Footer />
-
-      {/* Booking Modal */}
-      <AppointmentFormModal
-        isOpen={isBookingModalOpen}
-        onClose={() => setIsBookingModalOpen(false)}
-        serviceId={id}
-        branchId={service?.branchId}
-        branchName="Aartiket Speech & Hearing" // This should be dynamic
-        selectedDate={selectedDateISO}
-        selectedTimeSlot={selectedTimeSlot}
-        serviceName={service?.name}
-        onBookingSuccess={handleBookingSuccess}
-      />
     </div>
   );
 };

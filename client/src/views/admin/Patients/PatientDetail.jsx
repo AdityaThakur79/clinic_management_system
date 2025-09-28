@@ -129,10 +129,6 @@ export default function PatientDetail() {
   const [completeAppointment, { isLoading: isCompleting }] = useCompleteAppointmentMutation();
 
   // Debug logging
-  console.log('PatientDetail - ID:', id);
-  console.log('PatientDetail - Data:', data);
-  console.log('PatientDetail - Loading:', isLoading);
-  console.log('PatientDetail - Error:', error);
 
   if (isLoading) {
     return (
@@ -214,7 +210,6 @@ export default function PatientDetail() {
     const cleaned = value.replace(/_/g, ' ').trim();
     return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
   };
-
 
   const handleCompleteAppointment = (appointment) => {
     // Navigate to enhanced complete appointment page
@@ -715,7 +710,6 @@ export default function PatientDetail() {
             </Card>
           </TabPanel>
 
-          
         </TabPanels>
       </Tabs>
 

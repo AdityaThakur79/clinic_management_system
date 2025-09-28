@@ -339,4 +339,3 @@ const AllBills = () => {
 
 export default AllBills;
 
-

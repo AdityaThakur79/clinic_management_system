@@ -17,9 +17,9 @@ const AuthInitializer = ({ children }) => {
   useEffect(() => {
     if (error) {
       // Only clear auth state if it's a 401 (unauthorized) error
-      console.log('Failed to load user, error:', error);
+
       if (error.status === 401) {
-        console.log('Unauthorized, clearing auth state');
+
         localStorage.removeItem('auth');
         window.location.reload();
       }

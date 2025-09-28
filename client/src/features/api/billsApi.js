@@ -28,4 +28,3 @@ export const billsApi = createApi({
 
 export const { useGetAllBillsQuery, useUpdateBillStatusMutation } = billsApi;
 
-

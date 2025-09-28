@@ -93,7 +93,7 @@ export const getAllReminders = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("getAllReminders error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -137,7 +137,7 @@ export const getTodayReminders = async (req, res) => {
 
     return res.json({ success: true, reminders });
   } catch (error) {
-    console.error("getTodayReminders error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -183,7 +183,7 @@ export const getRemindersByDateRange = async (req, res) => {
 
     return res.json({ success: true, reminders });
   } catch (error) {
-    console.error("getRemindersByDateRange error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -206,7 +206,7 @@ export const getReminderById = async (req, res) => {
 
     return res.json({ success: true, reminder });
   } catch (error) {
-    console.error("getReminderById error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -269,7 +269,7 @@ export const createReminder = async (req, res) => {
 
     return res.status(201).json({ success: true, reminder: populatedReminder });
   } catch (error) {
-    console.error("createReminder error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -305,7 +305,7 @@ export const updateReminder = async (req, res) => {
 
     return res.json({ success: true, reminder });
   } catch (error) {
-    console.error("updateReminder error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -349,7 +349,7 @@ export const updateReminderStatus = async (req, res) => {
 
     return res.json({ success: true, reminder });
   } catch (error) {
-    console.error("updateReminderStatus error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -379,7 +379,7 @@ export const markReminderCompleted = async (req, res) => {
 
     return res.json({ success: true, reminder });
   } catch (error) {
-    console.error("markReminderCompleted error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -397,7 +397,7 @@ export const deleteReminder = async (req, res) => {
 
     return res.json({ success: true, message: "Reminder deleted successfully" });
   } catch (error) {
-    console.error("deleteReminder error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -449,7 +449,7 @@ export const sendReminder = async (req, res) => {
         await sendEmail({ to: patientEmail, subject, html });
       }
     } catch (e) {
-      console.error('Reminder email failed:', e?.message || e);
+
     }
 
     // WhatsApp via AiSensy (commented until keys available)
@@ -459,7 +459,7 @@ export const sendReminder = async (req, res) => {
 
     return res.json({ success: true, reminder });
   } catch (error) {
-    console.error("sendReminder error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -470,7 +470,7 @@ export const getReminderSettings = async (req, res) => {
     const settings = await ReminderSettings.findOne();
     return res.json({ success: true, settings: settings || { leadTimesMinutes: [360] } });
   } catch (e) {
-    console.error('getReminderSettings error', e);
+
     return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
@@ -493,7 +493,7 @@ export const updateReminderSettings = async (req, res) => {
     const settings = await ReminderSettings.findOneAndUpdate({}, { leadTimesMinutes, updatedBy: req.user._id }, { new: true, upsert: true });
     return res.json({ success: true, settings });
   } catch (e) {
-    console.error('updateReminderSettings error', e);
+
     return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
@@ -535,14 +535,14 @@ export const processUpcomingReminders = async (req, res) => {
           // WhatsApp via AiSensy (commented)
           // if (process.env.AISENSY_API_KEY && appt.patientId?.contact) { ... }
         } catch (e) {
-          console.error('processUpcomingReminders email failed:', e?.message || e);
+
         }
       }
     }
 
     return res.json({ success: true, sentCount, checked: appts.length });
   } catch (e) {
-    console.error('processUpcomingReminders error', e);
+
     return res.status(500).json({ success: false, message: 'Server error' });
   }
 };

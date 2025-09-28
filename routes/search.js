@@ -9,4 +9,3 @@ router.get("/", isAuthenticated, globalSearch);
 
 export default router;
 
-

@@ -42,7 +42,6 @@ export const createDoctor = async (req, res) => {
       });
     }
 
-
     // Check if branch exists
     const branchExists = await Branch.findById(branch);
     if (!branchExists) {
@@ -68,7 +67,7 @@ export const createDoctor = async (req, res) => {
         parsedAvailableTimeSlots = typeof availableTimeSlots === 'string' ? JSON.parse(availableTimeSlots) : availableTimeSlots;
       }
     } catch (parseError) {
-      console.error('Error parsing JSON fields:', parseError);
+
       return res.status(400).json({
         success: false,
         message: "Invalid data format for languages, availableDays, or availableTimeSlots",
@@ -129,7 +128,7 @@ export const createDoctor = async (req, res) => {
       doctor: doctorResponse,
     });
   } catch (error) {
-    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to create doctor",
@@ -211,7 +210,7 @@ export const getAllDoctors = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to fetch doctors",
@@ -240,7 +239,7 @@ export const getDoctorById = async (req, res) => {
       doctor,
     });
   } catch (error) {
-    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to fetch doctor",
@@ -300,7 +299,6 @@ export const updateDoctor = async (req, res) => {
       }
     }
 
-
     // Handle file uploads
     let photoUrl = doctor.photoUrl;
     let photoUrlPublicId = doctor.photoUrlPublicId;
@@ -332,7 +330,7 @@ export const updateDoctor = async (req, res) => {
       try {
         parsedLanguages = typeof languages === 'string' ? JSON.parse(languages) : languages;
       } catch (parseError) {
-        console.error('Error parsing languages:', parseError);
+
         return res.status(400).json({
           success: false,
           message: "Invalid data format for languages",
@@ -344,7 +342,7 @@ export const updateDoctor = async (req, res) => {
       try {
         parsedAvailableDays = typeof availableDays === 'string' ? JSON.parse(availableDays) : availableDays;
       } catch (parseError) {
-        console.error('Error parsing availableDays:', parseError);
+
         return res.status(400).json({
           success: false,
           message: "Invalid data format for availableDays",
@@ -356,7 +354,7 @@ export const updateDoctor = async (req, res) => {
       try {
         parsedAvailableTimeSlots = typeof availableTimeSlots === 'string' ? JSON.parse(availableTimeSlots) : availableTimeSlots;
       } catch (parseError) {
-        console.error('Error parsing availableTimeSlots:', parseError);
+
         return res.status(400).json({
           success: false,
           message: "Invalid data format for availableTimeSlots",
@@ -400,7 +398,7 @@ export const updateDoctor = async (req, res) => {
       doctor: updatedDoctor,
     });
   } catch (error) {
-    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to update doctor",
@@ -436,7 +434,7 @@ export const deleteDoctor = async (req, res) => {
       message: "Doctor deleted successfully",
     });
   } catch (error) {
-    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to delete doctor",
@@ -459,7 +457,7 @@ export const getDoctorsByBranch = async (req, res) => {
       doctors,
     });
   } catch (error) {
-    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to fetch doctors by branch",
@@ -502,7 +500,7 @@ export const getDoctorsBySpecialization = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to fetch doctors by specialization",

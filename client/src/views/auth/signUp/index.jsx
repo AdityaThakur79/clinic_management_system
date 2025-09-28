@@ -65,11 +65,10 @@ function SignUp() {
   // Handle registration mutation results
   useEffect(() => {
     if (registerIsSuccess && registerData) {
-      console.log("Registration success, data:", registerData);
-      
+
       // Auto-login after successful registration
       if (registerData.user) {
-        console.log("Dispatching userLoggedIn with user:", registerData.user);
+
         dispatch(userLoggedIn({ user: registerData.user }));
       }
       
@@ -171,7 +170,6 @@ function SignUp() {
       password: formData.password,
     });
   };
-
 
   return (
     <DefaultAuth illustrationBackground={illustration} image={illustration}>
@@ -329,7 +327,6 @@ function SignUp() {
                   </InputRightElement>
                 </InputGroup>
               </FormControl>
- 
 
                               <Button
                   type="submit"

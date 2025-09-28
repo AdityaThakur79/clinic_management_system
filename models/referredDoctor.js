@@ -42,4 +42,3 @@ const referredDoctorSchema = new mongoose.Schema(
 
 export default mongoose.models.ReferredDoctor || mongoose.model("ReferredDoctor", referredDoctorSchema);
 
-

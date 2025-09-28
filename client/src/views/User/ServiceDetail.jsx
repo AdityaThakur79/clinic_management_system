@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Box, Container, Text, Heading, VStack, Flex, SimpleGrid, Image, Divider, Button, HStack, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon } from "@chakra-ui/react";
 import PageHeader from "./Components/PageHeader";
 import Navbar from "./Components/Navbar";
@@ -10,6 +10,7 @@ import PatternBG from "../../assets/patternBG.png";
 
 const ServiceDetail = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const service = getServiceBySlug(slug);
   const [isVisible, setIsVisible] = React.useState({});
 
@@ -20,6 +21,13 @@ const ServiceDetail = () => {
       window.scrollTo(0, 0);
     }
   }, []);
+
+  // Handle book appointment click
+  const handleBookAppointment = () => {
+    if (service?.slug) {
+      navigate(`/book-service/${service.slug}`);
+    }
+  };
 
   // Intersection Observer for reveal animations
   useEffect(() => {
@@ -710,7 +718,7 @@ const ServiceDetail = () => {
             <Flex align="center" justify="space-between" gap={4} direction={{ base: "column", md: "row" }}>
               <Text color={brand.primaryDark} fontWeight="semibold">Have questions about {service.title}? Talk to our audiologist.</Text>
               <HStack>
-                <Button as={Link} to="/doctors" bg={brand.primary} color="white" _hover={{ bg: "#3AC0E7" }}>Book Appointment</Button>
+                <Button onClick={handleBookAppointment} bg={brand.primary} color="white" _hover={{ bg: "#3AC0E7" }}>Book Appointment</Button>
                 <Button variant="outline" color={brand.primaryDark} borderColor={brand.primary} as={Link} to="/contact">Contact Us</Button>
               </HStack>
             </Flex>

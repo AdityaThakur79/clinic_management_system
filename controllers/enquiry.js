@@ -92,7 +92,7 @@ const createEnquiry = async (req, res) => {
       });
 
     } catch (emailError) {
-      console.error('Email sending failed:', emailError);
+
       // Don't fail the enquiry creation if email fails
     }
 
@@ -103,7 +103,7 @@ const createEnquiry = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error creating enquiry:', error);
+
     res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -168,7 +168,7 @@ const getAllEnquiries = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching enquiries:', error);
+
     res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -200,7 +200,7 @@ const getEnquiryById = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching enquiry:', error);
+
     res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -236,7 +236,7 @@ const updateEnquiry = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error updating enquiry:', error);
+
     res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -286,7 +286,7 @@ const addNoteToEnquiry = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error adding note:', error);
+
     res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -315,7 +315,7 @@ const deleteEnquiry = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error deleting enquiry:', error);
+
     res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -353,7 +353,7 @@ const getEnquiryStats = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching enquiry stats:', error);
+
     res.status(500).json({
       success: false,
       message: 'Internal server error',

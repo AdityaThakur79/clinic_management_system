@@ -37,14 +37,14 @@ const BookAppointment = () => {
         title="Book An Appointment"
         description="Book an appointment with our experts for comprehensive audiology and speech therapy."
         crumbs={[{ label: "Services" }]}
-        bgImage={assets.service_4}
+        bgImage={assets.audiologist2}
       />
     <Box as="section" px={{ base: 2, md: 10, lg: 20 }} py={{ base: 10, md: 20 }}>
       <Container maxW="8xl">
         {/* Header */}
-        <VStack spacing={3} textAlign="center">
-          <Text fontSize="sm" color="#2BA8D1" fontWeight="semibold">
-            BOOK AN APPOINTMENT
+        <VStack spacing={4} textAlign="center">
+          <Text fontSize="sm" color="#2BA8D1" fontWeight="semibold" letterSpacing="wide">
+            SCHEDULE YOUR CONSULTATION
           </Text>
           <Heading
             as="h2"
@@ -53,10 +53,10 @@ const BookAppointment = () => {
             color="#0C2F4D"
             maxW="4xl"
           >
-            Book An Appointment
+            Expert Care for Your Hearing & Speech Needs
           </Heading>
-          <Text color="gray.600" maxW="xl" pt={2}>
-            Book an appointment with our experts for comprehensive audiology and speech therapy.
+          <Text color="gray.600" maxW="2xl" pt={2} fontSize="lg" lineHeight="1.6">
+            Take the first step towards better hearing and communication. Our certified audiologists and speech therapists are here to provide personalized care tailored to your unique needs. Book your consultation today and experience the difference expert care can make.
           </Text>
         </VStack>
 
@@ -165,7 +165,6 @@ const BookAppointment = () => {
           })}
         </Grid>
 
-       
       </Container>
     </Box>
     <CTA/>

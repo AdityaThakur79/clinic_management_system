@@ -15,4 +15,3 @@ router.get("/:id/payments", isAuthenticated, listCommissionPayments);
 
 export default router;
 
-

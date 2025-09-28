@@ -7,9 +7,9 @@ export const deleteFile = (relativeFilePath) => {
     if (fs.existsSync(absolutePath)) {
       fs.unlinkSync(absolutePath);
     } else {
-      console.log("File not found:", absolutePath);
+
     }
   } catch (error) {
-    console.error(`Error deleting file at ${relativeFilePath}:`, error.message);
+
   }
 };

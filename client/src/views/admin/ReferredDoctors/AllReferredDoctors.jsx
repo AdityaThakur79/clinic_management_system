@@ -770,4 +770,3 @@ const AllReferredDoctors = () => {
 
 export default AllReferredDoctors;
 
-

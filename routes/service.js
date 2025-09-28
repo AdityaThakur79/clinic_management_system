@@ -22,4 +22,3 @@ router.delete("/delete", isAuthenticated, deleteServiceController);
 
 export default router;
 
-

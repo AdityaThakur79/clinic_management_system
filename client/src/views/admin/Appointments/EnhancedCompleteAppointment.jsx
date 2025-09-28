@@ -45,10 +45,6 @@ const EnhancedCompleteAppointment = () => {
   const services = servicesData?.services || [];
 
   // Debug logging
-  console.log('Services Data:', servicesData);
-  console.log('Services Loading:', servicesLoading);
-  console.log('Services Error:', servicesError);
-  console.log('Services Array:', services);
 
   // Form states
   const [prescription, setPrescription] = useState({
@@ -146,8 +142,7 @@ const EnhancedCompleteAppointment = () => {
 
   useEffect(() => {
     if (appointment) {
-      
-      
+
       setPatientUpdate({
         name: appointment.patientId?.name || '',
         age: appointment.patientId?.age || '',
@@ -222,9 +217,7 @@ const EnhancedCompleteAppointment = () => {
         const perVisitCharge = appointment.patientId.plan.perVisitCharge || 0;
         const walletAmount = appointment.patientId.plan.walletAmount || 0;
         const visitsRemaining = appointment.patientId.plan.visitsRemaining || 0;
-        
-        
-        
+
         setBill(prev => ({
           ...prev,
           consultationFee: prev.consultationFee || perVisitCharge,
@@ -292,7 +285,7 @@ const EnhancedCompleteAppointment = () => {
 
     const selectedService = services.find(s => s._id === newService.serviceId);
     if (selectedService) {
-      console.log('Selected Service:', selectedService);
+
       const serviceToAdd = {
         ...newService,
         name: selectedService.name,
@@ -469,7 +462,7 @@ const EnhancedCompleteAppointment = () => {
           }
           await refetchReminders();
         } catch (e) {
-          console.error('Saving reminder failed', e);
+
           toast({ title: 'Reminder not saved', description: e?.data?.message || e?.message || 'Please try again from the appointment page', status: 'warning', duration: 4000, isClosable: true });
         }
       }

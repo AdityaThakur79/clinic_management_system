@@ -41,4 +41,3 @@ const Unauthorized = ({ title = "Unauthorized", message = "You don't have permis
 
 export default Unauthorized;
 
-

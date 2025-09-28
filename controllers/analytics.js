@@ -190,9 +190,8 @@ export const getOverview = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Overview analytics error", error);
+
     return res.status(500).json({ success: false, message: "Failed to load overview", error: error.message });
   }
 };
-
 

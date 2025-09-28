@@ -142,7 +142,6 @@ const Footer = () => {
               </VStack>
             </Box>
 
-
             {/* Contact Info */}
             <Box>
               <Text
@@ -527,7 +526,7 @@ const Footer = () => {
       </Flex>
 
       {/* CSS Animation for Wave Effect */}
-      <style jsx>{`
+      <style>{`
         @keyframes wave {
           0% {
             transform: translate(-50%, -50%) scale(1);

@@ -348,7 +348,7 @@
           navigate('/admin/doctors/all');
         }, 1000);
       } catch (error) {
-        console.error("Error creating doctor:", error);
+
         toast({
           title: "Error",
           description: error?.data?.message || "Failed to add doctor. Please try again.",

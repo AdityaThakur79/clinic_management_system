@@ -69,8 +69,7 @@ export const createInventory = async (req, res) => {
     if (req.files && req.files.deviceImage) {
       try {
         const imageFile = req.files.deviceImage[0];
-        console.log('Uploading device image:', imageFile.originalname);
-        
+
         const result = await cloudinary.uploader.upload(imageFile.path, {
           folder: 'inventory',
           resource_type: 'image',
@@ -81,10 +80,9 @@ export const createInventory = async (req, res) => {
           url: result.secure_url,
           publicId: result.public_id
         };
-        
-        console.log('Device image uploaded successfully:', deviceImage);
+
       } catch (imageError) {
-        console.error('Device image upload failed:', imageError);
+
         return res.status(500).json({
           success: false,
           message: "Failed to upload device image"
@@ -127,7 +125,7 @@ export const createInventory = async (req, res) => {
       message: "Inventory item created successfully" 
     });
   } catch (error) {
-    console.error("createInventory error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -173,7 +171,6 @@ export const listInventories = async (req, res) => {
       filter.branchId = new mongoose.Types.ObjectId(branchId);
     }
     // If superAdmin and no branchId specified, show all branches (no branchId filter)
-    
 
     // Search filter
     if (search) {
@@ -219,7 +216,6 @@ export const listInventories = async (req, res) => {
         .limit(numericLimit),
       Inventory.countDocuments(filter),
     ]);
-    
 
     // Calculate statistics
     const stats = await Inventory.aggregate([
@@ -264,7 +260,7 @@ export const listInventories = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("listInventories error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -311,7 +307,7 @@ export const getInventoryById = async (req, res) => {
     }
     return res.json({ success: true, inventory: invObj });
   } catch (error) {
-    console.error("getInventoryById error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -328,16 +324,48 @@ export const updateInventory = async (req, res) => {
       });
     }
 
-    // Remove fields that shouldn't be updated directly
-    delete updateData._id;
-    delete updateData.createdAt;
-    delete updateData.createdBy;
-    delete updateData.branchId;
-
     // Fetch user data from database
     const user = await User.findById(req.user.userId);
     if (!user) {
       return res.status(401).json({ success: false, message: "User not found" });
+    }
+
+    // Remove fields that shouldn't be updated directly
+    delete updateData._id;
+    delete updateData.createdAt;
+    delete updateData.createdBy;
+    
+    // Get existing inventory to check current branch
+    const existingInventory = await Inventory.findById(id);
+    if (!existingInventory) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Inventory item not found" 
+      });
+    }
+
+    // Role-based restrictions
+    if (user.role === 'superAdmin') {
+      // SuperAdmin can update branchId if provided
+      if (updateData.branchId) {
+        if (!mongoose.Types.ObjectId.isValid(updateData.branchId)) {
+          return res.status(400).json({ 
+            success: false, 
+            message: "Invalid branch ID format" 
+          });
+        }
+      }
+    } else {
+      // BranchAdmin and Doctor can only update items in their own branch
+      const userBranchId = user.branch?._id || user.branch;
+      if (existingInventory.branchId.toString() !== userBranchId.toString()) {
+        return res.status(403).json({ 
+          success: false, 
+          message: "You can only update inventory items in your own branch" 
+        });
+      }
+      // Remove branchId from update data for non-superAdmin users
+      delete updateData.branchId;
     }
 
     // Add updatedBy
@@ -346,15 +374,13 @@ export const updateInventory = async (req, res) => {
     // Handle device image upload
     if (req.files && req.files.deviceImage) {
       try {
-        // Get existing inventory to delete old image
-        const existingInventory = await Inventory.findById(id);
-        if (existingInventory && existingInventory.deviceImage && existingInventory.deviceImage.publicId) {
+        // Delete old image if it exists
+        if (existingInventory.deviceImage && existingInventory.deviceImage.publicId) {
           await cloudinary.uploader.destroy(existingInventory.deviceImage.publicId);
         }
 
         const imageFile = req.files.deviceImage[0];
-        console.log('Uploading new device image:', imageFile.originalname);
-        
+
         const result = await cloudinary.uploader.upload(imageFile.path, {
           folder: 'inventory',
           resource_type: 'image',
@@ -365,10 +391,9 @@ export const updateInventory = async (req, res) => {
           url: result.secure_url,
           publicId: result.public_id
         };
-        
-        console.log('Device image updated successfully:', updateData.deviceImage);
+
       } catch (imageError) {
-        console.error('Device image upload failed:', imageError);
+
         return res.status(500).json({
           success: false,
           message: "Failed to upload device image"
@@ -430,7 +455,7 @@ export const updateInventory = async (req, res) => {
       message: "Inventory item updated successfully" 
     });
   } catch (error) {
-    console.error("updateInventory error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -470,7 +495,7 @@ export const deleteInventory = async (req, res) => {
       message: "Inventory item deleted successfully" 
     });
   } catch (error) {
-    console.error("deleteInventory error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -567,7 +592,7 @@ export const updateStock = async (req, res) => {
       message: `Stock ${operation}ed successfully` 
     });
   } catch (error) {
-    console.error("updateStock error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -673,7 +698,7 @@ export const getInventoryAnalytics = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("getInventoryAnalytics error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };

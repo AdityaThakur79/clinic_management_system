@@ -238,4 +238,3 @@ const AddReferredDoctor = () => {
 
 export default AddReferredDoctor;
 
-

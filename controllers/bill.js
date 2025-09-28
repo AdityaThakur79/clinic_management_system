@@ -50,11 +50,10 @@ export const getAllBills = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('getAllBills error', error);
+
     return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
-
 
 // Get detailed bill for a specific appointment
 export const getBillByAppointment = async (req, res) => {
@@ -76,7 +75,7 @@ export const getBillByAppointment = async (req, res) => {
 
     return res.json({ success: true, bill });
   } catch (error) {
-    console.error('getBillByAppointment error', error);
+
     return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
@@ -97,9 +96,8 @@ export const getBillById = async (req, res) => {
 
     return res.json({ success: true, bill });
   } catch (error) {
-    console.error('getBillById error', error);
+
     return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
-
 

@@ -48,6 +48,7 @@ import billRoutes from "./routes/bill.js";
 import inventoryRoutes from "./routes/inventory.js";
 import searchRoutes from "./routes/search.js";
 import enquiryRoutes from "./routes/enquiry.js";
+import settingsRoutes from "./routes/settings.js";
 
 app.use("/api/user", userRoutes);
 app.use("/api/branch", branchRoutes);
@@ -63,6 +64,7 @@ app.use("/api/bills", billRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/enquiry", enquiryRoutes);
+app.use("/api/settings", settingsRoutes);
 
 // Serve static files from uploads directory
 const __filename = fileURLToPath(import.meta.url);
@@ -100,5 +102,5 @@ if (clientDistExists) {
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
-  console.log(`Server is running at ${PORT}`);
+
 });

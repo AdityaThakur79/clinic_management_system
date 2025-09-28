@@ -42,7 +42,7 @@ import { useUpdateInventoryMutation, useGetInventoryByIdQuery } from '../../../f
 import { useGetAllBranchesQuery, useGetBranchByIdMutation } from '../../../features/api/branchApi';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { MdSave, MdArrowBack, MdWarning, MdEdit, MdAdd, MdClose } from 'react-icons/md';
+import { MdSave, MdArrowBack, MdWarning, MdEdit, MdAdd, MdClose, MdBusiness } from 'react-icons/md';
 
 const UpdateInventory = () => {
   const location = useLocation();
@@ -107,7 +107,7 @@ const UpdateInventory = () => {
   const { data: inventoryData, isLoading: isLoadingInventory } = useGetInventoryByIdQuery(inventoryId, {
     skip: !inventoryId
   });
-  const { data: branchesData } = useGetAllBranchesQuery({ page: 1, limit: 100, search: '' });
+  const { data: branchesData, isLoading: isLoadingBranches } = useGetAllBranchesQuery({ page: 1, limit: 100, search: '' });
   const [getBranchById] = useGetBranchByIdMutation();
 
   const cardBg = useColorModeValue('white', 'gray.800');
@@ -116,19 +116,21 @@ const UpdateInventory = () => {
   const userRole = user?.role;
   const userBranchId = user?.branch?._id || user?.branch || '';
   const isScopedToBranch = !!userBranchId && (userRole === 'branchAdmin' || userRole === 'doctor');
-  const [branchLabel, setBranchLabel] = useState('');
+  const [selectedBranch, setSelectedBranch] = useState(null);
 
-  useEffect(() => {
-    if (isScopedToBranch) {
-      setFormData(prev => ({ ...prev, branchId: prev.branchId || userBranchId }));
-      (async () => {
-        try {
-          const res = await getBranchById({ id: userBranchId }).unwrap();
-          if (res?.branch?.branchName) setBranchLabel(res.branch.branchName);
-        } catch (e) {}
-      })();
+  // Handle branch selection
+  const handleBranchChange = (e) => {
+    const branchId = e.target.value;
+    const branch = branchesData?.branches?.find((b) => b._id === branchId);
+    
+    setFormData((prev) => ({ ...prev, branchId: branchId }));
+    setSelectedBranch(branch);
+    
+    // Clear error when user selects a branch
+    if (errors.branchId) {
+      setErrors((prev) => ({ ...prev, branchId: '' }));
     }
-  }, [isScopedToBranch, userBranchId, getBranchById]);
+  };
 
   const categories = [
     'Medical Equipment',
@@ -162,8 +164,7 @@ const UpdateInventory = () => {
   useEffect(() => {
     if (inventoryData?.inventory) {
       const inv = inventoryData.inventory;
-      console.log('Inventory data received:', inv);
-      console.log('Device image data:', inv.deviceImage);
+
       setFormData({
         deviceName: inv.deviceName || '',
         model: inv.model || '',
@@ -175,7 +176,7 @@ const UpdateInventory = () => {
         threshold: inv.threshold || 5,
         costPrice: inv.costPrice || 0,
         sellingPrice: inv.sellingPrice || 0,
-        branchId: inv.branchId || '',
+        branchId: typeof inv.branchId === 'object' && inv.branchId._id ? inv.branchId._id : (inv.branchId || ''),
         supplier: {
           name: inv.supplier?.name || '',
           contact: inv.supplier?.contact || '',
@@ -207,8 +208,26 @@ const UpdateInventory = () => {
         troubleshooting: inv.troubleshooting || [{ issue: '', solution: '' }],
         notes: inv.notes || ''
       });
+      console.log('Form data initialized with branchId:', typeof inv.branchId === 'object' && inv.branchId._id ? inv.branchId._id : (inv.branchId || ''));
+      
+      // Set initial selected branch if we have populated branch data
+      if (typeof inv.branchId === 'object' && inv.branchId.branchName) {
+        setSelectedBranch(inv.branchId);
+
+      }
     }
   }, [inventoryData]);
+
+  // Set selectedBranch when branches are loaded and we have a branchId
+  useEffect(() => {
+    if (branchesData?.branches && formData.branchId && !selectedBranch) {
+      const branch = branchesData.branches.find((b) => b._id === formData.branchId);
+      if (branch) {
+        setSelectedBranch(branch);
+
+      }
+    }
+  }, [branchesData?.branches, formData.branchId, selectedBranch]);
 
   // If no inventory data and not loading, redirect back
   useEffect(() => {
@@ -540,6 +559,16 @@ const UpdateInventory = () => {
         troubleshooting: inv.troubleshooting || [{ issue: '', solution: '' }],
         notes: inv.notes || ''
       });
+      
+      // Reset selected branch
+      if (typeof inv.branchId === 'object' && inv.branchId.branchName) {
+        setSelectedBranch(inv.branchId);
+      } else if (inv.branchId) {
+        const branch = branchesData?.branches?.find((b) => b._id === inv.branchId);
+        setSelectedBranch(branch || null);
+      } else {
+        setSelectedBranch(null);
+      }
     }
     setErrors({});
   };
@@ -706,19 +735,45 @@ const UpdateInventory = () => {
                 <CardBody>
                   <FormControl isInvalid={errors.branchId}>
                     <FormLabel>Select Branch</FormLabel>
-                    <Select
-                      value={formData.branchId}
-                      onChange={(e) => handleInputChange('branchId', e.target.value)}
-                      placeholder="Select branch"
-                    >
-                      {branchesData?.branches?.map(branch => (
-                        <option key={branch._id} value={branch._id}>
-                          {branch.branchName} - {branch.address}
-                        </option>
-                      ))}
-                    </Select>
+                    {isLoadingBranches ? (
+                      <HStack>
+                        <Spinner size="sm" />
+                        <Text>Loading branches...</Text>
+                      </HStack>
+                    ) : (
+                      <Select
+                        value={formData.branchId || ''}
+                        onChange={handleBranchChange}
+                        placeholder="Select branch"
+                      >
+                        <option value="">Select branch</option>
+                        {branchesData?.branches?.map(branch => {
+
+                          return (
+                            <option key={branch._id} value={branch._id}>
+                              {branch.branchName} - {branch.address}
+                            </option>
+                          );
+                        })}
+                      </Select>
+                    )}
                     <FormErrorMessage>{errors.branchId}</FormErrorMessage>
                   </FormControl>
+                  
+                  {/* Selected Branch Info */}
+                  {selectedBranch && (
+                    <Box p={4} bg="blue.50" borderRadius="lg" border="1px solid" borderColor="blue.200" mt={4}>
+                      <HStack>
+                        <Icon as={MdBusiness} w={5} h={5} color="#2BA8D1" />
+                        <Text fontWeight="semibold" color="blue.700">
+                          Selected Branch: {selectedBranch.branchName}
+                        </Text>
+                      </HStack>
+                      <Text fontSize="sm" color="blue.600" mt={1}>
+                        {selectedBranch.address}
+                      </Text>
+                    </Box>
+                  )}
                 </CardBody>
               </Card>
             ) : (
@@ -727,7 +782,16 @@ const UpdateInventory = () => {
                   <Text fontSize="lg" fontWeight="semibold">Branch</Text>
                 </CardHeader>
                 <CardBody>
-                  <Input value={branchLabel || user?.branch?.branchName || 'Current Branch'} isReadOnly />
+                  <Input 
+                    value={selectedBranch?.branchName || user?.branch?.branchName || 'Current Branch'} 
+                    isReadOnly 
+                    placeholder="Loading branch information..."
+                  />
+                  {selectedBranch && (
+                    <Text fontSize="sm" color="gray.600" mt={2}>
+                      {selectedBranch.address}
+                    </Text>
+                  )}
                 </CardBody>
               </Card>
             )}
@@ -1094,9 +1158,9 @@ const UpdateInventory = () => {
                         size="xs"
                         variant="ghost"
                         onClick={() => {
-                          console.log('Test button clicked');
+
                           const fileInput = document.getElementById('image-upload');
-                          console.log('File input found:', fileInput);
+
                           if (fileInput) {
                             fileInput.click();
                           }

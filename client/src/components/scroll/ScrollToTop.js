@@ -14,7 +14,6 @@ function ScrollToTop({ history, children }) {
       }
   });
 
-
   return <Fragment>{children}</Fragment>;
 }
 

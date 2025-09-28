@@ -154,7 +154,6 @@ const Services = () => {
                   <option value="inactive">Inactive</option>
                 </Select>
 
-              
               </HStack>
             </VStack>
           </CardBody>

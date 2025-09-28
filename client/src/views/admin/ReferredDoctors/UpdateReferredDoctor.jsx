@@ -279,4 +279,3 @@ const UpdateReferredDoctor = () => {
 
 export default UpdateReferredDoctor;
 
-

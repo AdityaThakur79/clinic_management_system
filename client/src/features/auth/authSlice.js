@@ -14,7 +14,7 @@ const loadInitialState = () => {
       };
     }
   } catch (error) {
-    console.log('Error loading auth state from localStorage:', error);
+
   }
   return {
     user: null,
@@ -31,10 +31,10 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     userLoggedIn: (state, action) => {
-      console.log("userLoggedIn reducer called with payload:", action.payload);
+
       state.user = action.payload.user;
       state.isAuthenticated = true;
-      console.log("State updated - user:", state.user, "isAuthenticated:", state.isAuthenticated);
+
       // Save to localStorage
       try {
         localStorage.setItem('auth', JSON.stringify({
@@ -43,9 +43,9 @@ const authSlice = createSlice({
           employee: state.employee,
           isEmployeeAuthenticated: state.isEmployeeAuthenticated,
         }));
-        console.log("Auth state saved to localStorage");
+
       } catch (error) {
-        console.log('Error saving auth state to localStorage:', error);
+
       }
     },
     userLoggedOut: (state) => {
@@ -55,7 +55,7 @@ const authSlice = createSlice({
       try {
         localStorage.removeItem('auth');
       } catch (error) {
-        console.log('Error clearing auth state from localStorage:', error);
+
       }
     },
     employeeLoggedIn: (state, action) => {
@@ -70,7 +70,7 @@ const authSlice = createSlice({
           isEmployeeAuthenticated: true,
         }));
       } catch (error) {
-        console.log('Error saving auth state to localStorage:', error);
+
       }
     },
     employeeLoggedOut: (state) => {
@@ -85,7 +85,7 @@ const authSlice = createSlice({
           isEmployeeAuthenticated: false,
         }));
       } catch (error) {
-        console.log('Error saving auth state to localStorage:', error);
+
       }
     },
   },

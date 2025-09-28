@@ -118,8 +118,6 @@ const ServiceBookingPage = () => {
     const slots = [];
     const today = new Date();
 
-    console.log('Generating slots for branch:', branchId);
-
     for (let i = 0; i < 7; i++) {
       const currentDate = new Date(today);
       currentDate.setDate(today.getDate() + i);
@@ -136,8 +134,6 @@ const ServiceBookingPage = () => {
         );
         const data = await response.json();
 
-        console.log(`Availability for ${dateISO}:`, data);
-
         if (data.success && data.availableSlots && data.availableSlots.length > 0) {
           const daySlots = data.availableSlots.map(slot => ({
             datetime: new Date(currentDate),
@@ -149,16 +145,15 @@ const ServiceBookingPage = () => {
           slots.push(daySlots);
         } else {
           // If branch is closed or no slots available, add empty array
-          console.log(`No slots available for ${dateISO}:`, data.message || 'No slots');
+
           slots.push([]);
         }
       } catch (error) {
-        console.error('Error fetching availability for', dateISO, error);
+
         slots.push([]);
       }
     }
 
-    console.log('Final slots array:', slots);
     setAvailableSlots(slots);
 
     // If no date selected yet, initialize selectedDateISO to first available day
@@ -189,7 +184,7 @@ const ServiceBookingPage = () => {
   // Regenerate slots when branch changes
   useEffect(() => {
     if (branchId) {
-      console.log('Branch changed, regenerating slots for:', branchId);
+
       generateTimeSlots();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -263,8 +258,7 @@ const ServiceBookingPage = () => {
       // Navigate back to services or home
       navigate('/services');
     } catch (error) {
-      console.error('Booking error:', error);
-      
+
       // Handle specific conflict error
       if (error?.data?.message?.includes('no longer available')) {
         toast({

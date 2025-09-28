@@ -24,7 +24,7 @@ const videoFields = ["videoUpload"];
 const storage = new CloudinaryStorage({
   cloudinary,
   params: (req, file) => {
-    console.log('[MULTER PARAMS] fieldname:', file.fieldname, 'mimetype:', file.mimetype);
+
     const isVideo = file.mimetype.startsWith("video/");
     let folder = "uploads";
 
@@ -55,7 +55,7 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024,
   },
   fileFilter: (req, file, cb) => {
-    console.log('[MULTER FILTER] fieldname:', file.fieldname, 'mimetype:', file.mimetype);
+
     if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
       cb(null, true);
     } else {
@@ -68,6 +68,5 @@ const upload = multer({
   { name: "bannerImage", maxCount: 1 },
   { name: "deviceImage", maxCount: 1 },
 ]);
- 
 
 export default upload;

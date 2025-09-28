@@ -163,7 +163,7 @@ const TodayAppointments = () => {
         }).unwrap();
         setDoctors(result.doctors || []);
       } catch (error) {
-        console.error('Error fetching doctors:', error);
+
       }
     };
     fetchDoctors();
@@ -421,8 +421,6 @@ const TodayAppointments = () => {
             </HStack>
           </CardBody>
         </Card>
-
-  
 
         {/* Appointments Table */}
         <Card bg={cardBg} borderColor={borderColor}>

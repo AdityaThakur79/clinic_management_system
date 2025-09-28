@@ -199,7 +199,7 @@ const AddBranchAdmin = () => {
       setProfilePhoto(null);
       setBannerImage(null);
     } catch (error) {
-      console.error('Error creating branch admin:', error);
+
       toast({
         title: 'Error',
         description:

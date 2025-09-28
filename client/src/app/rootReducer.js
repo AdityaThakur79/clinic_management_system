@@ -13,6 +13,7 @@ import { analyticsApi } from '../features/api/analyticsApi';
 import { billsApi } from '../features/api/billsApi';
 import { inventoryApi } from '../features/api/inventoryApi';
 import { enquiryApi } from '../features/api/enquiryApi';
+import { settingsApi } from '../features/api/settingsApi';
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -29,6 +30,7 @@ const rootReducer = combineReducers({
   [billsApi.reducerPath]: billsApi.reducer,
   [inventoryApi.reducerPath]: inventoryApi.reducer,
   [enquiryApi.reducerPath]: enquiryApi.reducer,
+  [settingsApi.reducerPath]: settingsApi.reducer,
 });
 
 export default rootReducer;

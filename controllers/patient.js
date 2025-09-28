@@ -61,7 +61,7 @@ export const getAllPatients = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("getAllPatients error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -133,7 +133,7 @@ export const createPatient = async (req, res) => {
       message: "Patient created successfully"
     });
   } catch (error) {
-    console.error("createPatient error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -169,7 +169,7 @@ export const getPatientById = async (req, res) => {
       patient
     });
   } catch (error) {
-    console.error("getPatientById error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -233,7 +233,7 @@ export const updatePatient = async (req, res) => {
       message: "Patient updated successfully"
     });
   } catch (error) {
-    console.error("updatePatient error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -262,7 +262,7 @@ export const deletePatient = async (req, res) => {
       message: "Patient deleted successfully"
     });
   } catch (error) {
-    console.error("deletePatient error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -321,7 +321,7 @@ export const getPatientDetails = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("getPatientDetails error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -329,13 +329,13 @@ export const getPatientDetails = async (req, res) => {
 // Complete appointment with prescription and billing
 export const completeAppointment = async (req, res) => {
   try {
-    console.log("completeAppointment called with:", { appointmentId: req.params.appointmentId, body: req.body });
+
     const { appointmentId } = req.params;
     const { prescription, bill, patientUpdate, reminder: reminderBody } = req.body;
     
     // Validate appointmentId format
     if (!appointmentId || !appointmentId.match(/^[0-9a-fA-F]{24}$/)) {
-      console.log("Invalid appointment ID format:", appointmentId);
+
       return res.status(400).json({ success: false, message: "Invalid appointment ID format" });
     }
     
@@ -372,23 +372,20 @@ export const completeAppointment = async (req, res) => {
     } = bill || {};
 
     const doctorId = req.user?.userId || req.id;
-    console.log("Doctor ID:", doctorId);
-    
+
     if (!doctorId) {
-      console.log("No doctor ID found in request");
+
       return res.status(401).json({ success: false, message: "Doctor ID not found" });
     }
 
     // Get appointment details
-    console.log("Looking for appointment with ID:", appointmentId);
+
     const appointment = await Appointment.findById(appointmentId)
       .populate('patientId')
       .populate('doctorId');
 
-    console.log("Appointment found:", appointment ? "Yes" : "No");
     if (appointment) {
-      console.log("Appointment status:", appointment.status);
-      console.log("Patient ID:", appointment.patientId?._id);
+
     }
 
     if (!appointment) {
@@ -400,15 +397,7 @@ export const completeAppointment = async (req, res) => {
     }
 
     // Create prescription
-    console.log("Creating prescription with data:", {
-      appointmentId,
-      patientId: appointment.patientId._id,
-      doctorId,
-      branchId: appointment.branchId,
-      diagnosis: diagnosis || '',
-      medicines: medicines || []
-    });
-    
+
     let prescriptionDoc;
     try {
       prescriptionDoc = await Prescription.create({
@@ -426,9 +415,9 @@ export const completeAppointment = async (req, res) => {
         doctorNotes: doctorNotes || '',
         patientInstructions: patientInstructions || ''
       });
-      console.log("Prescription created successfully:", prescriptionDoc._id);
+
     } catch (prescriptionError) {
-      console.error("Prescription creation error:", prescriptionError);
+
       return res.status(500).json({ success: false, message: "Failed to create prescription", error: prescriptionError.message });
     }
 
@@ -452,7 +441,7 @@ export const completeAppointment = async (req, res) => {
       const perVisitCharge = appointment.patientId.plan.perVisitCharge || 0;
       if (perVisitCharge > 0) {
         finalConsultationFee = perVisitCharge;
-        console.log(`Wallet plan: Using per-visit charge ${perVisitCharge} instead of consultation fee ${consultationFeeNum}`);
+
       }
     }
     
@@ -481,19 +470,9 @@ export const completeAppointment = async (req, res) => {
       quantity: parseInt(d.quantity) || 0,
       notes: d.notes || ''
     }));
-    
-    console.log("Processed services:", processedServices);
-    
+
     // Create bill - let the pre-save middleware handle subtotal and totalAmount calculations
-    console.log("Creating bill with data:", {
-      appointmentId,
-      patientId: appointment.patientId._id,
-      doctorId,
-      branchId: appointment.branchId,
-      consultationFee: consultationFeeNum,
-      services: processedServices
-    });
-    
+
     // Calculate totals manually as fallback
     const servicesTotal = processedServices.reduce((sum, service) => sum + (service.actualPrice || service.basePrice || 0), 0);
     const devicesTotal = processedDevices.reduce((sum, d) => sum + ((parseFloat(d.unitPrice)||0) * (parseInt(d.quantity)||0)), 0);
@@ -535,14 +514,6 @@ export const completeAppointment = async (req, res) => {
     const day = String(date.getDate()).padStart(2, '0');
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     const billNumber = `BILL-${year}${month}${day}-${random}`;
-    
-    console.log("Manual calculations:", {
-      servicesTotal,
-      subtotal,
-      totalAmount,
-      remainingAmount,
-      billNumber
-    });
 
     let billDoc;
     try {
@@ -574,9 +545,9 @@ export const completeAppointment = async (req, res) => {
         remainingAmount: remainingAmount,
         billNumber: billNumber
       });
-      console.log("Bill created successfully:", billDoc._id);
+
     } catch (billError) {
-      console.error("Bill creation error:", billError);
+
       return res.status(500).json({ success: false, message: "Failed to create bill", error: billError.message });
     }
 
@@ -598,7 +569,7 @@ export const completeAppointment = async (req, res) => {
           let planType = patientUpdate.plan.type || patient.plan?.type || 'standard';
           
           if (!validPlanTypes.includes(planType)) {
-            console.log("Invalid plan type:", planType, "using standard instead");
+
             planType = 'standard';
           }
           
@@ -608,8 +579,7 @@ export const completeAppointment = async (req, res) => {
             visitsRemaining: parseInt(patientUpdate.plan.visitsRemaining) || patient.plan?.visitsRemaining || 0,
             perVisitCharge: parseFloat(patientUpdate.plan.perVisitCharge) || patient.plan?.perVisitCharge || 0
           };
-          
-          console.log("Updated patient plan:", patient.plan);
+
         }
         
         await patient.save();
@@ -641,9 +611,9 @@ export const completeAppointment = async (req, res) => {
           patient.plan.walletAmount = walletAmount - visitCharge;
           patient.plan.visitsRemaining = Math.max(0, (patient.plan.visitsRemaining || 0) - 1);
           await patient.save();
-          console.log(`Wallet plan: Deducted ${visitCharge} from wallet. Remaining: ${patient.plan.walletAmount}`);
+
         } else {
-          console.log(`Wallet plan: Insufficient funds. Required: ${visitCharge}, Available: ${walletAmount}`);
+
         }
       }
     }
@@ -699,7 +669,7 @@ export const completeAppointment = async (req, res) => {
       bill: billDoc
     });
   } catch (error) {
-    console.error("completeAppointment error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -780,7 +750,7 @@ export const updateCompletedAppointment = async (req, res) => {
 
     return res.json({ success: true, message: 'Appointment updated', appointment });
   } catch (error) {
-    console.error('updateCompletedAppointment error', error);
+
     return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
@@ -821,7 +791,7 @@ const updateReferredDoctorEarnings = async (referredDoctorId, amount) => {
 
     await referredDoctor.save();
   } catch (error) {
-    console.error("updateReferredDoctorEarnings error", error);
+
   }
 };
 
@@ -882,7 +852,7 @@ export const getReferredDoctorDetails = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("getReferredDoctorDetails error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -925,7 +895,7 @@ export const getAllReferredDoctors = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("getAllReferredDoctors error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };

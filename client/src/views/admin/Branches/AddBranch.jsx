@@ -217,7 +217,7 @@ const AddBranch = () => {
       });
       setErrors({});
     } catch (error) {
-      console.error('Error creating branch:', error);
+
       toast({
         title: 'Error',
         description:
@@ -310,7 +310,6 @@ const AddBranch = () => {
                   </FormControl>
                 </SimpleGrid>
 
-               
                 <Box>
                   <HStack mb={4}>
                     <Icon as={MdLocationOn} w={5} h={5} color="#3AC0E7" />
@@ -534,7 +533,6 @@ const AddBranch = () => {
                         </NumberInputStepper>
                       </NumberInput>
                     </FormControl>
-
 
                     {/* Break Times */}
                     <Box>

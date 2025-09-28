@@ -9,9 +9,6 @@ const ProtectedRoute = ({ children, requiredRole, requiredPermission }) => {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectUser);
 
-  console.log("ProtectedRoute isAuthenticated:", isAuthenticated);
-  console.log("ProtectedRoute user:", user);
-
   // If not authenticated, redirect to sign-in
   if (!isAuthenticated || !user) {
     return <Navigate to="/auth/sign-in" replace />;

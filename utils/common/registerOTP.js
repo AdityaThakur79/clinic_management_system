@@ -41,10 +41,10 @@ const createTransporter = () => {
 const verifyTransporter = async (transporter) => {
   try {
     await transporter.verify();
-    console.log("Email transporter verified successfully");
+
     return true;
   } catch (error) {
-    console.error("Email transporter verification failed:", error);
+
     return false;
   }
 };
@@ -71,7 +71,7 @@ export const sendOTPEmail = async (name, email, otp) => {
 
     await transporter.sendMail(mailOptions);
   } catch (error) {
-    console.error("Error sending OTP email:", error);
+
     throw error;
   }
 };

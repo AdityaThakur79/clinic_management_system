@@ -40,4 +40,3 @@ const ServiceSchema = new mongoose.Schema(
 
 export const Service = mongoose.models.Service || mongoose.model('Service', ServiceSchema);
 
-

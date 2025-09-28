@@ -129,8 +129,8 @@ export function SidebarLinks(props) {
                 <HStack
                   spacing={isCollapsed ? '0' : '26px'}
                   py="5px"
-                  ps={isCollapsed ? '6px' : '10px'}
-                  pe={isCollapsed ? '24px' : '10px'}
+                  ps={isCollapsed ? '10px' : '10px'}
+                  pe={isCollapsed ? '10px' : '10px'}
                 >
                   <Flex
                     w="100%"
@@ -267,7 +267,8 @@ export function SidebarLinks(props) {
                         : '26px'
                     }
                     py='5px'
-                    ps='24px'>
+                    ps={isCollapsed ? '10px' : '10px'}
+                    pe={isCollapsed ? '10px' : '10px'}>
                     <Flex w='100%' alignItems='center' justifyContent='center'>
                       <Box
                         color={
@@ -322,8 +323,8 @@ export function SidebarLinks(props) {
                         : '26px'
                     }
                     py="5px"
-                    ps={isCollapsed ? '6px' : '10px'}
-                    pe={isCollapsed ? '24px' : '10px'}
+                    ps={isCollapsed ? '10px' : '10px'}
+                    pe={isCollapsed ? '10px' : '10px'}
                   >
                     {!isCollapsed && (
                       <Text

@@ -29,7 +29,6 @@ const HearingAidBrands = () => {
   const textColor = useColorModeValue('gray.600', 'gray.300');
   const headingColor = useColorModeValue('gray.800', 'white');
 
-
   // Intersection Observer for reveal animations
   useEffect(() => {
     const observer = new IntersectionObserver(

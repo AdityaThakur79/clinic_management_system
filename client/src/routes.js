@@ -75,6 +75,8 @@ import CreateInventory from './views/admin/Inventory/CreateInventory';
 import UpdateInventory from './views/admin/Inventory/UpdateInventory';
 import InventoryDetail from './views/admin/Inventory/InventoryDetail.jsx';
 import GlobalSearch from './views/admin/Search/GlobalSearch.jsx';
+import Settings from './views/admin/Settings/Settings';
+import { SettingsIcon } from '@chakra-ui/icons';
 
 // NEW CLINIC MANAGEMENT ROUTES
 const routes = [
@@ -209,7 +211,6 @@ const routes = [
       // },
     ],
   },
-
 
    // Services Section
    {
@@ -510,6 +511,16 @@ const routes = [
     ],
   },
 
+  // System Section
+ 
+  {
+    name: 'Settings',
+    layout: '/admin',
+    path: '/settings',
+    icon: <Icon as={SettingsIcon} width="20px" height="20px" color="inherit" />,
+    component: <Settings />,
+    roles: ['superAdmin'],
+  },
 
   // Profile Section
   {

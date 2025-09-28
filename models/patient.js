@@ -55,4 +55,3 @@ patientSchema.pre('findOneAndUpdate', function(next) {
 
 export default mongoose.models.Patient || mongoose.model("Patient", patientSchema);
 
-

@@ -79,7 +79,7 @@ export const getAvailability = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("getAvailability error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -327,7 +327,7 @@ export const createAppointment = async (req, res) => {
 
           await Promise.all(toSend.map(({ to }) => sendEmail({ to, subject, html })));
         } catch (e) {
-          console.error('Appointment email notification failed:', e?.message || e);
+
         }
       })();
 
@@ -367,7 +367,7 @@ export const createAppointment = async (req, res) => {
         }
       })();
     } catch (notifyErr) {
-      console.error('Notification scheduling failed:', notifyErr?.message || notifyErr);
+
     }
 
     return res.status(201).json({ 
@@ -378,7 +378,7 @@ export const createAppointment = async (req, res) => {
       message: "Appointment booked successfully. A doctor will be assigned to your appointment."
     });
   } catch (error) {
-    console.error("createAppointment error", error);
+
     await session.abortTransaction();
     session.endSession();
     return res.status(500).json({ success: false, message: "Server error" });
@@ -453,7 +453,7 @@ export const getAllAppointments = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("getAllAppointments error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -499,7 +499,7 @@ export const getTodayAppointments = async (req, res) => {
       date: today.toISOString().split('T')[0]
     });
   } catch (error) {
-    console.error("getTodayAppointments error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -529,7 +529,7 @@ export const getAppointmentById = async (req, res) => {
       appointment
     });
   } catch (error) {
-    console.error("getAppointmentById error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -567,7 +567,7 @@ export const updateAppointmentStatus = async (req, res) => {
       message: "Appointment status updated successfully"
     });
   } catch (error) {
-    console.error("updateAppointmentStatus error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -620,7 +620,7 @@ export const assignDoctorToAppointment = async (req, res) => {
       message: "Doctor assigned to appointment successfully"
     });
   } catch (error) {
-    console.error("assignDoctorToAppointment error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -652,9 +652,8 @@ export const deleteAppointment = async (req, res) => {
       message: "Appointment deleted successfully"
     });
   } catch (error) {
-    console.error("deleteAppointment error", error);
+
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
 

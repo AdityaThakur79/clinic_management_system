@@ -132,7 +132,7 @@ const UpdateBranchAdmin = () => {
           setFetchError('Failed to fetch branch admin data');
         }
       } catch (error) {
-        console.error('Error fetching branch admin:', error);
+
         setFetchError(
           error?.data?.message || 'Failed to fetch branch admin data',
         );
@@ -256,7 +256,7 @@ const UpdateBranchAdmin = () => {
       // Navigate back to branch admin list
       navigate('/admin/branch-admins');
     } catch (error) {
-      console.error('Error updating branch admin:', error);
+
       toast({
         title: 'Error',
         description:

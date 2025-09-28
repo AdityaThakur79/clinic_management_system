@@ -14,6 +14,7 @@ import { analyticsApi } from '../features/api/analyticsApi';
 import { billsApi } from '../features/api/billsApi';
 import { inventoryApi } from '../features/api/inventoryApi';
 import { enquiryApi } from '../features/api/enquiryApi';
+import { settingsApi } from '../features/api/settingsApi';
 
 export const store = configureStore({
   reducer: rootReducer,
@@ -22,7 +23,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: ['persist/PERSIST'],
       },
-    }).concat(authApi.middleware, branchApi.middleware, branchAdminApi.middleware, doctorApi.middleware, serviceApi.middleware, appointmentsApi.middleware, referredDoctorsApi.middleware, patientApi.middleware, remindersApi.middleware, analyticsApi.middleware, billsApi.middleware, inventoryApi.middleware, enquiryApi.middleware),
+    }).concat(authApi.middleware, branchApi.middleware, branchAdminApi.middleware, doctorApi.middleware, serviceApi.middleware, appointmentsApi.middleware, referredDoctorsApi.middleware, patientApi.middleware, remindersApi.middleware, analyticsApi.middleware, billsApi.middleware, inventoryApi.middleware, enquiryApi.middleware, settingsApi.middleware),
 });
 
 // export type RootState = ReturnType<typeof store.getState>;

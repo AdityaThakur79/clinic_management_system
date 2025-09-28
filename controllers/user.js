@@ -37,10 +37,10 @@ const createTransporter = () => {
 const verifyTransporter = async (transporter) => {
   try {
     await transporter.verify();
-    console.log("Email transporter verified successfully");
+
     return true;
   } catch (error) {
-    console.error("Email transporter verification failed:", error);
+
     return false;
   }
 };
@@ -95,7 +95,7 @@ export const registerController = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to register",
@@ -157,10 +157,7 @@ export const updateProfileController = async (req, res) => {
       updatedUser,
     });
   } catch (error) {
-    console.log("=== ERROR ===");
-    console.log("Error message:", error.message);
-    console.log("Error stack:", error.stack);
-    console.log(error);
+
     return res
       .status(500)
       .json({ success: false, message: "Something went wrong" ,  error: error.message });
@@ -183,7 +180,7 @@ export const getUserProfileController = async (req, res) => {
       user,
     });
   } catch (error) {
-    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to load user",
@@ -217,7 +214,7 @@ export const loginController = async (req, res) => {
     }
     generateToken(res, user, `Welcome back ${user.name}`);
   } catch (error) {
-    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to login",
@@ -260,7 +257,7 @@ export const verifyOTPController = async (req, res) => {
       user: newUser,
     });
   } catch (error) {
-    console.error(error);
+
     return res.status(500).json({ message: "Server error" });
   }
 };
@@ -272,7 +269,7 @@ export const logoutController = async (req, res) => {
       success: true,
     });
   } catch (error) {
-    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to Log out",
@@ -324,16 +321,13 @@ export const forgotPasswordController = async (req, res) => {
 
     // Send OTP email using password reset template
     try {
-      console.log("Attempting to send password reset email to:", email);
-      
+
       const transporter = createTransporter();
-      console.log("Email transporter created successfully");
-      
+
       const isVerified = await verifyTransporter(transporter);
       if (!isVerified) {
         throw new Error("Email service not available");
       }
-      console.log("Email transporter verified successfully");
 
       const emailUser = process.env.SMTP_USER || process.env.EMAIL_USER;
       
@@ -344,21 +338,14 @@ export const forgotPasswordController = async (req, res) => {
         html: passwordResetTemplate(user.name, otp),
       };
 
-      console.log("Sending email with options:", {
-        from: emailUser,
-        to: email,
-        subject: mailOptions.subject
-      });
-
       const result = await transporter.sendMail(mailOptions);
-      console.log("Email sent successfully:", result.messageId);
-      
+
       return res.status(200).json({
         success: true,
         message: "Password reset OTP sent to your email",
       });
     } catch (emailError) {
-      console.error("Email sending failed:", emailError);
+
       return res.status(500).json({
         success: false,
         message: "Failed to send OTP email. Please try again later.",
@@ -366,7 +353,7 @@ export const forgotPasswordController = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("Forgot password error:", error);
+
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -421,7 +408,7 @@ export const verifyPasswordResetOTPController = async (req, res) => {
       message: "OTP verified successfully. You can now reset your password.",
     });
   } catch (error) {
-    console.error("Verify OTP error:", error);
+
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -497,14 +484,13 @@ export const resetPasswordController = async (req, res) => {
       message: "Password reset successfully. You can now login with your new password.",
     });
   } catch (error) {
-    console.error("Reset password error:", error);
+
     return res.status(500).json({
       success: false,
       message: "Internal server error",
     });
   }
 };
-
 
 // Change Password Controller (for authenticated users)
 export const changePasswordController = async (req, res) => {
@@ -574,7 +560,7 @@ export const changePasswordController = async (req, res) => {
       message: "Password changed successfully",
     });
   } catch (error) {
-    console.error("Change password error:", error.message);
+
     return res.status(500).json({
       success: false,
       message: "Internal server error",

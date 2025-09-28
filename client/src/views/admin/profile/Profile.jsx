@@ -330,7 +330,7 @@ export default function Profile() {
           }).unwrap();
         } catch (e) {
           // Non-blocking
-          console.warn('Branch update failed', e);
+
         }
       }
       dispatch(userLoggedIn({ user: res }));

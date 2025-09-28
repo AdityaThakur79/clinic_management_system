@@ -71,7 +71,6 @@ const Inventories = () => {
     lowStock: false
   });
 
-
   const { data: analyticsData } = useGetInventoryAnalyticsQuery({});
   const { data: branchesData } = useGetAllBranchesQuery({ page: 1, limit: 100, search: '' });
   const [deleteInventory, { isLoading: isDeleting }] = useDeleteInventoryMutation();
@@ -634,7 +633,7 @@ const Inventories = () => {
                                 colorScheme="purple"
                                 onClick={async () => {
                                   try {
-                                    console.log('Print PDF clicked for inventory:', inventory?.deviceName);
+
                                     console.log('Full inventory object:', JSON.stringify(inventory, null, 2));
                                     
                                     // Validate inventory data more thoroughly
@@ -660,8 +659,6 @@ const Inventories = () => {
                                       troubleshooting: inventory.troubleshooting || []
                                     };
 
-                                    console.log('Clean inventory data:', cleanInventory);
-
                                     // Create PDF document
                                     const pdfDoc = <InventoryPDF 
                                       inventory={cleanInventory} 
@@ -675,24 +672,19 @@ const Inventories = () => {
                                       }} 
                                     />;
 
-                                    console.log('PDF document created successfully');
-
                                     // Generate PDF blob
                                     const { pdf } = await import('@react-pdf/renderer');
-                                    console.log('PDF renderer imported successfully');
-                                    
+
                                     const blob = await pdf(pdfDoc).toBlob();
-                                    console.log('PDF blob generated successfully');
-                                    
+
                                     // Create object URL and open in new window for printing
                                     const url = URL.createObjectURL(blob);
-                                    console.log('Object URL created:', url);
-                                    
+
                                     const printWindow = window.open(url, '_blank');
                                     
                                     if (printWindow) {
                                       printWindow.onload = () => {
-                                        console.log('Print window loaded, triggering print');
+
                                         printWindow.print();
                                         // Clean up the URL after printing
                                         setTimeout(() => {
@@ -700,7 +692,7 @@ const Inventories = () => {
                                         }, 1000);
                                       };
                                     } else {
-                                      console.error('Could not open print window');
+
                                       toast({
                                         title: 'Print Error',
                                         description: 'Could not open print window. Please check popup blockers.',
@@ -710,8 +702,7 @@ const Inventories = () => {
                                       });
                                     }
                                   } catch (error) {
-                                    console.error('Print PDF error:', error);
-                                    console.error('Error stack:', error.stack);
+
                                     toast({
                                       title: 'Print Error',
                                       description: `Failed to generate PDF: ${error.message}`,

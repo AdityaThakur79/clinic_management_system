@@ -64,7 +64,6 @@ const Navbar = () => {
           Aartiket Speech & Hearing Care
         </Text> */}
       </HStack>
-      
 
       {/* Desktop Menu */}
       <HStack

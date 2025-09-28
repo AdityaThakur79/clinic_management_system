@@ -18,4 +18,3 @@ router.delete("/:id", isAuthenticated, deleteAppointment);
 
 export default router;
 
-

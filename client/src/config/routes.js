@@ -28,6 +28,7 @@ import HearingAidDevice from '../views/User/HearingAidDevice';
 import LocationSEO from '../views/User/Pages/LocationSEO';
 import BookAppointment from '../views/User/Pages/BookAppointment';
 import ServiceBookingPage from '../views/User/Pages/ServiceBookingPage';
+import Settings from '../views/admin/Settings/Settings';
 
 // Public Routes (No authentication required)
 export const publicRoutes = [
@@ -193,6 +194,13 @@ export const adminRoutes = [
     name: 'Enquiries',
     showInSidebar: true,
     category: 'Customer Care',
+  },
+  {
+    path: '/admin/settings',
+    element: <Settings />,
+    name: 'Settings',
+    showInSidebar: true,
+    category: 'System',
   },
   
 ];

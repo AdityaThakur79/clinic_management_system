@@ -7,7 +7,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
     padding: 0,
-    fontSize: 11,
+    fontSize: 12,
     lineHeight: 1.4,
   },
   header: {
@@ -38,13 +38,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   clinicSubtitle: {
     fontSize: 14,
     color: 'white',
     opacity: 0.9,
-    marginBottom: 10,
+    marginBottom: 6,
   },
   clinicAddress: {
     fontSize: 10,
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   documentDate: {
     fontSize: 10,
@@ -76,8 +76,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   deviceImage: {
-    width: 120,
-    height: 120,
+    width: 100,
+    height: 100,
     marginRight: 20,
     objectFit: 'contain',
   },
@@ -85,28 +85,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   deviceName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#2BA8D1',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   deviceBrand: {
-    fontSize: 14,
+    fontSize: 11,
+    color: '#666',
+    marginBottom: 2,
+  },
+  deviceModel: {
+    fontSize: 11,
     color: '#666',
     marginBottom: 4,
   },
-  deviceModel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-  },
   devicePrice: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#2BA8D1',
   },
   section: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 14,
@@ -114,99 +114,127 @@ const styles = StyleSheet.create({
     color: '#2BA8D1',
     marginBottom: 10,
     borderBottom: '2px solid #2BA8D1',
-    paddingBottom: 5,
+    paddingBottom: 4,
+  },
+  table: {
+    width: '100%',
+    marginBottom: 10,
+    border: '1px solid #dee2e6',
+  },
+  tableHeader: {
+    backgroundColor: '#f8f9fa',
+    borderBottom: '1px solid #dee2e6',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottom: '1px solid #dee2e6',
+    minHeight: 20,
+  },
+  tableCell: {
+    padding: 8,
+    fontSize: 10,
+    flex: 1,
+    borderRight: '1px solid #dee2e6',
+  },
+  tableCellHeader: {
+    padding: 8,
+    fontSize: 10,
+    fontWeight: 'bold',
+    backgroundColor: '#f8f9fa',
+    flex: 1,
+    borderRight: '1px solid #dee2e6',
   },
   description: {
-    fontSize: 11,
-    color: '#333',
-    lineHeight: 1.5,
-    marginBottom: 15,
-  },
-  dosDontsContainer: {
-    flexDirection: 'row',
-    marginBottom: 15,
-  },
-  dosColumn: {
-    flex: 1,
-    marginRight: 10,
-  },
-  dontsColumn: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  dosTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#28a745',
-    marginBottom: 8,
-  },
-  dontsTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#dc3545',
-    marginBottom: 8,
-  },
-  listItem: {
-    fontSize: 10,
-    color: '#333',
-    marginBottom: 4,
-    paddingLeft: 8,
-  },
-  dosItem: {
-    fontSize: 10,
-    color: '#28a745',
-    marginBottom: 4,
-    paddingLeft: 8,
-  },
-  dontsItem: {
-    fontSize: 10,
-    color: '#dc3545',
-    marginBottom: 4,
-    paddingLeft: 8,
-  },
-  careInstructions: {
-    fontSize: 11,
-    color: '#333',
-    lineHeight: 1.5,
-    backgroundColor: '#f8f9fa',
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 15,
-  },
-  warrantySection: {
-    backgroundColor: '#e3f2fd',
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 15,
-  },
-  warrantyTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#1976d2',
-    marginBottom: 5,
-  },
-  warrantyText: {
     fontSize: 10,
     color: '#333',
     lineHeight: 1.4,
+    marginBottom: 10,
   },
-  troubleshootingSection: {
-    marginBottom: 15,
+  dosDontsContainer: {
+    flexDirection: 'row',
+    marginBottom: 10,
   },
-  troubleshootingItem: {
-    marginBottom: 8,
-    padding: 8,
-    backgroundColor: '#fff3cd',
-    borderRadius: 3,
+  dosColumn: {
+    flex: 1,
+    marginRight: 8,
   },
-  troubleshootingIssue: {
+  dontsColumn: {
+    flex: 1,
+    marginLeft: 8,
+  },
+  dosTitle: {
     fontSize: 10,
     fontWeight: 'bold',
+    color: '#28a745',
+    marginBottom: 4,
+  },
+  dontsTitle: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#dc3545',
+    marginBottom: 4,
+  },
+  listItem: {
+    fontSize: 9,
+    color: '#333',
+    marginBottom: 2,
+    paddingLeft: 6,
+  },
+  dosItem: {
+    fontSize: 9,
+    color: '#28a745',
+    marginBottom: 2,
+    paddingLeft: 6,
+  },
+  dontsItem: {
+    fontSize: 9,
+    color: '#dc3545',
+    marginBottom: 2,
+    paddingLeft: 6,
+  },
+  careInstructions: {
+    fontSize: 9,
+    color: '#333',
+    lineHeight: 1.3,
+    backgroundColor: '#f8f9fa',
+    padding: 6,
+    borderRadius: 3,
+    marginBottom: 10,
+  },
+  warrantySection: {
+    backgroundColor: '#e3f2fd',
+    padding: 6,
+    borderRadius: 3,
+    marginBottom: 10,
+  },
+  warrantyTitle: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#1976d2',
+    marginBottom: 2,
+  },
+  warrantyText: {
+    fontSize: 9,
+    color: '#333',
+    lineHeight: 1.3,
+  },
+  troubleshootingSection: {
+    marginBottom: 10,
+  },
+  troubleshootingItem: {
+    marginBottom: 6,
+    padding: 5,
+    backgroundColor: '#fff3cd',
+    borderRadius: 2,
+  },
+  troubleshootingIssue: {
+    fontSize: 9,
+    fontWeight: 'bold',
     color: '#856404',
-    marginBottom: 3,
+    marginBottom: 2,
   },
   troubleshootingSolution: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#856404',
   },
   footer: {
@@ -215,24 +243,23 @@ const styles = StyleSheet.create({
     borderTop: '1px solid #dee2e6',
   },
   footerText: {
-    fontSize: 9,
+    fontSize: 10,
     color: '#6c757d',
     textAlign: 'center',
   },
   contactInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
+    marginTop: 6,
   },
   contactItem: {
-    fontSize: 9,
+    fontSize: 8,
     color: '#6c757d',
   },
 });
 
 const InventoryPDF = ({ inventory, clinicInfo }) => {
-  console.log('InventoryPDF rendering with:', { inventory, clinicInfo });
-  
+
   const currentDate = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -241,7 +268,7 @@ const InventoryPDF = ({ inventory, clinicInfo }) => {
 
   // Add comprehensive error handling
   if (!inventory) {
-    console.error('No inventory data provided to PDF');
+
     return (
       <Document>
         <Page size="A4" style={styles.page}>
@@ -255,7 +282,7 @@ const InventoryPDF = ({ inventory, clinicInfo }) => {
 
   // Validate required fields
   if (!inventory.deviceName) {
-    console.error('Missing device name in inventory data');
+
     return (
       <Document>
         <Page size="A4" style={styles.page}>
@@ -280,8 +307,6 @@ const InventoryPDF = ({ inventory, clinicInfo }) => {
     warrantyInfo: inventory.warrantyInfo || { duration: '', conditions: '' },
     troubleshooting: inventory.troubleshooting || []
   };
-
-  console.log('Safe inventory data:', safeInventory);
 
   return (
     <Document>
@@ -331,109 +356,117 @@ const InventoryPDF = ({ inventory, clinicInfo }) => {
             </View>
           </View>
 
-          {/* Description */}
-          {safeInventory.description && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Description</Text>
+          {/* Combined Information Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Device Information</Text>
+            
+            {/* Description */}
+            {safeInventory.description && (
               <Text style={styles.description}>{safeInventory.description}</Text>
-            </View>
-          )}
+            )}
 
-          {/* Dos and Don'ts */}
-          {(safeInventory.dosAndDonts.dos.length > 0 || safeInventory.dosAndDonts.donts.length > 0) && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Care Guidelines</Text>
-              <View style={styles.dosDontsContainer}>
-                {safeInventory.dosAndDonts.dos.length > 0 && (
-                  <View style={styles.dosColumn}>
-                    <Text style={styles.dosTitle}>✓ DO's</Text>
-                    {safeInventory.dosAndDonts.dos.map((item, index) => (
-                      <Text key={index} style={styles.dosItem}>
-                        • {item}
+            {/* Dos and Don'ts - Custom Table Format */}
+            {(safeInventory.dosAndDonts.dos.length > 0 || safeInventory.dosAndDonts.donts.length > 0) && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Care Guidelines</Text>
+                <View style={styles.table}>
+                  {/* Table Header */}
+                  <View style={styles.tableHeader}>
+                    <View style={styles.tableRow}>
+                      <Text style={[styles.tableCellHeader, { color: '#28a745', flex: 0.5 }]}>
+                        ✓ DO's
                       </Text>
-                    ))}
-                  </View>
-                )}
-                {safeInventory.dosAndDonts.donts.length > 0 && (
-                  <View style={styles.dontsColumn}>
-                    <Text style={styles.dontsTitle}>✗ DON'Ts</Text>
-                    {safeInventory.dosAndDonts.donts.map((item, index) => (
-                      <Text key={index} style={styles.dontsItem}>
-                        • {item}
+                      <Text style={[styles.tableCellHeader, { color: '#dc3545', flex: 0.5 }]}>
+                        ✗ DON'Ts
                       </Text>
-                    ))}
+                    </View>
                   </View>
-                )}
+                  {/* Table Body */}
+                  {Array.from({ length: Math.max(safeInventory.dosAndDonts.dos.length, safeInventory.dosAndDonts.donts.length) }, (_, index) => (
+                    <View key={index} style={styles.tableRow}>
+                      <Text style={[styles.tableCell, { color: '#28a745' }]}>
+                        {safeInventory.dosAndDonts.dos[index] ? `• ${safeInventory.dosAndDonts.dos[index]}` : ''}
+                      </Text>
+                      <Text style={[styles.tableCell, { color: '#dc3545' }]}>
+                        {safeInventory.dosAndDonts.donts[index] ? `• ${safeInventory.dosAndDonts.donts[index]}` : ''}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
               </View>
-            </View>
-          )}
+            )}
 
-          {/* Care Instructions */}
-          {safeInventory.careInstructions && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Care Instructions</Text>
-              <Text style={styles.careInstructions}>{safeInventory.careInstructions}</Text>
-            </View>
-          )}
+            {/* Care Instructions - Compact */}
+            {safeInventory.careInstructions && (
+              <Text style={styles.careInstructions}>
+                <Text style={styles.warrantyTitle}>Care: </Text>
+                {safeInventory.careInstructions.length > 150 
+                  ? safeInventory.careInstructions.substring(0, 150) + '...'
+                  : safeInventory.careInstructions
+                }
+              </Text>
+            )}
 
-          {/* Warranty Information */}
-          {(safeInventory.warrantyInfo.duration || safeInventory.warrantyInfo.conditions) && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Warranty Information</Text>
+            {/* Warranty Information - Compact */}
+            {(safeInventory.warrantyInfo.duration || safeInventory.warrantyInfo.conditions) && (
               <View style={styles.warrantySection}>
                 {safeInventory.warrantyInfo.duration && (
                   <Text style={styles.warrantyText}>
-                    <Text style={styles.warrantyTitle}>Duration: </Text>
+                    <Text style={styles.warrantyTitle}>Warranty: </Text>
                     {safeInventory.warrantyInfo.duration}
                   </Text>
                 )}
                 {safeInventory.warrantyInfo.conditions && (
                   <Text style={styles.warrantyText}>
-                    <Text style={styles.warrantyTitle}>Conditions: </Text>
-                    {safeInventory.warrantyInfo.conditions}
+                    <Text style={styles.warrantyTitle}>Terms: </Text>
+                    {safeInventory.warrantyInfo.conditions.length > 100 
+                      ? safeInventory.warrantyInfo.conditions.substring(0, 100) + '...'
+                      : safeInventory.warrantyInfo.conditions
+                    }
                   </Text>
                 )}
               </View>
-            </View>
-          )}
+            )}
 
-          {/* Troubleshooting */}
-          {safeInventory.troubleshooting.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Troubleshooting</Text>
-              <View style={styles.troubleshootingSection}>
-                {safeInventory.troubleshooting.map((item, index) => (
-                  <View key={index} style={styles.troubleshootingItem}>
-                    <Text style={styles.troubleshootingIssue}>
-                      Issue: {item.issue}
-                    </Text>
-                    <Text style={styles.troubleshootingSolution}>
-                      Solution: {item.solution}
-                    </Text>
+            {/* Troubleshooting - Custom Table Format */}
+            {safeInventory.troubleshooting.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Troubleshooting Guide</Text>
+                <View style={styles.table}>
+                  {/* Table Header */}
+                  <View style={styles.tableHeader}>
+                    <View style={styles.tableRow}>
+                      <Text style={[styles.tableCellHeader, { flex: 0.4 }]}>
+                        Issue
+                      </Text>
+                      <Text style={[styles.tableCellHeader, { flex: 0.6 }]}>
+                        Solution
+                      </Text>
+                    </View>
                   </View>
-                ))}
+                  {/* Table Body */}
+                  {safeInventory.troubleshooting.map((item, index) => (
+                    <View key={index} style={styles.tableRow}>
+                      <Text style={[styles.tableCell, { color: '#856404', fontWeight: 'bold' }]}>
+                        {item.issue}
+                      </Text>
+                      <Text style={[styles.tableCell, { color: '#856404' }]}>
+                        {item.solution}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
               </View>
-            </View>
-          )}
+            )}
+          </View>
         </View>
 
         {/* Footer */}
-        <View style={styles.footer}>
+        {/* <View style={styles.footer}>
           <Text style={styles.footerText}>
-            For any questions or support, please contact us
+            For support: 7977483031 | aartiketspeechandhearing@gmail.com | aartiketspeechandhearingcare.in
           </Text>
-          <View style={styles.contactInfo}>
-            <Text style={styles.contactItem}>
-              Phone: 7977483031
-            </Text>
-            <Text style={styles.contactItem}>
-              Email: aartiketspeechandhearing@gmail.com
-            </Text>
-            <Text style={styles.contactItem}>
-              Website: aartiketspeechandhearingcare.in
-            </Text>
-          </View>
-        </View>
+        </View> */}
       </Page>
     </Document>
   );

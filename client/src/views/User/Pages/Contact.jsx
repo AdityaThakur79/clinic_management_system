@@ -131,8 +131,7 @@ const Contact = () => {
       }, 2000);
 
     } catch (error) {
-      console.error('Enquiry submission error:', error);
-      
+
       // Fallback to WhatsApp if API fails
       const number = "918087766556";
       const text = `Contact Enquiry\nName: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nAge: ${formData.age}\nCity: ${formData.city}\nMessage: ${formData.message}`;
@@ -425,8 +424,6 @@ const Contact = () => {
                           />
                         </FormControl>
                       </Grid>
-
-                      
 
                       <FormControl>
                         <Textarea

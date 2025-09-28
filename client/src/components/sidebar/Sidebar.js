@@ -14,8 +14,6 @@ import {
   DrawerCloseButton,
 } from '@chakra-ui/react';
 import Content from './components/Content';
-import { renderThumb, renderTrack, renderView } from '../scrollbar/Scrollbar';
-import { Scrollbars } from 'react-custom-scrollbars-2';
 import PropTypes from 'prop-types';
 
 // Assets
@@ -29,6 +27,29 @@ function Sidebar(props) {
     activeParentIndex: activeParentIndexProp,
     setActiveParentIndex: setActiveParentIndexProp,
   } = props;
+
+  const sidebarRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const sidebar = sidebarRef.current;
+    if (sidebar) {
+      const handleWheel = (e) => {
+        e.stopPropagation();
+      };
+      
+      const handleScroll = (e) => {
+        e.stopPropagation();
+      };
+
+      sidebar.addEventListener('wheel', handleWheel, { passive: false });
+      sidebar.addEventListener('scroll', handleScroll, { passive: false });
+
+      return () => {
+        sidebar.removeEventListener('wheel', handleWheel);
+        sidebar.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, []);
 
   let variantChange = '0.2s linear';
   let shadow = useColorModeValue(
@@ -64,21 +85,40 @@ function Sidebar(props) {
       minH="100%"
     >
       <Box
+        ref={sidebarRef}
         bg={sidebarBg}
         transition="width 0.3s ease, box-shadow 0.2s ease"
         w={isCollapsed ? '80px' : '300px'}
         h="100vh"
         m={sidebarMargins}
-        minH="100%"
+        position="relative"
+        overflowY="scroll"
         overflowX="hidden"
         boxShadow={shadow}
+        onWheel={(e) => {
+          e.stopPropagation();
+        }}
+        onScroll={(e) => {
+          e.stopPropagation();
+        }}
+        css={{
+          '&::-webkit-scrollbar': {
+            width: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'rgba(0, 0, 0, 0.1)',
+            borderRadius: '4px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'rgba(43, 168, 209, 0.8)',
+            borderRadius: '4px',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            background: 'rgba(43, 168, 209, 1)',
+          },
+        }}
       >
-        <Scrollbars
-          autoHide
-          renderTrackVertical={renderTrack}
-          renderThumbVertical={renderThumb}
-          renderView={renderView}
-        >
+        <Box h="100%" overflow="visible">
           <Content
             routes={routes}
             isCollapsed={isCollapsed}
@@ -86,7 +126,7 @@ function Sidebar(props) {
             activeParentIndex={activeParentIndex}
             setActiveParentIndex={setActiveParentIndex}
           />
-        </Scrollbars>
+        </Box>
       </Box>
     </Box>
   );
@@ -131,19 +171,42 @@ export function SidebarResponsive(props) {
             _focus={{ boxShadow: 'none' }}
             _hover={{ boxShadow: 'none' }}
           />
-          <DrawerBody maxW="285px" px="0rem" pb="0">
-            <Scrollbars
-              autoHide
-              renderTrackVertical={renderTrack}
-              renderThumbVertical={renderThumb}
-              renderView={renderView}
-            >
+          <DrawerBody 
+            maxW="285px" 
+            px="0rem" 
+            pb="0"
+            overflowY="scroll"
+            overflowX="hidden"
+            onWheel={(e) => {
+              e.stopPropagation();
+            }}
+            onScroll={(e) => {
+              e.stopPropagation();
+            }}
+            css={{
+              '&::-webkit-scrollbar': {
+                width: '8px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: 'rgba(0, 0, 0, 0.1)',
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: 'rgba(43, 168, 209, 0.8)',
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-thumb:hover': {
+                background: 'rgba(43, 168, 209, 1)',
+              },
+            }}
+          >
+            <Box h="100%" overflow="visible">
               <Content
                 routes={routes}
                 isCollapsed={false}
                 setIsCollapsed={() => {}}
               />
-            </Scrollbars>
+            </Box>
           </DrawerBody>
         </DrawerContent>
       </Drawer>

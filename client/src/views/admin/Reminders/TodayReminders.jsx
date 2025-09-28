@@ -4,7 +4,7 @@ import {
   useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter,
   ModalCloseButton, useToast, Tooltip, Flex, Spinner, Center, Alert, AlertIcon, AlertTitle, AlertDescription, Icon, SimpleGrid
 } from '@chakra-ui/react';
-import { useGetTodayRemindersQuery, useMarkReminderCompletedMutation, useSendReminderMutation } from '../../../features/api/reminders';
+import { useGetTodayRemindersQuery, useGetRemindersByDateRangeQuery, useMarkReminderCompletedMutation, useSendReminderMutation } from '../../../features/api/reminders';
 import { MdNotifications, MdCheckCircle, MdSend, MdPerson, MdSchedule, MdBusiness, MdPhone, MdEmail } from 'react-icons/md';
 import { useSelector } from 'react-redux';
 
@@ -19,8 +19,33 @@ const TodayReminders = () => {
   const userBranchId = user?.branch?._id || user?.branch || '';
   const userDoctorId = user?.role === 'doctor' ? user?._id : '';
 
+  // Calculate date range for upcoming reminders (next 3 days)
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dayAfterTomorrow = new Date(today);
+  dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+  const threeDaysLater = new Date(today);
+  threeDaysLater.setDate(threeDaysLater.getDate() + 3);
+
+  const formatDateForAPI = (date) => {
+    return date.toISOString().split('T')[0];
+  };
+
   // API hooks
   const { data, isLoading, error, refetch } = useGetTodayRemindersQuery({
+    branchId: (userRole === 'branchAdmin' || userRole === 'doctor') ? userBranchId : '',
+    doctorId: userRole === 'doctor' ? userDoctorId : ''
+  });
+
+  const { 
+    data: upcomingData, 
+    isLoading: isUpcomingLoading, 
+    error: upcomingError, 
+    refetch: refetchUpcoming 
+  } = useGetRemindersByDateRangeQuery({
+    startDate: formatDateForAPI(tomorrow),
+    endDate: formatDateForAPI(threeDaysLater),
     branchId: (userRole === 'branchAdmin' || userRole === 'doctor') ? userBranchId : '',
     doctorId: userRole === 'doctor' ? userDoctorId : ''
   });
@@ -29,6 +54,7 @@ const TodayReminders = () => {
   const [sendReminder] = useSendReminderMutation();
 
   const reminders = data?.reminders || [];
+  const upcomingReminders = upcomingData?.reminders || [];
 
   const cardBg = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
@@ -49,6 +75,7 @@ const TodayReminders = () => {
         isClosable: true,
       });
       refetch();
+      refetchUpcoming();
     } catch (error) {
       toast({
         title: 'Error',
@@ -71,6 +98,7 @@ const TodayReminders = () => {
         isClosable: true,
       });
       refetch();
+      refetchUpcoming();
     } catch (error) {
       toast({
         title: 'Error',
@@ -123,6 +151,25 @@ const TodayReminders = () => {
     });
   };
 
+  // Calculate days until reminder
+  const getDaysUntilReminder = (reminderDate) => {
+    const reminder = new Date(reminderDate);
+    const today = new Date();
+    const diffTime = reminder - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   // Group reminders by time
   const groupRemindersByTime = (reminders) => {
     const grouped = {
@@ -150,23 +197,23 @@ const TodayReminders = () => {
 
   const groupedReminders = groupRemindersByTime(reminders);
 
-  if (isLoading) {
+  if (isLoading || isUpcomingLoading) {
     return (
       <Center minH="60vh">
         <VStack spacing={4}>
           <Spinner size="xl" color="#2BA8D1" />
-          <Text>Loading today's reminders...</Text>
+          <Text>Loading reminders...</Text>
         </VStack>
       </Center>
     );
   }
 
-  if (error) {
+  if (error || upcomingError) {
     return (
       <Alert status="error">
         <AlertIcon />
         <AlertTitle>Error!</AlertTitle>
-        <AlertDescription>Failed to load today's reminders.</AlertDescription>
+        <AlertDescription>Failed to load reminders.</AlertDescription>
       </Alert>
     );
   }
@@ -189,7 +236,10 @@ const TodayReminders = () => {
             <Icon as={MdNotifications} boxSize={8} color="#2BA8D1" />
             <VStack align="start" spacing={0}>
               <Text fontSize="2xl" fontWeight="bold">Today's Reminders</Text>
-              <Text fontSize="sm" color="gray.600">{reminders.length} reminders for today</Text>
+              <Text fontSize="sm" color="gray.600">
+                {reminders.length} reminders for today
+                {upcomingReminders.length > 0 && ` • ${upcomingReminders.length} upcoming reminders`}
+              </Text>
             </VStack>
           </HStack>
         </Flex>
@@ -503,6 +553,94 @@ const TodayReminders = () => {
           </SimpleGrid>
         )}
 
+        {/* Upcoming Reminders Section */}
+        {upcomingReminders.length > 0 && (
+          <Card bg={cardBg} borderColor={borderColor}>
+            <CardHeader>
+              <HStack>
+                <Icon as={MdSchedule} boxSize={6} color="blue.500" />
+                <Text fontSize="lg" fontWeight="semibold">Upcoming Reminders ({upcomingReminders.length})</Text>
+              </HStack>
+            </CardHeader>
+            <CardBody>
+              <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+                {upcomingReminders.map((reminder) => {
+                  const daysUntil = getDaysUntilReminder(reminder.reminderDate);
+                  return (
+                    <Card key={reminder._id} variant="outline" p={3}>
+                      <VStack spacing={2} align="stretch">
+                        <HStack justify="space-between">
+                          <Text fontWeight="semibold" fontSize="sm" noOfLines={1}>
+                            {reminder.title}
+                          </Text>
+                          <Badge 
+                            colorScheme={daysUntil === 1 ? 'orange' : daysUntil === 2 ? 'yellow' : 'blue'} 
+                            size="sm"
+                          >
+                            {daysUntil === 1 ? 'Tomorrow' : `${daysUntil} days`}
+                          </Badge>
+                        </HStack>
+                        <Text fontSize="xs" color="gray.600">
+                          {formatDate(reminder.reminderDate)} at {formatTime(reminder.reminderTime)}
+                        </Text>
+                        <Text fontSize="xs" color="gray.600" noOfLines={2}>
+                          {reminder.description}
+                        </Text>
+                        <HStack justify="space-between">
+                          <HStack spacing={2}>
+                            <Badge colorScheme={getTypeColor(reminder.type)} size="sm">
+                              {reminder.type.replace('_', ' ')}
+                            </Badge>
+                            <Badge colorScheme={getPriorityColor(reminder.priority)} size="sm">
+                              {reminder.priority}
+                            </Badge>
+                            <Badge colorScheme={getStatusColor(reminder.status)} size="sm">
+                              {reminder.status}
+                            </Badge>
+                          </HStack>
+                          <HStack spacing={1}>
+                            <Tooltip label="View Details">
+                              <IconButton
+                                icon={<MdPerson />}
+                                size="xs"
+                                variant="ghost"
+                                colorScheme="blue"
+                                onClick={() => handleViewReminder(reminder)}
+                              />
+                            </Tooltip>
+                            {reminder.status === 'pending' && (
+                              <Tooltip label="Send Reminder">
+                                <IconButton
+                                  icon={<MdSend />}
+                                  size="xs"
+                                  variant="ghost"
+                                  colorScheme="green"
+                                  onClick={() => handleSendReminder(reminder._id)}
+                                />
+                              </Tooltip>
+                            )}
+                            {reminder.status === 'sent' && (
+                              <Tooltip label="Mark Completed">
+                                <IconButton
+                                  icon={<MdCheckCircle />}
+                                  size="xs"
+                                  variant="ghost"
+                                  colorScheme="green"
+                                  onClick={() => handleMarkCompleted(reminder._id)}
+                                />
+                              </Tooltip>
+                            )}
+                          </HStack>
+                        </HStack>
+                      </VStack>
+                    </Card>
+                  );
+                })}
+              </SimpleGrid>
+            </CardBody>
+          </Card>
+        )}
+
         {/* View Reminder Modal */}
         <Modal isOpen={isViewModalOpen} onClose={onViewModalClose} size="lg">
           <ModalOverlay />
@@ -536,8 +674,17 @@ const TodayReminders = () => {
                       </Badge>
                     </Box>
                     <Box>
-                      <Text fontSize="sm" color="gray.600" mb={1}>Time</Text>
-                      <Text fontWeight="semibold">{formatTime(selectedReminder.reminderTime)}</Text>
+                      <Text fontSize="sm" color="gray.600" mb={1}>Date & Time</Text>
+                      <Text fontWeight="semibold">
+                        {selectedReminder.reminderDate ? formatDate(selectedReminder.reminderDate) : 'Today'} at {formatTime(selectedReminder.reminderTime)}
+                      </Text>
+                      {selectedReminder.reminderDate && (
+                        <Text fontSize="xs" color="gray.500">
+                          {getDaysUntilReminder(selectedReminder.reminderDate) === 0 ? 'Today' : 
+                           getDaysUntilReminder(selectedReminder.reminderDate) === 1 ? 'Tomorrow' : 
+                           `${getDaysUntilReminder(selectedReminder.reminderDate)} days from now`}
+                        </Text>
+                      )}
                     </Box>
                     <Box>
                       <Text fontSize="sm" color="gray.600" mb={1}>Status</Text>

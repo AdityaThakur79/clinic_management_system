@@ -141,7 +141,7 @@ const TopDoctors = () => {
         setDoctors(mockDoctors);
       }
     } catch (err) {
-      console.error('Error fetching doctors:', err);
+
       // Use mock data as fallback
       setDoctors(mockDoctors);
     } finally {
@@ -161,7 +161,6 @@ const TopDoctors = () => {
   useEffect(() => {
     fetchDoctors();
   }, []);
-
 
   // Intersection Observer for reveal animations
   useEffect(() => {
@@ -192,8 +191,8 @@ const TopDoctors = () => {
   }, [doctors]); // Add doctors as dependency
 
   const handleDoctorClick = (doctorId) => {
-    navigate(`/doctor/${doctorId}`);
-    window.scrollTo(0, 0);
+    // navigate(`/doctor/${doctorId}`);
+    // window.scrollTo(0, 0);
   };
 
   const handleBookAppointment = () => {
@@ -260,7 +259,6 @@ const TopDoctors = () => {
             Our experienced audiologists and speech therapists are dedicated to providing exceptional care.
           </Text>
         </VStack>
-
 
         {/* Doctors Grid */}
         {doctors.length > 0 ? (

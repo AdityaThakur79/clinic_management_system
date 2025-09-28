@@ -32,7 +32,7 @@ router.patch('/:id/stock',  updateStock);
 // Get single inventory
 router.get('/:id', getInventoryById);
 
-// Update inventory - SuperAdmin only
+// Update inventory - All authenticated users (role-based logic in controller)
 router.put('/:id', upload, updateInventory);
 
 // Delete inventory - SuperAdmin only

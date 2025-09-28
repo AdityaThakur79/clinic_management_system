@@ -160,9 +160,8 @@ export const globalSearch = async (req, res) => {
 
     return res.status(200).json({ success: true, query: trimmed, results: response });
   } catch (error) {
-    console.error("Global search error", error);
+
     return res.status(500).json({ success: false, message: "Search failed", error: error.message });
   }
 };
-
 

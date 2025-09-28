@@ -26,8 +26,8 @@ const AllReminders = () => {
   const [doctorFilter, setDoctorFilter] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [sortBy, setSortBy] = useState('reminderDate');
-  const [sortOrder, setSortOrder] = useState('asc');
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedReminders, setSelectedReminders] = useState([]);
@@ -105,7 +105,7 @@ const AllReminders = () => {
         }).unwrap();
         setDoctors(result.doctors || []);
       } catch (error) {
-        console.error('Error fetching doctors:', error);
+        // Error fetching doctors
       }
     };
     fetchDoctors();
@@ -388,6 +388,31 @@ const AllReminders = () => {
                     />
                   </Box>
                   
+                  <Box>
+                    <Text fontWeight="semibold" mb={2}>Sort By</Text>
+                    <Select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                    >
+                      <option value="createdAt">Created Date</option>
+                      <option value="reminderDate">Reminder Date</option>
+                      <option value="title">Title</option>
+                      <option value="priority">Priority</option>
+                      <option value="status">Status</option>
+                    </Select>
+                  </Box>
+                  
+                  <Box>
+                    <Text fontWeight="semibold" mb={2}>Sort Order</Text>
+                    <Select
+                      value={sortOrder}
+                      onChange={(e) => setSortOrder(e.target.value)}
+                    >
+                      <option value="desc">Newest First</option>
+                      <option value="asc">Oldest First</option>
+                    </Select>
+                  </Box>
+                  
                   {userRole === 'superAdmin' && (
                     <>
                       <Box>
@@ -463,7 +488,8 @@ const AllReminders = () => {
                       <Th>Patient</Th>
                       <Th>Type</Th>
                       <Th>Title</Th>
-                      <Th>Date & Time</Th>
+                      <Th>Reminder Date & Time</Th>
+                      <Th>Created At</Th>
                       <Th>Priority</Th>
                       <Th>Status</Th>
                       <Th>Actions</Th>
@@ -491,6 +517,12 @@ const AllReminders = () => {
                           <VStack align="start" spacing={1}>
                             <Text fontWeight="medium">{formatDate(reminder.reminderDate)}</Text>
                             <Text fontSize="sm" color="gray.600">{formatTime(reminder.reminderTime)}</Text>
+                          </VStack>
+                        </Td>
+                        <Td>
+                          <VStack align="start" spacing={1}>
+                            <Text fontWeight="medium">{formatDate(reminder.createdAt)}</Text>
+                            <Text fontSize="sm" color="gray.600">{formatTime(reminder.createdAt?.split('T')[1]?.split('.')[0] || '00:00')}</Text>
                           </VStack>
                         </Td>
                         <Td>
@@ -620,9 +652,14 @@ const AllReminders = () => {
                       </Badge>
                     </Box>
                     <Box>
-                      <Text fontSize="sm" color="gray.600" mb={1}>Date & Time</Text>
+                      <Text fontSize="sm" color="gray.600" mb={1}>Reminder Date & Time</Text>
                       <Text fontWeight="semibold">{formatDate(selectedReminder.reminderDate)}</Text>
                       <Text fontSize="sm" color="gray.600">{formatTime(selectedReminder.reminderTime)}</Text>
+                    </Box>
+                    <Box>
+                      <Text fontSize="sm" color="gray.600" mb={1}>Created At</Text>
+                      <Text fontWeight="semibold">{formatDate(selectedReminder.createdAt)}</Text>
+                      <Text fontSize="sm" color="gray.600">{formatTime(selectedReminder.createdAt?.split('T')[1]?.split('.')[0] || '00:00')}</Text>
                     </Box>
                     <Box>
                       <Text fontSize="sm" color="gray.600" mb={1}>Status</Text>

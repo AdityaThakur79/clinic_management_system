@@ -230,7 +230,6 @@ export default function UserReports() {
             </Box>
           )}
 
-
           <SimpleGrid columns={{ base: 1, md: 2 }} gap="20px" mt="20px">
             <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm" minH="340px">
               <Text mb="8px" fontWeight="700">Revenue by Month</Text>
@@ -264,7 +263,6 @@ export default function UserReports() {
             </Box>
           </SimpleGrid>
 
-         
         </>
       )}
 

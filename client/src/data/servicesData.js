@@ -863,13 +863,13 @@ export const servicesData = [
   },
   {
     id: 12,
-    title: "Hearing Aids & Accessories in Kalyan",
-    slug: "hearing-aids-&-accessories-in-kalyan",
-    description: "Full range of hearing aids, batteries, and accessories available at our Kalyan clinic.",
+    title: "Hearing Aids & Accessories",
+    slug: "hearing-aids-&-accessories",
+    description: "Full range of hearing aids, batteries, and accessories available at our clinic.",
     image: assets.service_11,
     category: "Products",
     detailedContent: {
-      overview: "Complete hearing care solutions available at our Kalyan location, offering a full range of hearing aids, batteries, and accessories from leading manufacturers with expert fitting and support services.",
+      overview: "Complete hearing care solutions available at our clinic, offering a full range of hearing aids, batteries, and accessories from leading manufacturers with expert fitting and support services.",
       benefits: [
         "Complete range of hearing aid brands",
         "Expert fitting and programming",
@@ -910,11 +910,11 @@ export const servicesData = [
         { q: "Are accessories compatible across brands?", a: "Many are; we ensure proper compatibility and setup." }
       ]
     },
-    seo: {
-      title: "Hearing Aids Kalyan | Hearing Care Center Kalyan",
-      description: "Complete hearing aid solutions in Kalyan. Expert fitting, accessories, and support services. Leading brands available with professional care. Visit our clinic.",
-      keywords: "hearing aids Kalyan, hearing care Kalyan, audiologist Kalyan, hearing aid center Kalyan, hearing solutions Kalyan"
-    }
+      seo: {
+        title: "Hearing Aids & Accessories | Hearing Care Center",
+        description: "Complete hearing aid solutions. Expert fitting, accessories, and support services. Leading brands available with professional care. Visit our clinic.",
+        keywords: "hearing aids, hearing care, audiologist, hearing aid center, hearing solutions, hearing accessories"
+      }
   },
   {
     id: 13,

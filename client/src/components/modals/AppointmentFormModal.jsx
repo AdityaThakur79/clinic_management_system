@@ -110,8 +110,7 @@ const AppointmentFormModal = ({
         notes: '',
       });
     } catch (error) {
-      console.error('Booking error:', error);
-      
+
       // Handle specific conflict error
       if (error?.data?.message?.includes('no longer available')) {
         toast({

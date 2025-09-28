@@ -75,4 +75,3 @@ const TodayModal = () => {
 
 export default TodayModal;
 
-
