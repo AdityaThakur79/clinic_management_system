@@ -126,7 +126,7 @@ const HeroSection = () => {
           <SplideSlide key={index}>
             <Box
               position="relative"
-              h={{ base: '85vh', sm: '90vh', md: '85vh' }}
+              h={{ base: '85vh', sm: '100vh', md: '100vh' }}
               minH={{ base: '450px', sm: '550px', md: '650px' }}
               overflow="hidden"
             >
