@@ -728,7 +728,7 @@ export const createAppointment = async (req, res) => {
       
                   <!-- Action Buttons -->
                   <div class="actions">
-                    <a class="btn btn-primary" href="https://maps.google.com/?q=${encodeURIComponent(populatedAppointment?.branchId?.address || populatedBranch?.address || '')}" target="_blank">
+                    <a class="btn btn-primary" href="https://maps.app.goo.gl/m3QhftKJFMj3it9N7" target="_blank">
                       📍 Get Directions
                     </a>
                     <a class="btn btn-secondary" href="tel:+917977483031">

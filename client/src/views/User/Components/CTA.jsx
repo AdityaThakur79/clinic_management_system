@@ -9,7 +9,7 @@ const CTA = ({
   subtitle = "with Aartiket Speech & Hearing Care", 
   description = "Don't let hearing loss impact your quality of life. Schedule a consultation with our specialists at Aartiket Speech & Hearing Care today and discover the right hearing solution for you.",
   buttonText = "Book Consultation Now",
-  buttonLink = "book-an-appointment"
+  buttonLink = "/book-an-appointment"
 }) => {
   const navigate = useNavigate();
 
@@ -86,7 +86,7 @@ const CTA = ({
 
         <Button
         as={Link}
-        to={"/doctors"}
+        to={buttonLink}
           mt={6}
           px={6}
           py={6}
