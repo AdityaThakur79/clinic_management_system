@@ -18,6 +18,12 @@ const createTransporter = () => {
 
   let transporter;
   if (smtpHost) {
+    console.log('[Mail] Using custom SMTP host configuration', {
+      host: smtpHost,
+      port: smtpPort ?? 587,
+      secure: smtpSecure ?? false,
+      user: (process.env.SMTP_USER || process.env.EMAIL_USER) ? '***provided***' : '***missing***'
+    });
     transporter = nodemailer.createTransport({
       host: smtpHost,
       port: smtpPort ?? 587,
@@ -27,6 +33,12 @@ const createTransporter = () => {
     });
   } else {
     // For Gmail, use App Password
+    console.log('[Mail] Using Gmail SMTP configuration', {
+      service: 'gmail',
+      port: 465,
+      secure: true,
+      user: (process.env.SMTP_USER || process.env.EMAIL_USER) ? '***provided***' : '***missing***'
+    });
     transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user: emailUser, pass: emailPass },
@@ -43,10 +55,10 @@ const createTransporter = () => {
 const verifyTransporter = async (transporter) => {
   try {
     await transporter.verify();
-
+    console.log('[Mail] Transporter verification successful');
     return true;
   } catch (error) {
-
+    console.error('[Mail] Transporter verification failed:', error?.response || error?.message || error);
     return false;
   }
 };
@@ -78,10 +90,12 @@ export const sendOTPEmail = async (email, otp) => {
       `,
     };
 
+    console.log('[Mail] Sending OTP email', { to: email });
     const result = await transporter.sendMail(mailOptions);
+    console.log('[Mail] OTP email sent', { to: email, messageId: result?.messageId });
     return result;
   } catch (error) {
-
+    console.error('[Mail] Failed to send OTP email:', error?.response || error?.message || error);
     throw error;
   }
 };
@@ -107,9 +121,12 @@ export const sendEmail = async ({ to, subject, html, text, attachments }) => {
       attachments: attachments || [],
     };
 
-    return await transporter.sendMail(mailOptions);
+    console.log('[Mail] Sending email', { to, subject, hasHtml: Boolean(html), hasText: Boolean(text) });
+    const result = await transporter.sendMail(mailOptions);
+    console.log('[Mail] Email sent', { to, subject, messageId: result?.messageId });
+    return result;
   } catch (error) {
-
+    console.error('[Mail] Failed to send email:', { to, subject, error: error?.response || error?.message || error });
     throw error;
   }
 };
@@ -216,10 +233,12 @@ export const sendSalarySlipEmail = async (email, employeeData, salarySlip, month
       ] : [],
     };
 
+    console.log('[Mail] Sending salary slip email', { to: email, month, employee: employeeData?.name });
     const result = await transporter.sendMail(mailOptions);
+    console.log('[Mail] Salary slip email sent', { to: email, messageId: result?.messageId });
     return result;
   } catch (error) {
-
+    console.error('[Mail] Failed to send salary slip email:', error?.response || error?.message || error);
     throw error;
   }
 };

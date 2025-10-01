@@ -50,12 +50,19 @@ const createEnquiry = async (req, res) => {
 
     // Send email notifications
     try {
+      console.log('[Enquiry] Preparing notification emails for new enquiry', {
+        enquiryId: enquiry._id?.toString(),
+        service: enquiry.service,
+        fromEmail: enquiry.email
+      });
       // Get super admin and branch admins
       const superAdmins = await User.find({ role: 'superAdmin' });
       const branchAdmins = await User.find({ role: 'branchAdmin' });
 
       // Send email to super admins
+      console.log(`[Enquiry] Found ${superAdmins.length} superAdmins to notify`);
       for (const admin of superAdmins) {
+        console.log('[Enquiry] Sending to superAdmin', { to: admin.email, adminName: admin.name });
         await sendMail({
           to: admin.email,
           subject: `New Enquiry Received - ${enquiry.service}`,
@@ -65,10 +72,13 @@ const createEnquiry = async (req, res) => {
             adminName: admin.name
           })
         });
+        console.log('[Enquiry] Sent to superAdmin', { to: admin.email });
       }
 
       // Send email to branch admins
+      console.log(`[Enquiry] Found ${branchAdmins.length} branchAdmins to notify`);
       for (const admin of branchAdmins) {
+        console.log('[Enquiry] Sending to branchAdmin', { to: admin.email, adminName: admin.name });
         await sendMail({
           to: admin.email,
           subject: `New Enquiry Received - ${enquiry.service}`,
@@ -78,9 +88,11 @@ const createEnquiry = async (req, res) => {
             adminName: admin.name
           })
         });
+        console.log('[Enquiry] Sent to branchAdmin', { to: admin.email });
       }
 
       // Send confirmation email to customer
+      console.log('[Enquiry] Sending confirmation to customer', { to: enquiry.email });
       await sendMail({
         to: enquiry.email,
         subject: 'Thank you for your enquiry - Aartiket Speech & Hearing Care',
@@ -90,9 +102,10 @@ const createEnquiry = async (req, res) => {
           customerName: enquiry.name
         })
       });
+      console.log('[Enquiry] Confirmation sent to customer', { to: enquiry.email });
 
     } catch (emailError) {
-
+      console.error('[Enquiry] Email sending failed:', emailError?.response || emailError?.message || emailError);
       // Don't fail the enquiry creation if email fails
     }
 

@@ -330,11 +330,12 @@ export const forgotPasswordController = async (req, res) => {
 
     // Send OTP email using password reset template
     try {
-
+      console.log('[User] Forgot password flow started', { email });
       const transporter = createTransporter();
-
+      console.log('[User] Verifying transporter for forgot password');
       const isVerified = await verifyTransporter(transporter);
       if (!isVerified) {
+        console.error('[User] Transporter verify failed in forgot password');
         throw new Error("Email service not available");
       }
 
@@ -347,14 +348,16 @@ export const forgotPasswordController = async (req, res) => {
         html: passwordResetTemplate(user.name, otp),
       };
 
+      console.log('[User] Sending forgot password email', { to: email });
       const result = await transporter.sendMail(mailOptions);
+      console.log('[User] Forgot password email sent', { to: email, messageId: result?.messageId });
 
       return res.status(200).json({
         success: true,
         message: "Password reset OTP sent to your email",
       });
     } catch (emailError) {
-
+      console.error('[User] Forgot password email failed:', emailError?.response || emailError?.message || emailError);
       return res.status(500).json({
         success: false,
         message: "Failed to send OTP email. Please try again later.",

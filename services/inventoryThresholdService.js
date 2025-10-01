@@ -102,7 +102,12 @@ export const sendInventoryThresholdAlerts = async (inventoryItems, branchId = nu
       };
     }
     
-    console.log('✅ Email configuration is valid');
+    console.log('✅ Email configuration is valid', {
+      userProvided: Boolean(emailUser),
+      host: process.env.SMTP_HOST || 'gmail',
+      port: process.env.SMTP_PORT || (process.env.SMTP_HOST ? 587 : 465),
+      secure: process.env.SMTP_SECURE || (process.env.SMTP_HOST ? 'false' : 'true')
+    });
 
     // Send emails to each SuperAdmin
     for (const recipient of superAdmins) {
@@ -138,7 +143,7 @@ export const sendInventoryThresholdAlerts = async (inventoryItems, branchId = nu
         console.log(`✅ Inventory alert sent to SuperAdmin ${recipient.email} for ${itemsToSend.length} items`);
 
       } catch (emailError) {
-        console.error(`❌ Failed to send inventory alert to SuperAdmin ${recipient.email}:`, emailError);
+        console.error(`❌ Failed to send inventory alert to SuperAdmin ${recipient.email}:`, emailError?.response || emailError?.message || emailError);
         emailResults.push({
           recipient: recipient.email,
           success: false,
