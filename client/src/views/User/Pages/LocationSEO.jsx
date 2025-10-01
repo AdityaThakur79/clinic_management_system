@@ -181,7 +181,7 @@ export default function LocationSEO() {
                   professional hearing aid fitting, and evidence‑based speech therapy in Mumbai.
                 </Text>
                 <HStack spacing={4}>
-                  <Button as={Link} to="/doctors" bg={brand.primary} color="white" _hover={{ bg: brand.primaryDark }}>Book Appointment</Button>
+                  <Button as={Link} to="/book-an-appointment" bg={brand.primary} color="white" _hover={{ bg: brand.primaryDark }}>Book Appointment</Button>
                   <Button as={Link} to="/contact" variant="outline" borderColor={brand.primary} color={brand.textDark}>Contact Us</Button>
                 </HStack>
               </VStack>
@@ -286,7 +286,7 @@ export default function LocationSEO() {
             <VStack spacing={6} color="white" textAlign="center">
               <Heading fontSize={{ base: "xl", md: "3xl" }}>Ready to book your visit near {areaName}?</Heading>
               <HStack spacing={4}>
-                <Button as={Link} to="/doctors" bg="white" color={brand.textDark} _hover={{ bg: '#F1FAFE' }}>Book Appointment</Button>
+                <Button as={Link} to="/book-an-appointment" bg="white" color={brand.textDark} _hover={{ bg: '#F1FAFE' }}>Book Appointment</Button>
                 <Button as={Link} to="/contact" variant="outline" borderColor="white" color="white">Contact Us</Button>
               </HStack>
             </VStack>

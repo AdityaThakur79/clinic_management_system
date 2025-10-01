@@ -107,7 +107,7 @@ const PricingSection = () => {
             >
               <Button
                 as={Link}
-                href="/clinics"
+                href="/book-an-appointment"
                 bg="#2BA8D1"
                 color="white"
                 px={8}
@@ -121,7 +121,7 @@ const PricingSection = () => {
                   boxShadow: "0 10px 25px rgba(43, 168, 209, 0.3)"
                 }}
               >
-                Get Free Consultation
+                Get Consultation
               </Button>
 
               <Button

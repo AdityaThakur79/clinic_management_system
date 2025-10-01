@@ -114,7 +114,7 @@ const Navbar = () => {
           _hover={{ bg: "#2BA8D1", shadow: "xl" }}
           _active={{ transform: "scale(0.95)" }}
           onClick={() => {
-            navigate("/doctors");
+            navigate("/book-an-appointment");
            
           }}
         >

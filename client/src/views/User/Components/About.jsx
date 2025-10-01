@@ -92,7 +92,6 @@ const About1 = () => {
             <Stack spacing={3}>
               {[
                 '15+ Years of Specialized Experience',
-                'Consultant at 15+ Leading Hospitals',
                 'State-of-the-Art Technology & Equipment',
                 'Personalized Treatment Plans for All Ages',
               ].map((feature, idx) => (
@@ -108,7 +107,7 @@ const About1 = () => {
             {/* CTA Button */}
             <Button
               as={RouterLink}
-              to="/contact"
+              to="/book-an-appointment"
               alignSelf={{ base: 'center', lg: 'flex-start' }}
               bg="#2BA8D1"
               color="white"
@@ -128,7 +127,7 @@ const About1 = () => {
               _active={{ transform: 'translateY(0)' }}
               transition="all 0.3s ease"
             >
-              Book Free Consultation
+              Book Consultation
             </Button>
           </Stack>
         </Box>
