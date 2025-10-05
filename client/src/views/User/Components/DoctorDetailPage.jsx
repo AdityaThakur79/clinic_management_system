@@ -205,11 +205,24 @@ const DoctorDetailPage = () => {
     }
 
     // Set selected date and time for modal
+    console.log('Debug: selectedTime when booking:', selectedTime);
+    console.log('Available slots:', availableSlots[selectedDateIndex]);
+    
     const selectedSlot = availableSlots[selectedDateIndex]?.find(slot => slot.time === selectedTime);
     if (selectedSlot) {
+      console.log('Selected slot:', selectedSlot);
       setSelectedDateISO(selectedSlot.datetime.toISOString().split('T')[0]);
       setSelectedTimeSlot(selectedTime);
       setIsBookingModalOpen(true);
+    } else {
+      console.log('No slot found for time:', selectedTime);
+      toast({
+        title: 'Invalid Time Slot',
+        description: 'Selected time slot is not available.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -556,7 +569,7 @@ const DoctorDetailPage = () => {
       <AppointmentFormModal
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
-        doctorId={id}
+        service="Doctor Consultation"
         branchId={doctor?.branch?._id || doctor?.branch}
         branchName={doctor?.branch?.branchName}
         selectedDate={selectedDateISO}

@@ -68,7 +68,7 @@ export const getAllPatients = async (req, res) => {
 
 export const createPatient = async (req, res) => {
   try {
-    const { name, age, gender, contact, email, address, medicalHistory, branchId, referredDoctorId, referralDate } = req.body;
+    const { name, age, gender, contact, email, address, dateOfBirth, medicalHistory, branchId, referredDoctorId, referralDate } = req.body;
 
     if (!name || !contact) {
       return res.status(400).json({ success: false, message: "Name and contact are required" });
@@ -117,6 +117,7 @@ export const createPatient = async (req, res) => {
       contact: normalizedContact,
       email: normalizedEmail,
       address,
+      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
       medicalHistory: medicalHistory || [],
       branchId: branchId || undefined,
       referredDoctorId: referredDoctorId || undefined,
@@ -215,6 +216,10 @@ export const updatePatient = async (req, res) => {
     // Normalize email if provided
     if (updateData.email) {
       updateData.email = updateData.email.toLowerCase();
+    }
+    // Normalize DOB to Date if provided
+    if (updateData.dateOfBirth) {
+      updateData.dateOfBirth = new Date(updateData.dateOfBirth);
     }
 
     const patient = await Patient.findByIdAndUpdate(
@@ -468,14 +473,42 @@ export const completeAppointment = async (req, res) => {
       deviceName: d.deviceName || '',
       unitPrice: parseFloat(d.unitPrice) || 0,
       quantity: parseInt(d.quantity) || 0,
+      discount: parseFloat(d.discount) || 0,
+      discountType: d.discountType || 'fixed',
+      discountPercentage: parseFloat(d.discountPercentage) || 0,
       notes: d.notes || ''
     }));
 
     // Create bill - let the pre-save middleware handle subtotal and totalAmount calculations
 
     // Calculate totals manually as fallback
-    const servicesTotal = processedServices.reduce((sum, service) => sum + (service.actualPrice || service.basePrice || 0), 0);
-    const devicesTotal = processedDevices.reduce((sum, d) => sum + ((parseFloat(d.unitPrice)||0) * (parseInt(d.quantity)||0)), 0);
+    const servicesTotal = processedServices.reduce((sum, service) => {
+      let servicePrice = service.actualPrice || service.basePrice || 0;
+      if (service.discount > 0) {
+        if (service.discountType === 'percentage') {
+          servicePrice = servicePrice - (servicePrice * service.discountPercentage / 100);
+        } else {
+          servicePrice = servicePrice - service.discount;
+        }
+      }
+      return sum + Math.max(0, servicePrice);
+    }, 0);
+    
+    const devicesTotal = processedDevices.reduce((sum, d) => {
+      const qty = parseInt(d.quantity) || 0;
+      const price = parseFloat(d.unitPrice) || 0;
+      let deviceTotal = qty * price;
+      
+      if (d.discount > 0) {
+        if (d.discountType === 'percentage') {
+          deviceTotal = deviceTotal - (deviceTotal * d.discountPercentage / 100);
+        } else {
+          deviceTotal = deviceTotal - d.discount;
+        }
+      }
+      
+      return sum + Math.max(0, deviceTotal);
+    }, 0);
     const subtotal = finalConsultationFee + treatmentFeeNum + medicineFeeNum + otherChargesNum + 
                      hearingAidFeeNum + audiometryFeeNum + servicesTotal + devicesTotal;
     

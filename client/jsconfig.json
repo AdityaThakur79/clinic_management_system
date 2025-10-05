@@ -5,6 +5,7 @@
     "components/*": ["./components/*"],
     "views/*": ["./views/*"],
     "assets/*": ["./assets/*"],
+    "styles/*": ["./assets/img/styles/*"],
     "theme/*": ["./theme/*"],
     "variables/*": ["./variables/*"],
     "contexts/*": ["./contexts/*"]

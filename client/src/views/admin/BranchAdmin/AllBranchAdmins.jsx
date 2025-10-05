@@ -130,7 +130,7 @@ const AllBranchAdmins = () => {
         limit: pageSize,
         q: searchTerm,
         branch: branchFilter === 'all' ? '' : branchFilter,
-        status: statusFilter === 'all' ? '' : (statusFilter === 'active' ? 'true' : 'false'),
+        status: statusFilter === 'all' ? '' : (statusFilter === 'active' ? 'active' : 'inactive'),
         sortBy,
         sortOrder,
       }).unwrap();

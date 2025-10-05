@@ -104,10 +104,8 @@ const About1 = () => {
               ))}
             </Stack>
 
-            {/* CTA Button */}
+            {/* CTA Button - opens quick appointment modal instead of routing */}
             <Button
-              as={RouterLink}
-              to="/book-an-appointment"
               alignSelf={{ base: 'center', lg: 'flex-start' }}
               bg="#2BA8D1"
               color="white"
@@ -118,6 +116,14 @@ const About1 = () => {
               borderRadius="full"
               border="2px solid #2BA8D1"
               shadow="lg"
+              onClick={() => {
+                if (window.openQuickAppointmentModal) {
+                  window.openQuickAppointmentModal();
+                } else {
+                  // Fallback: dispatch event directly
+                  window.dispatchEvent(new Event('open-quick-appointment'));
+                }
+              }}
               _hover={{
                 bg: '#3AC0E7',
                 borderColor: '#3AC0E7',

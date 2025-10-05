@@ -73,6 +73,18 @@ const AllReminders = () => {
   const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure();
   const toast = useToast();
 
+  // Auto refresh
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  useEffect(() => {
+    let id;
+    if (autoRefresh) {
+      id = setInterval(() => {
+        refetch();
+      }, 30000); // 30s
+    }
+    return () => { if (id) clearInterval(id); };
+  }, [autoRefresh, refetch]);
+
   // Brand button styles
   const brandHover = {
     _hover: {
@@ -283,10 +295,10 @@ const AllReminders = () => {
   }
 
   return (
-    <Box pt={{ base: '130px', md: '100px', xl: '100px' }} px={6} maxW="1400px" mx="auto">
+    <Box pt={{ base: '130px', md: '80px', xl: '80px' }}   >
       <VStack spacing={6} align="stretch">
         {/* Header */}
-        <Flex justify="space-between" align="center">
+        <Flex justify="space-between" align="center" wrap="wrap" gap={3}>
           <HStack>
             <Icon as={MdNotifications} boxSize={8} color="#2BA8D1" />
             <VStack align="start" spacing={0}>
@@ -295,6 +307,16 @@ const AllReminders = () => {
             </VStack>
           </HStack>
           <HStack spacing={3}>
+            <Button
+              leftIcon={<RepeatIcon />}
+              variant="outline"
+              onClick={() => refetch()}
+              isLoading={isFetching}
+              {...brandHover}
+            >
+              Refresh
+            </Button>
+            
             <Button
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
@@ -480,6 +502,13 @@ const AllReminders = () => {
                   <Text color="gray.600">Loading reminders...</Text>
                 </VStack>
               </Center>
+            ) : (data?.reminders?.length || 0) === 0 ? (
+              <Center py={20}>
+                <VStack spacing={3}>
+                  <Icon as={MdSchedule} w={12} h={12} color="gray.400" />
+                  <Text color="gray.600">No reminders found.</Text>
+                </VStack>
+              </Center>
             ) : (
               <TableContainer>
                 <Table variant="simple">
@@ -582,6 +611,18 @@ const AllReminders = () => {
                       </Tr>
                     ))}
                   </Tbody>
+                  <Thead>
+                    <Tr>
+                      <Th>Patient</Th>
+                      <Th>Type</Th>
+                      <Th>Title</Th>
+                      <Th>Reminder Date & Time</Th>
+                      <Th>Created At</Th>
+                      <Th>Priority</Th>
+                      <Th>Status</Th>
+                      <Th>Actions</Th>
+                    </Tr>
+                  </Thead>
                 </Table>
               </TableContainer>
             )}

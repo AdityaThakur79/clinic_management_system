@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Box, Container, Text, Heading, VStack, Flex, SimpleGrid, Image, Button, HStack, Badge, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Divider, FormControl, FormLabel, Select, Input, Textarea, useToast, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, ModalFooter, Alert, AlertIcon, AlertTitle, AlertDescription } from "@chakra-ui/react";
+import { Box, Container, Text, Heading, VStack, Flex, SimpleGrid, Image, Button, HStack, Badge, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon, Divider, FormControl, FormLabel, Select, Input, Textarea, useToast, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, ModalFooter } from "@chakra-ui/react";
 import { FaVolumeUp, FaBluetooth, FaBatteryFull } from "react-icons/fa";
 import PageHeader from "./Components/PageHeader";
 import Navbar from "./Components/Navbar";
@@ -8,7 +8,7 @@ import Footer from "./Components/Footer";
 import CTA from "./Components/CTA";
 import { getBrandBySlug } from "../../data/hearingAidBrands";
 import { useGetAllBranchesQuery } from "../../features/api/branchApi";
-import { useCreateAppointmentMutation } from "../../features/api/appointments";
+import { useCreateAppointmentMutation, useGetMultipleDateAvailabilityQuery } from "../../features/api/appointments";
 
 const HearingAidBrand = () => {
   const { brandSlug } = useParams();
@@ -19,19 +19,32 @@ const HearingAidBrand = () => {
     name: '',
     email: '',
     phone: '',
-    age: '',
-    gender: 'prefer_not_to_say',
-    address: '',
     branchId: '',
-    preferredDate: '',
-    preferredTime: '',
     notes: '',
-    serviceType: 'hearing_aid_brand_consultation'
+    serviceType: 'hearing_aid_brand_consultation',
+    preferredDate: '',
+    preferredTime: '09:00'
   });
+  
+  const [selectedDate, setSelectedDate] = useState('');
+  const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
   
   const toast = useToast();
   const { data: branchesData } = useGetAllBranchesQuery({ page: 1, limit: 100 });
   const [createAppointment, { isLoading: isBookingLoading }] = useCreateAppointmentMutation();
+  
+  // Fetch availability data when branch and date are selected
+  const { data: availabilityData, isLoading: isAvailabilityLoading } = useGetMultipleDateAvailabilityQuery(
+    {
+      branchId: bookingForm.branchId,
+      startDate: selectedDate || new Date().toISOString().split('T')[0],
+      days: 7
+    },
+    {
+      // Fetch as soon as a branch is selected so we can show date options
+      skip: !bookingForm.branchId
+    }
+  );
 
   const brandColors = {
     primary: "#2BA8D1",
@@ -39,10 +52,56 @@ const HearingAidBrand = () => {
     bgSoft: "#F7FBFD"
   };
 
+  // Update available time slots when availability data changes
+  useEffect(() => {
+    if (availabilityData?.data && selectedDate) {
+      const dayAvailability = availabilityData.data.find(
+        day => day.date === selectedDate
+      );
+      
+      if (dayAvailability && dayAvailability.availableSlots) {
+        // Filter only available slots and extract time strings
+        const availableSlots = dayAvailability.availableSlots
+          .filter(slot => slot.isAvailable)
+          .map(slot => slot.time);
+        setAvailableTimeSlots(availableSlots);
+      } else {
+        setAvailableTimeSlots([]);
+      }
+    }
+  }, [availabilityData, selectedDate]);
+
+  // Reset time slot when date changes
+  useEffect(() => {
+    if (selectedDate) {
+      setBookingForm(prev => ({ ...prev, preferredTime: '09:00' }));
+    }
+  }, [selectedDate]);
+
+  // Check if a date should be disabled (non-working day)
+  const isDateDisabled = (dateString) => {
+    if (!availabilityData?.data) return false;
+    
+    const dayAvailability = availabilityData.data.find(
+      day => day.date === dateString
+    );
+    
+    return dayAvailability ? !dayAvailability.isWorkingDay : false;
+  };
+
+  // Get available dates for the date picker
+  const getAvailableDates = () => {
+    if (!availabilityData?.data) return [];
+    
+    return availabilityData.data
+      .filter(day => day.isWorkingDay)
+      .map(day => day.date);
+  };
+
   const cardProps = {
     bg: "white",
     borderRadius: "2xl",
-    p: { base: 6, md: 8 },
+    p: { base: 4, md: 5 },
     shadow: "xl",
     border: "1px solid",
     borderColor: "rgba(12,47,77,0.06)",
@@ -74,7 +133,12 @@ const HearingAidBrand = () => {
 
   // Handle form input changes
   const handleInputChange = (field, value) => {
-    setBookingForm(prev => ({ ...prev, [field]: value }));
+    if (field === 'preferredDate') {
+      setSelectedDate(value);
+      setBookingForm(prev => ({ ...prev, [field]: value }));
+    } else {
+      setBookingForm(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   // Handle booking submission
@@ -82,7 +146,7 @@ const HearingAidBrand = () => {
     if (!bookingForm.name || !bookingForm.phone || !bookingForm.branchId) {
       toast({
         title: 'Required fields missing',
-        description: 'Name, phone number, and branch selection are required',
+        description: `Name, phone number, and branch selection are required`,
         status: 'warning',
         duration: 3000,
         isClosable: true,
@@ -91,27 +155,48 @@ const HearingAidBrand = () => {
     }
 
     try {
+      // Generate current date in YYYY-MM-DD format
+      const today = new Date();
+      const currentDate = today.toISOString().split('T')[0];
+      
       const appointmentData = {
         branchId: bookingForm.branchId,
-        doctorId: null, // Optional doctor
-        date: bookingForm.preferredDate || new Date().toISOString().split('T')[0],
+        service: `${brand.brandName} Hearing Aids Consultation`,
+        servicePrice: 0,
+        serviceDuration: 60,
+        date: bookingForm.preferredDate || currentDate,
         timeSlot: bookingForm.preferredTime || '09:00',
-        notes: `Service: ${brand.brandName} hearing aids consultation\nAdditional Notes: ${bookingForm.notes}`,
+        notes: `Consultation request - ${bookingForm.notes || `Hearing aid consultation request for ${brand.brandName}`}\nNote: Please schedule at your convenience`,
+        serviceDetails: {
+          importance: `${brand.brandName} hearing aid consultation - detailed evaluation and fitting`,
+          benefits: [
+            'Expert hearing assessment',
+            'Personalized hearing aid fitting',
+            'Professional advice on hearing solutions',
+            'Follow-up support and maintenance'
+          ],
+          duration: '60 minutes consultation',
+          preparationInstructions: 'No special preparation required. Please bring any previous hearing test results if available.',
+          detailedInfo: `Comprehensive consultation for ${brand.brandName} hearing aids including assessment, fitting, and personalized recommendations.`,
+        },
         patient: {
           name: bookingForm.name,
-          email: bookingForm.email,
+          email: bookingForm.email || '',
           contact: bookingForm.phone,
-          age: bookingForm.age ? parseInt(bookingForm.age) : undefined,
-          gender: bookingForm.gender,
-          address: bookingForm.address,
+          age: undefined,
+          gender: 'prefer_not_to_say',
+          address: '',
         },
       };
 
-      const result = await createAppointment(appointmentData).unwrap();
+      // Debug: Log appointment data before submission
+      // console.log('Submitting appointment data:', JSON.stringify(appointmentData, null, 2));
+      
+      await createAppointment(appointmentData).unwrap();
       
       toast({
-        title: 'Appointment Booked Successfully!',
-        description: `Your consultation for ${brand.brandName} hearing aids has been scheduled. We'll contact you soon to confirm the details.`,
+        title: 'Consultation Request Submitted!',
+        description: `Your ${brand.brandName} hearing aids consultation request has been submitted. Our team will contact you soon to schedule the most convenient appointment time.`,
         status: 'success',
         duration: 5000,
         isClosable: true,
@@ -122,12 +207,7 @@ const HearingAidBrand = () => {
         name: '',
         email: '',
         phone: '',
-        age: '',
-        gender: 'prefer_not_to_say',
-        address: '',
         branchId: '',
-        preferredDate: '',
-        preferredTime: '',
         notes: '',
         serviceType: 'hearing_aid_brand_consultation'
       });
@@ -458,97 +538,125 @@ const HearingAidBrand = () => {
           </Container>
         </Box>
 
-        {/* Book Consultation Section */}
-        <Box as="section" py={{ base: 16, md: 20 }} bg="white">
+        {/* Product Showcase Section */}
+        <Box as="section" py={{ base: 16, md: 20 }} bg={brandColors.primary}>
           <Container maxW="7xl">
             <VStack spacing={16}>
               <Heading
                 as="h2"
                 fontSize={{ base: "2xl", md: "3xl" }}
                 fontWeight="bold"
-                color={brandColors.primaryDark}
+                color="#ffffff"
                 textAlign="center"
                 data-animate
-                id="booking-title"
-                opacity={isVisible['booking-title'] ? 1 : 0}
-                transform={isVisible['booking-title'] ? 'translateY(0)' : 'translateY(-30px)'}
+                id="products-title"
+                opacity={isVisible['products-title'] ? 1 : 0}
+                transform={isVisible['products-title'] ? 'translateY(0)' : 'translateY(-30px)'}
                 transition="all 0.8s ease-out"
               >
-                Book a Consultation for {brand.brandName} Hearing Aids
+                {brand.brandName} Product Range
               </Heading>
               
-              <Box {...cardProps} w="100%" maxW="4xl">
-                <VStack spacing={8} align="stretch">
-                  <Alert status="info" borderRadius="lg">
-                    <AlertIcon />
-                    <Box>
-                      <AlertTitle>Professional Consultation Required!</AlertTitle>
-                      <AlertDescription>
-                        Book a consultation to explore {brand.brandName} hearing aids. Our audiologists will help you find the perfect device from our {brand.brandName} collection and provide professional fitting services.
-                      </AlertDescription>
+              <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6}>
+                {brand.devices.map((device, index) => (
+                  <Box
+                    key={device.id}
+                    {...cardProps}
+                    data-animate
+                    id={`product-card-${index}`}
+                    opacity={isVisible[`product-card-${index}`] ? 1 : 0}
+                    transform={isVisible[`product-card-${index}`] ? 'translateY(0) scale(1)' : 'translateY(30px) scale(0.95)'}
+                    transition={`all 0.6s ease-out`}
+                    transitionDelay={`${index * 0.1}s`}
+                    _hover={{
+                      transform: "translateY(-8px) scale(1.02)",
+                      shadow: "0 25px 50px rgba(43, 168, 209, 0.25)",
+                      borderColor: brandColors.primary,
+                    }}
+                  >
+                    {/* Product Image */}
+                    <Box position="relative" mb={3}>
+                      <Image
+                        src={device.image}
+                        alt={device.name}
+                        w="100%"
+                        h="120px"
+                        objectFit="contain"
+                        borderRadius="lg"
+                        mb={3}
+                      />
+                      <Badge
+                        position="absolute"
+                        top={2}
+                        right={2}
+                        colorScheme="green"
+                        variant="solid"
+                        fontSize="xs"
+                        px={2}
+                        py={1}
+                        borderRadius="full"
+                      >
+                        {device.priceRange}
+                      </Badge>
                     </Box>
-                  </Alert>
-                  
-                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8}>
-                    <VStack spacing={6} align="start">
-                      <Heading as="h3" fontSize="xl" color={brandColors.primaryDark}>
-                        What's Included in Your Consultation?
+
+                    {/* Product Info */}
+                    <VStack spacing={2} align="start">
+                      <Heading as="h3" fontSize="md" color={brandColors.primaryDark}>
+                        {device.name}
                       </Heading>
-                      <VStack spacing={4} align="start">
-                        <HStack align="start" spacing={3}>
-                          <Box w={2} h={2} borderRadius="full" bg={brandColors.primary} mt={2} />
-                          <Text color="gray.700">Comprehensive hearing assessment</Text>
-                        </HStack>
-                        <HStack align="start" spacing={3}>
-                          <Box w={2} h={2} borderRadius="full" bg={brandColors.primary} mt={2} />
-                          <Text color="gray.700">{brand.brandName} device demonstration</Text>
-                        </HStack>
-                        <HStack align="start" spacing={3}>
-                          <Box w={2} h={2} borderRadius="full" bg={brandColors.primary} mt={2} />
-                          <Text color="gray.700">Professional fitting and programming</Text>
-                        </HStack>
-                        <HStack align="start" spacing={3}>
-                          <Box w={2} h={2} borderRadius="full" bg={brandColors.primary} mt={2} />
-                          <Text color="gray.700">Trial period and evaluation</Text>
-                        </HStack>
-                        <HStack align="start" spacing={3}>
-                          <Box w={2} h={2} borderRadius="full" bg={brandColors.primary} mt={2} />
-                          <Text color="gray.700">Ongoing support and adjustments</Text>
-                        </HStack>
-                      </VStack>
-                    </VStack>
-                    
-                    <VStack spacing={6} align="center">
-                      <Box textAlign="center">
-                        <Heading as="h3" fontSize="xl" color={brandColors.primaryDark} mb={4}>
-                          Ready to Explore {brand.brandName}?
-                        </Heading>
-                        <Text color="gray.600" mb={6}>
-                          Book your consultation today and discover the perfect {brand.brandName} hearing aid for your needs.
+                      
+                      <Text fontSize="xs" color="gray.600" lineHeight="1.4" noOfLines={2}>
+                        {device.description}
+                      </Text>
+
+                      {/* Category Badge */}
+                      <Badge colorScheme="blue" variant="outline" fontSize="xs">
+                        {device.category}
+                      </Badge>
+
+                      {/* Key Features */}
+                      <VStack spacing={1} align="start" w="full">
+                        <Text fontSize="xs" fontWeight="semibold" color={brandColors.primaryDark}>
+                          Key Features:
                         </Text>
-                        <Button
-                          onClick={() => setIsBookingModalOpen(true)}
-                          bg={brandColors.primary}
-                          color="white"
-                          _hover={{ bg: "#3AC0E7" }}
-                          size="lg"
-                          px={8}
-                          py={6}
-                          borderRadius="full"
-                          fontWeight="semibold"
-                          fontSize="lg"
-                        >
-                          Book Consultation Now
-                        </Button>
-                      </Box>
+                        <VStack spacing={0.5} align="start" w="full">
+                          {device.features.slice(0, 2).map((feature, featureIndex) => (
+                            <HStack key={featureIndex} spacing={1}>
+                              <Box w={1} h={1} borderRadius="full" bg={brandColors.primary} mt={1} />
+                              <Text fontSize="xs" color="gray.600" noOfLines={1}>
+                                {feature}
+                              </Text>
+                            </HStack>
+                          ))}
+                        </VStack>
+                      </VStack>
+
+                      {/* Color Options - Simplified */}
+                      <Text fontSize="xs" color="gray.500">
+                        Multiple color variants available
+                      </Text>
+
+                      {/* Action Button */}
+                      <Button
+                        w="full"
+                        bg={brandColors.primary}
+                        color="white"
+                        _hover={{ bg: brandColors.primaryDark }}
+                        size="xs"
+                        onClick={() => setIsBookingModalOpen(true)}
+                      >
+                        Book Consultation
+                      </Button>
                     </VStack>
-                  </SimpleGrid>
-                </VStack>
-              </Box>
+                  </Box>
+                ))}
+              </SimpleGrid>
             </VStack>
           </Container>
         </Box>
 
+       
         {/* FAQ Section */}
         <Box as="section" py={{ base: 16, md: 20 }} bg={brandColors.bgSoft}>
           <Container maxW="7xl">
@@ -644,78 +752,106 @@ const HearingAidBrand = () => {
             <Text color={brandColors.primaryDark} fontWeight="semibold">Interested in {brand.brandName} hearing aids? Book a consultation with our audiologist.</Text>
             <HStack>
               <Button onClick={() => setIsBookingModalOpen(true)} bg={brandColors.primary} color="white" _hover={{ bg: brandColors.primaryDark }}>Book Consultation</Button>
-              <Button variant="outline" color={brandColors.primaryDark} borderColor={brandColors.primary} as={Link} to="/contact">Contact Us</Button>
+              <Button 
+                variant="outline" 
+                color={brandColors.primaryDark} 
+                borderColor={brandColors.primary} 
+                _hover={{ 
+                  bg: brandColors.primary, 
+                  color: "white",
+                  borderColor: brandColors.primary 
+                }} 
+                as={Link} 
+                to="/contact"
+              >
+                Contact Us
+              </Button>
             </HStack>
           </Flex>
         </Box>
       </Box>
 
       {/* Booking Modal */}
-      <Modal isOpen={isBookingModalOpen} onClose={() => setIsBookingModalOpen(false)} size={{ base: "full", md: "xl", lg: "2xl" }} isCentered>
+      <Modal isOpen={isBookingModalOpen} onClose={() => setIsBookingModalOpen(false)} size="lg" isCentered>
         <ModalOverlay />
-        <ModalContent mx={{ base: 4, md: 0 }} my={{ base: 4, md: 0 }} maxH={{ base: "90vh", md: "80vh" }} overflowY="auto">
-          <ModalHeader px={{ base: 4, md: 6 }} py={{ base: 4, md: 6 }}>
-            <Heading fontSize={{ base: "lg", md: "xl" }} color={brandColors.primaryDark}>
-              Book Consultation for {brand.brandName} Hearing Aids
-            </Heading>
+        <ModalContent bg="white" maxW="620px" borderRadius="xl" boxShadow="2xl" border="1px solid" borderColor="gray.200">
+          <ModalHeader borderBottom="1px solid" borderColor="gray.200" pb={3}>
+            <Text fontSize="xl" fontWeight="bold" color={brandColors.primaryDark}>
+              Book Consultation
+            </Text>
+            <Text fontSize="sm" color="gray.500" mt={1}>
+              for {brand.brandName} Hearing Aids
+            </Text>
           </ModalHeader>
           <ModalCloseButton />
-          <ModalBody px={{ base: 4, md: 6 }} pb={{ base: 4, md: 6 }}>
-            <VStack spacing={6}>
-              {/* Personal Information */}
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} w="100%">
+          
+          <ModalBody>
+            <VStack spacing={5} align="stretch">
+              {/* Service Details */}
+              <Box w="full" p={4} bg={`${brandColors.primary}15`} borderRadius="lg" border="1px solid" borderColor={`${brandColors.primary}40`}>
+                <Flex align="center" gap={4}>
+                  <Image 
+                    src={brand.logo} 
+                    alt={brand.brandName}
+                    w={16}
+                    h={16}
+                    borderRadius="lg"
+                    border="2px solid"
+                    borderColor={brandColors.primary}
+                    p={1}
+                    bg="white"
+                  />
+                  <Box flex={1}>
+                    <Text fontWeight="semibold" color={brandColors.primaryDark} fontSize="lg">
+                      Hearing Aid Consultation
+                    </Text>
+                    <Text fontSize="sm" color="gray.600">
+                      Expert consultation and fitting for {brand.brandName} hearing aids
+                    </Text>
+                    <Text fontSize="xs" color="gray.500" mt={1}>
+                      Select your preferred date and time, or we'll contact you to schedule
+                    </Text>
+                  </Box>
+                </Flex>
+              </Box>
+
+              <Divider />
+
+              {/* Patient Information */}
+              <Text fontWeight="semibold" color="gray.800" alignSelf="start">
+                Patient Information
+              </Text>
+
+              <HStack spacing={4} w="full">
                 <FormControl isRequired>
-                  <FormLabel fontSize="sm" color="gray.700">Full Name</FormLabel>
+                  <FormLabel fontSize="sm">Full Name</FormLabel>
                   <Input
                     value={bookingForm.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     placeholder="Enter your full name"
-                    size="md"
+                    size="sm"
                   />
                 </FormControl>
-                
-                <FormControl isRequired>
-                  <FormLabel fontSize="sm" color="gray.700">Phone Number</FormLabel>
-                  <Input
-                    value={bookingForm.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
-                    placeholder="Enter your phone number"
-                    type="tel"
-                    size="md"
-                  />
-                </FormControl>
-                
                 <FormControl>
-                  <FormLabel fontSize="sm" color="gray.700">Email Address</FormLabel>
+                  <FormLabel fontSize="sm">Email</FormLabel>
                   <Input
-                    value={bookingForm.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder="Enter your email"
                     type="email"
-                    size="md"
+                    value={bookingForm.email || ''}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    placeholder="Enter email (optional)"
+                    size="sm"
                   />
                 </FormControl>
-                
-                <FormControl>
-                  <FormLabel fontSize="sm" color="gray.700">Age</FormLabel>
-                  <Input
-                    value={bookingForm.age}
-                    onChange={(e) => handleInputChange('age', e.target.value)}
-                    placeholder="Enter your age"
-                    type="number"
-                    size="md"
-                  />
-                </FormControl>
-              </SimpleGrid>
+              </HStack>
 
               {/* Branch Selection */}
               <FormControl isRequired>
-                <FormLabel fontSize="sm" color="gray.700">Select Branch</FormLabel>
+                <FormLabel fontSize="sm">Branch</FormLabel>
                 <Select
                   value={bookingForm.branchId}
                   onChange={(e) => handleInputChange('branchId', e.target.value)}
                   placeholder="Choose your preferred branch"
-                  size="md"
+                  size="sm"
                 >
                   {branchesData?.branches?.map((branch) => (
                     <option key={branch._id} value={branch._id}>
@@ -725,103 +861,126 @@ const HearingAidBrand = () => {
                 </Select>
               </FormControl>
 
-              {/* Gender Selection */}
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.700">Gender</FormLabel>
-                <Select
-                  value={bookingForm.gender}
-                  onChange={(e) => handleInputChange('gender', e.target.value)}
-                  size="md"
-                >
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                  <option value="prefer_not_to_say">Prefer not to say</option>
-                </Select>
-              </FormControl>
+              {/* Date and Time Selection */}
+              <HStack spacing={4} w="full">
+                <FormControl>
+                  <FormLabel fontSize="sm">Preferred Date</FormLabel>
+                  <Select
+                    value={bookingForm.preferredDate || ''}
+                    onChange={(e) => handleInputChange('preferredDate', e.target.value)}
+                    placeholder="Select preferred date"
+                    size="sm"
+                    disabled={!bookingForm.branchId}
+                  >
+                    {availabilityData?.data ? (
+                      availabilityData.data
+                        .filter(day => day.isWorkingDay)
+                        .map((day) => {
+                          const date = new Date(day.date);
+                          const formattedDate = date.toLocaleDateString('en-US', {
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric'
+                          });
+                          return (
+                            <option key={day.date} value={day.date}>
+                              {formattedDate}
+                            </option>
+                          );
+                        })
+                    ) : (
+                      <option value="">Loading dates...</option>
+                    )}
+                  </Select>
+                  {!bookingForm.branchId && (
+                    <Text fontSize="xs" color="gray.500" mt={1}>
+                      Please select a branch first
+                    </Text>
+                  )}
+                  {isAvailabilityLoading && (
+                    <Text fontSize="xs" color="blue.500" mt={1}>
+                      Loading availability...
+                    </Text>
+                  )}
+                </FormControl>
+                <FormControl>
+                  <FormLabel fontSize="sm">Preferred Time</FormLabel>
+                  <Select
+                    value={bookingForm.preferredTime || '09:00'}
+                    onChange={(e) => handleInputChange('preferredTime', e.target.value)}
+                    placeholder="Select preferred time"
+                    size="sm"
+                    disabled={!selectedDate || availableTimeSlots.length === 0}
+                  >
+                    {availableTimeSlots.length > 0 ? (
+                      availableTimeSlots.map((slot) => (
+                        <option key={slot} value={slot}>
+                          {new Date(`2000-01-01T${slot}`).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                          })}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="09:00">09:00 AM (Default)</option>
+                    )}
+                  </Select>
+                  {!selectedDate && (
+                    <Text fontSize="xs" color="gray.500" mt={1}>
+                      Please select a date first
+                    </Text>
+                  )}
+                  {selectedDate && availableTimeSlots.length === 0 && !isAvailabilityLoading && (
+                    <Text fontSize="xs" color="red.500" mt={1}>
+                      No available slots for this date
+                    </Text>
+                  )}
+                </FormControl>
+              </HStack>
 
-              {/* Address */}
-              <FormControl>
-                <FormLabel fontSize="sm" color="gray.700">Address</FormLabel>
-                <Textarea
-                  value={bookingForm.address}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
-                  placeholder="Enter your address"
-                  rows={3}
-                  size="md"
+              <FormControl isRequired>
+                <FormLabel fontSize="sm">Phone Number</FormLabel>
+                <Input
+                  type="tel"
+                  value={bookingForm.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  placeholder="Enter your phone number"
+                  size="sm"
                 />
               </FormControl>
 
-              {/* Preferred Date and Time */}
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} w="100%">
-                <FormControl>
-                  <FormLabel fontSize="sm" color="gray.700">Preferred Date</FormLabel>
-                  <Input
-                    value={bookingForm.preferredDate}
-                    onChange={(e) => handleInputChange('preferredDate', e.target.value)}
-                    type="date"
-                    min={new Date().toISOString().split('T')[0]}
-                    size="md"
-                  />
-                </FormControl>
-                
-                <FormControl>
-                  <FormLabel fontSize="sm" color="gray.700">Preferred Time</FormLabel>
-                  <Select
-                    value={bookingForm.preferredTime}
-                    onChange={(e) => handleInputChange('preferredTime', e.target.value)}
-                    size="md"
-                  >
-                    <option value="09:00">9:00 AM</option>
-                    <option value="10:00">10:00 AM</option>
-                    <option value="11:00">11:00 AM</option>
-                    <option value="12:00">12:00 PM</option>
-                    <option value="14:00">2:00 PM</option>
-                    <option value="15:00">3:00 PM</option>
-                    <option value="16:00">4:00 PM</option>
-                    <option value="17:00">5:00 PM</option>
-                  </Select>
-                </FormControl>
-              </SimpleGrid>
-
-              {/* Additional Notes */}
               <FormControl>
-                <FormLabel fontSize="sm" color="gray.700">Additional Notes</FormLabel>
+                <FormLabel fontSize="sm">Notes</FormLabel>
                 <Textarea
                   value={bookingForm.notes}
                   onChange={(e) => handleInputChange('notes', e.target.value)}
-                  placeholder="Any specific requirements or questions about {brand.brandName} hearing aids?"
+                  placeholder="Any specific requirements or questions about hearing aids?"
+                  size="sm"
                   rows={3}
-                  size="md"
                 />
               </FormControl>
-
-              {/* Service Information */}
-              <Alert status="info" borderRadius="lg" w="100%">
-                <AlertIcon />
-                <Box>
-                  <AlertTitle fontSize="sm">Service Details</AlertTitle>
-                  <AlertDescription fontSize="sm">
-                    You're booking a consultation for {brand.brandName} hearing aids. Our audiologist will assess your hearing needs and help you find the perfect device from our {brand.brandName} collection.
-                  </AlertDescription>
-                </Box>
-              </Alert>
             </VStack>
           </ModalBody>
-          <ModalFooter px={{ base: 4, md: 6 }} py={{ base: 4, md: 6 }}>
-            <HStack spacing={3} w="full" justify={{ base: "center", md: "flex-end" }}>
-              <Button variant="outline" onClick={() => setIsBookingModalOpen(false)} size="md">
+          <ModalFooter borderTop="1px solid" borderColor="gray.200">
+            <HStack spacing={3}>
+              <Button 
+                variant="outline" 
+                colorScheme="brand" 
+                onClick={() => setIsBookingModalOpen(false)} 
+                size="sm"
+              >
                 Cancel
               </Button>
               <Button
+                type="submit"
+                colorScheme="brand"
                 bg={brandColors.primary}
                 color="white"
-                _hover={{ bg: brandColors.primaryDark }}
                 onClick={handleBookingSubmit}
                 isLoading={isBookingLoading}
                 loadingText="Booking..."
-                size="md"
-                minW={{ base: "120px", md: "140px" }}
+                size="sm"
               >
                 Book Consultation
               </Button>

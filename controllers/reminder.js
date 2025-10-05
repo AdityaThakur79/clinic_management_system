@@ -4,6 +4,7 @@ import Patient from "../models/patient.js";
 import { User } from "../models/user.js";
 import Branch from "../models/branch.js";
 import { sendEmail } from "../utils/common/sendMail.js";
+import { sendReminderNotifications } from "../utils/services/notifications.js";
 
 // Get all reminders with filters
 export const getAllReminders = async (req, res) => {
@@ -426,36 +427,9 @@ export const sendReminder = async (req, res) => {
       return res.status(404).json({ success: false, message: "Reminder not found" });
     }
 
-    // Send Email
     try {
-      const apptDate = reminder.appointmentId?.date;
-      const apptTime = reminder.appointmentId?.timeSlot;
-      const subject = `Appointment Reminder - ${reminder.doctorId?.name} - ${new Date(apptDate).toLocaleDateString('en-IN')} ${apptTime}`;
-      const html = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color:#2BA8D1; margin-bottom: 8px;">Appointment Reminder</h2>
-          <p style="margin:0 0 12px 0; color:#333;">This is a reminder for your upcoming appointment.</p>
-          <div style="border:1px solid #e5e7eb; border-radius:8px; padding:12px;">
-            <p style="margin:6px 0;"><strong>Doctor:</strong> ${reminder.doctorId?.name}</p>
-            <p style="margin:6px 0;"><strong>Date:</strong> ${new Date(apptDate).toLocaleDateString('en-IN')}</p>
-            <p style="margin:6px 0;"><strong>Time:</strong> ${apptTime}</p>
-            <p style="margin:6px 0;"><strong>Branch:</strong> ${reminder.branchId?.branchName}</p>
-            <p style="margin:6px 0;"><strong>Address:</strong> ${reminder.branchId?.address}</p>
-          </div>
-        </div>
-      `;
-      const patientEmail = reminder.patientId?.email;
-      if (patientEmail) {
-        await sendEmail({ to: patientEmail, subject, html });
-      }
-    } catch (e) {
-
-    }
-
-    // WhatsApp via AiSensy (commented until keys available)
-    // if (process.env.AISENSY_API_KEY && reminder.patientId?.contact) {
-    //   // Build and send AiSensy request here similar to appointment booking
-    // }
+      await sendReminderNotifications({ appointment: reminder });
+    } catch (e) {}
 
     return res.json({ success: true, reminder });
   } catch (error) {

@@ -6,6 +6,8 @@ import PageHeader from "./Components/PageHeader";
 import Navbar from "./Components/Navbar";
 import Footer from "./Components/Footer";
 import CTA from "./Components/CTA";
+import HearingAidStyleSelector from "./Components/HearingAidStyleSelector";
+import PopupAppointmentModal from "./Components/PopupAppointmentModal";
 import { getDeviceBySlug } from "../../data/hearingAidBrands";
 import { useGetAllBranchesQuery } from "../../features/api/branchApi";
 import { useCreateAppointmentMutation } from "../../features/api/appointments";
@@ -96,7 +98,7 @@ const HearingAidDevice = () => {
         doctorId: null, // Optional doctor
         date: bookingForm.preferredDate || new Date().toISOString().split('T')[0],
         timeSlot: bookingForm.preferredTime || '09:00',
-        notes: `Service: ${device.name} consultation\nAdditional Notes: ${bookingForm.notes}`,
+        notes: `Consultation request - Service: ${device.name} consultation\nAdditional Notes: ${bookingForm.notes}\nNote: Please schedule at your convenience`,
         patient: {
           name: bookingForm.name,
           email: bookingForm.email,
@@ -210,6 +212,8 @@ const HearingAidDevice = () => {
       </head>
 
       <Box>
+        {/* Mount quick appointment modal for global trigger */}
+        <PopupAppointmentModal />
         <Navbar />
         
         {/* Page Header */}
@@ -298,6 +302,9 @@ const HearingAidDevice = () => {
             </Flex>
           </Container>
         </Box>
+
+        {/* Style Overview + Quick booking */}
+        <HearingAidStyleSelector />
 
         {/* Specifications Section */}
         <Box as="section" py={{ base: 16, md: 20 }} bg="white">

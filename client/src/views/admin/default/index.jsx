@@ -2,7 +2,7 @@
 import { Box, Flex, SimpleGrid, Text, Spinner, Table, Thead, Tbody, Tr, Th, Td, Button, useColorModeValue, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, ModalFooter, VStack, HStack, Select } from "@chakra-ui/react";
 import React from "react";
 import { useSelector } from "react-redux";
-import { useGetOverviewQuery } from "../../../features/api/analyticsApi";
+import { useGetOverviewQuery, useGetBirthdaysTodayQuery } from "../../../features/api/analyticsApi";
 import Chart from "react-apexcharts";
 import { Link as RouterLink } from "react-router-dom";
 import { useGetAllAppointmentsQuery, useGetTodayAppointmentsQuery } from "../../../features/api/appointments";
@@ -28,6 +28,7 @@ export default function UserReports() {
     branchId: filters.branchId || undefined,
     doctorId: filters.doctorId || undefined,
   });
+  const { data: birthdaysData } = useGetBirthdaysTodayQuery();
 
   // Fetch bills for accurate paid/outstanding fallback on dashboard
   const { data: billsData } = useGetAllBillsQuery({
@@ -154,6 +155,31 @@ export default function UserReports() {
             <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm"><Text fontWeight="700" color={textSecondary}>Wallet Patients</Text><Box fontSize="2xl" color={textPrimary}>{showWalletPatients}</Box></Box>
             <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm"><Text fontWeight="700" color={textSecondary}>Wallet Collected</Text><Box fontSize="2xl" color={textPrimary}>₹{Number(showWalletCollected).toLocaleString('en-IN')}</Box></Box>
           </SimpleGrid>
+          {/* Today's Birthdays */}
+          {(birthdaysData?.data?.users?.length || birthdaysData?.data?.patients?.length) ? (
+            <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm" mb="20px">
+              <Text fontWeight="700" mb="10px">Today's Birthdays</Text>
+              <SimpleGrid columns={{ base: 1, md: 2 }} gap="12px">
+                {(birthdaysData?.data?.users || []).map((u) => (
+                  <Box key={u._id || `${u.email}-${u.phone}`} p="12px" border="1px solid" borderColor="gray.200" borderRadius="12px">
+                    <Text fontWeight="600">{u.name}</Text>
+                    <Text fontSize="sm" color={textSecondary}>{u.role?.toUpperCase()} {u.branch ? `• Branch` : ''}</Text>
+                    {u.email ? <Text fontSize="sm" color={textSecondary}>{u.email}</Text> : null}
+                    {u.phone ? <Text fontSize="sm" color={textSecondary}>{u.phone}</Text> : null}
+                  </Box>
+                ))}
+                {(birthdaysData?.data?.patients || []).map((p) => (
+                  <Box key={p._id || `${p.email}-${p.contact}`} p="12px" border="1px solid" borderColor="gray.200" borderRadius="12px">
+                    <Text fontWeight="600">{p.name}</Text>
+                    <Text fontSize="sm" color={textSecondary}>Patient</Text>
+                    {p.email ? <Text fontSize="sm" color={textSecondary}>{p.email}</Text> : null}
+                    {p.contact ? <Text fontSize="sm" color={textSecondary}>{p.contact}</Text> : null}
+                  </Box>
+                ))}
+              </SimpleGrid>
+            </Box>
+          ) : null}
+
           <SimpleGrid columns={{ base: 1, md: 2 }} gap="20px" mt="20px">
             <Box p="16px" bg={cardBg} borderRadius="16px" boxShadow="sm">
               <Flex align="center" justify="space-between" mb="10px">

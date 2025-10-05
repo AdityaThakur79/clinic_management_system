@@ -92,7 +92,7 @@ const AddAppointment = () => {
     
     const requiresNewPatientFields = patientMode === 'new' && !form.patient.name;
     const requiresExistingPatient = patientMode === 'existing' && !form.patientId;
-    if (!form.branchId || !form.doctorId || !form.date || !form.timeSlot || requiresNewPatientFields || requiresExistingPatient) {
+    if (!form.branchId || !form.date || !form.timeSlot || requiresNewPatientFields || requiresExistingPatient) {
       toast({
         title: 'Error',
         description: requiresExistingPatient ? 'Please select an existing patient.' : 'Please fill in all required fields.',
@@ -183,15 +183,16 @@ const AddAppointment = () => {
                 )}
 
                 {/* Doctor Selection */}
-                <FormControl isRequired>
-                  <FormLabel>Doctor</FormLabel>
+                <FormControl>
+                  <FormLabel>Doctor <Text as="span" color="gray.500" fontSize="sm">(Optional)</Text></FormLabel>
                   <Select
                     value={form.doctorId}
                     onChange={(e) => handleChange('doctorId', e.target.value)}
-                    placeholder="Select doctor"
+                    placeholder="Select doctor or leave empty"
                     borderRadius="lg"
                     isDisabled={!form.branchId}
                   >
+                    <option value="">No Doctor Selected</option>
                     {doctors.map(doctor => (
                       <option key={doctor._id} value={doctor._id}>{doctor.name} - {doctor.specialization}</option>
                     ))}

@@ -20,6 +20,9 @@ const user = new mongoose.Schema(
         return this.role !== "superAdmin";
       },
     },
+    dateOfBirth: {
+      type: Date,
+    },
     role: {
       type: String,
       enum: ["superAdmin", "doctor", "branchAdmin"],

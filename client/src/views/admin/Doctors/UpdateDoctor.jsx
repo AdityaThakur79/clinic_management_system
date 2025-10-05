@@ -72,6 +72,7 @@ const UpdateDoctor = () => {
     name: '',
     email: '',
     phone: '',
+    dateOfBirth: '',
     branch: '',
     degree: '',
     specialization: '',
@@ -143,12 +144,13 @@ const UpdateDoctor = () => {
             name: doctor.name || '',
             email: doctor.email || '',
             phone: doctor.phone || '',
+            dateOfBirth: doctor.dateOfBirth ? doctor.dateOfBirth.split('T')[0] : '',
             branch: doctor.branch?._id || '',
             degree: doctor.degree || '',
             specialization: doctor.specialization || '',
-            perSessionCharge: doctor.perSessionCharge || '',
-            yearsOfExperience: doctor.yearsOfExperience || '',
-            consultationTime: doctor.consultationTime || '',
+            perSessionCharge: doctor.perSessionCharge ?? '',
+            yearsOfExperience: doctor.yearsOfExperience ?? '',
+            consultationTime: doctor.consultationTime ?? '',
             bio: doctor.bio || '',
             languages: doctor.languages || [],
             availableDays: doctor.availableDays || [],
@@ -318,11 +320,11 @@ const UpdateDoctor = () => {
       newErrors.specialization = 'Specialization is required';
     }
 
-    if (!formData.perSessionCharge || formData.perSessionCharge <= 0) {
+    if (formData.perSessionCharge === '' || formData.perSessionCharge <= 0) {
       newErrors.perSessionCharge = 'Per session charge must be greater than 0';
     }
 
-    if (!formData.yearsOfExperience || formData.yearsOfExperience < 0) {
+    if (formData.yearsOfExperience === '' || formData.yearsOfExperience < 0) {
       newErrors.yearsOfExperience = 'Years of experience must be 0 or greater';
     }
 
@@ -371,9 +373,9 @@ const UpdateDoctor = () => {
     if (!validateForm()) {
       toast({
         title: 'Validation Error',
-        description: 'Please fix the errors in the form',
+        description: 'Please fill in all required fields. Check Languages and Available Days sections.',
         status: 'error',
-        duration: 3000,
+        duration: 4000,
         isClosable: true,
       });
       return;
@@ -616,6 +618,27 @@ const UpdateDoctor = () => {
                     </Select>
                     <FormErrorMessage>{errors.branch}</FormErrorMessage>
                   </FormControl>
+                  <FormControl>
+                    <FormLabel fontWeight="600" color="gray.700" mb={2}>
+                      Date of Birth (optional)
+                    </FormLabel>
+                    <Input
+                      name="dateOfBirth"
+                      type="date"
+                      value={formData.dateOfBirth}
+                      onChange={handleChange}
+                      borderRadius="lg"
+                      border="2px solid"
+                      borderColor="gray.200"
+                      _focus={{
+                        borderColor: "#2BA8D1",
+                        boxShadow: "0 0 0 3px rgba(43, 168, 209, 0.1)",
+                      }}
+                      _hover={{ borderColor: "gray.300" }}
+                      h="48px"
+                      fontSize="md"
+                    />
+                  </FormControl>
                 </SimpleGrid>
 
                 {/* Selected Branch Info */}
@@ -827,9 +850,9 @@ const UpdateDoctor = () => {
                     </Text>
                   </HStack>
 
-                  <FormControl>
+                  <FormControl isInvalid={errors.languages}>
                     <FormLabel fontWeight="600" color="gray.700" mb={2}>
-                      Select Languages
+                      Select Languages *
                     </FormLabel>
                     <CheckboxGroup
                       value={formData.languages}
@@ -843,6 +866,7 @@ const UpdateDoctor = () => {
                         ))}
                       </SimpleGrid>
                     </CheckboxGroup>
+                    <FormErrorMessage>{errors.languages}</FormErrorMessage>
                   </FormControl>
                 </Box>
 
@@ -856,9 +880,9 @@ const UpdateDoctor = () => {
                   </HStack>
 
                   <VStack spacing={6} align="stretch">
-                    <FormControl>
+                    <FormControl isInvalid={errors.availableDays}>
                       <FormLabel fontWeight="600" color="gray.700" mb={2}>
-                        Available Days
+                        Available Days *
                       </FormLabel>
                       <CheckboxGroup
                         value={formData.availableDays}
@@ -872,6 +896,7 @@ const UpdateDoctor = () => {
                           ))}
                         </SimpleGrid>
                       </CheckboxGroup>
+                      <FormErrorMessage>{errors.availableDays}</FormErrorMessage>
                     </FormControl>
 
                     {/* Per-day Time Slots */}

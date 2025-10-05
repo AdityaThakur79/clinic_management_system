@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import Appointment from "../models/appointment.js";
 import Patient from "../models/patient.js";
 import Bill from "../models/bill.js";
+import { User } from "../models/user.js";
+import { sendBirthdayNotifications } from "../utils/services/notifications.js";
 
 // Build a common MongoDB match filter for branch/doctor/time range
 const buildMatchFilter = (query) => {
@@ -164,6 +166,25 @@ export const getOverview = async (req, res) => {
       { $limit: 5 },
     ]);
 
+    // Today's birthdays (users + patients)
+    const today = new Date();
+    const month = today.getMonth() + 1;
+    const day = today.getDate();
+    const [birthdayUsers, birthdayPatients] = await Promise.all([
+      User.aggregate([
+        { $match: { dateOfBirth: { $ne: null } } },
+        { $addFields: { m: { $month: "$dateOfBirth" }, d: { $dayOfMonth: "$dateOfBirth" } } },
+        { $match: { m: month, d: day } },
+        { $project: { name: 1, email: 1, phone: 1, role: 1, branch: 1 } }
+      ]),
+      Patient.aggregate([
+        { $match: { dateOfBirth: { $ne: null } } },
+        { $addFields: { m: { $month: "$dateOfBirth" }, d: { $dayOfMonth: "$dateOfBirth" } } },
+        { $match: { m: month, d: day } },
+        { $project: { name: 1, email: 1, contact: 1, branchId: 1 } }
+      ])
+    ]);
+
     return res.status(200).json({
       success: true,
       filters: { ...req.query },
@@ -188,10 +209,32 @@ export const getOverview = async (req, res) => {
         revenueByPaymentMethod,
         paidVsOutstanding,
       },
+      birthdays: { users: birthdayUsers, patients: birthdayPatients },
     });
   } catch (error) {
 
     return res.status(500).json({ success: false, message: "Failed to load overview", error: error.message });
+  }
+};
+
+export const sendTodaysBirthdayWishes = async (req, res) => {
+  try {
+    const today = new Date();
+    const currentMonth = today.getMonth() + 1;
+    const currentDay = today.getDate();
+
+    const [usersWithBirthday, patientsWithBirthday] = await Promise.all([
+      User.find({ $expr: { $and: [ { $eq: [ { $month: "$dateOfBirth" }, currentMonth ] }, { $eq: [ { $dayOfMonth: "$dateOfBirth" }, currentDay ] } ] } }).select('name email phone role dateOfBirth'),
+      Patient.find({ $expr: { $and: [ { $eq: [ { $month: "$dateOfBirth" }, currentMonth ] }, { $eq: [ { $dayOfMonth: "$dateOfBirth" }, currentDay ] } ] } }).select('name contact email dateOfBirth'),
+    ]);
+
+    let sent = 0;
+    for (const u of usersWithBirthday) { await sendBirthdayNotifications({ person: { name: u.name, email: u.email, phone: u.phone } }); sent++; }
+    for (const p of patientsWithBirthday) { await sendBirthdayNotifications({ person: { name: p.name, email: p.email, phone: p.contact } }); sent++; }
+
+    return res.json({ success: true, sent, counts: { users: usersWithBirthday.length, patients: patientsWithBirthday.length } });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: 'Failed sending birthday wishes' });
   }
 };
 

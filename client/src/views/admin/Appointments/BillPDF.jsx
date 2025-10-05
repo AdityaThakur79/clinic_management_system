@@ -7,13 +7,13 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
     padding: 0,
-    fontSize: 11,
-    lineHeight: 1.4,
+    fontSize: 10,
+    lineHeight: 1.3,
     justifyContent: 'space-between',
   },
   header: {
     backgroundColor: '#2BA8D1',
-    padding: 16,
+    padding: 12,
     color: 'white',
   },
   headerContent: {
@@ -24,66 +24,66 @@ const styles = StyleSheet.create({
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    maxWidth: '60%',
+    maxWidth: '65%',
   },
   logo: {
-    width: 40,
-    height: 40,
-    marginRight: 12,
+    width: 35,
+    height: 35,
+    marginRight: 10,
   },
   clinicInfo: { flexDirection: 'column', alignItems: 'flex-start' },
   clinicName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   clinicSubtitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: 'white',
     opacity: 0.9,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   clinicAddress: {
-    fontSize: 10,
+    fontSize: 9,
     color: 'white',
     opacity: 0.9,
-    marginBottom: 3,
+    marginBottom: 2,
   },
   invoiceDetails: { alignItems: 'flex-end' },
   invoiceTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 15,
+    marginBottom: 12,
   },
   invoiceInfo: {
-    fontSize: 10,
+    fontSize: 9,
     color: 'white',
     opacity: 0.9,
-    marginBottom: 3,
+    marginBottom: 2,
   },
   statusBadge: {
     backgroundColor: '#10B981',
     color: 'white',
-    padding: '5 10',
-    borderRadius: 5,
-    fontSize: 10,
+    padding: '4 8',
+    borderRadius: 4,
+    fontSize: 9,
     fontWeight: 'bold',
-    marginTop: 5,
+    marginTop: 4,
   },
-  content: { padding: 20, flexGrow: 1, justifyContent: 'space-between' },
+  content: { padding: 16, flexGrow: 1, justifyContent: 'space-between' },
   section: {
-    marginBottom: 14,
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
     color: '#2BA8D1',
-    marginBottom: 10,
+    marginBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#2BA8D1',
-    paddingBottom: 4,
+    paddingBottom: 3,
   },
   infoGrid: {
     flexDirection: 'row',
@@ -95,64 +95,64 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   infoLabel: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: 'bold',
     color: '#666',
   },
   infoValue: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#333',
   },
   infoValueBold: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 'bold',
     color: '#333',
   },
   table: {
-    marginTop: 20,
+    marginTop: 16,
   },
   tableHeader: {
     backgroundColor: '#2BA8D1',
     flexDirection: 'row',
-    padding: 6,
+    padding: 5,
   },
-  tableHeaderText: { color: 'white', fontSize: 9, fontWeight: 'bold' },
+  tableHeaderText: { color: 'white', fontSize: 8, fontWeight: 'bold' },
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
-    padding: 6,
+    padding: 5,
   },
-  tableCell: { fontSize: 9, color: '#333' },
-  tableCellBold: { fontSize: 9, fontWeight: 'bold', color: '#333' },
-  tableCellRight: { fontSize: 9, color: '#333', textAlign: 'right' },
-  tableCellBoldRight: { fontSize: 9, fontWeight: 'bold', color: '#333', textAlign: 'right' },
+  tableCell: { fontSize: 8, color: '#333' },
+  tableCellBold: { fontSize: 8, fontWeight: 'bold', color: '#333' },
+  tableCellRight: { fontSize: 8, color: '#333', textAlign: 'right' },
+  tableCellBoldRight: { fontSize: 8, fontWeight: 'bold', color: '#333', textAlign: 'right' },
   serviceDescription: {
-    width: '40%',
+    width: '45%',
   },
   serviceDetails: {
-    width: '35%',
+    width: '30%',
   },
   serviceAmount: {
     width: '25%',
   },
   financialSummary: {
-    marginTop: 12,
+    marginTop: 10,
     alignItems: 'flex-end',
   },
   summaryBox: {
-    width: 240,
+    width: 220,
     border: '1px solid #E5E7EB',
-    padding: 10,
+    padding: 8,
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
-    paddingBottom: 8,
+    marginBottom: 6,
+    paddingBottom: 6,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
   },
@@ -160,83 +160,83 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     backgroundColor: '#2BA8D1',
-    padding: 10,
-    marginTop: 8,
-    borderRadius: 5,
+    padding: 8,
+    marginTop: 6,
+    borderRadius: 4,
   },
   summaryLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: 'bold',
     color: '#333',
   },
   summaryValue: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: 'bold',
     color: '#333',
   },
   summaryLabelTotal: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 'bold',
     color: 'white',
   },
   summaryValueTotal: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 'bold',
     color: 'white',
   },
   prescriptionSection: {
     backgroundColor: '#F9FAFB',
-    padding: 12,
-    marginTop: 12,
+    padding: 10,
+    marginTop: 10,
   },
   prescriptionTitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 'bold',
     color: '#2BA8D1',
-    marginBottom: 15,
+    marginBottom: 12,
   },
   prescriptionGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 15,
+    marginBottom: 12,
   },
   prescriptionColumn: {
     width: '48%',
   },
   prescriptionBox: {
     backgroundColor: 'white',
-    padding: 10,
+    padding: 8,
     border: '1px solid #E5E7EB',
-    borderRadius: 5,
+    borderRadius: 4,
   },
   prescriptionLabel: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: 'bold',
     color: '#666',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   prescriptionText: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#333',
   },
   medicineTable: {
-    marginTop: 15,
+    marginTop: 12,
   },
   medicineTableHeader: {
     backgroundColor: '#2BA8D1',
     flexDirection: 'row',
-    padding: 6,
+    padding: 5,
   },
-  medicineTableHeaderText: { color: 'white', fontSize: 8, fontWeight: 'bold' },
+  medicineTableHeaderText: { color: 'white', fontSize: 7, fontWeight: 'bold' },
   medicineTableRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
-    padding: 6,
+    padding: 5,
     backgroundColor: 'white',
   },
-  medicineTableCell: { fontSize: 8, color: '#333' },
-  medicineTableCellBold: { fontSize: 8, fontWeight: 'bold', color: '#333' },
+  medicineTableCell: { fontSize: 7, color: '#333' },
+  medicineTableCellBold: { fontSize: 7, fontWeight: 'bold', color: '#333' },
   medicineName: {
     width: '30%',
   },
@@ -251,24 +251,24 @@ const styles = StyleSheet.create({
   },
   footer: {
     backgroundColor: '#2BA8D1',
-    padding: 20,
+    padding: 16,
     color: 'white',
     textAlign: 'center',
   },
   footerText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   footerSubtext: {
-    fontSize: 9,
+    fontSize: 8,
     opacity: 0.9,
-    marginBottom: 3,
+    marginBottom: 2,
   },
   footerTimestamp: {
-    fontSize: 8,
+    fontSize: 7,
     opacity: 0.7,
-    marginTop: 10,
+    marginTop: 8,
   },
 });
 
@@ -300,15 +300,32 @@ const BillPDF = ({ appointment }) => {
     
     if (bill.services && bill.services.length > 0) {
       subtotal += bill.services.reduce((sum, service) => {
-        const servicePrice = service.actualPrice || service.basePrice || 0;
-        return sum + servicePrice;
+        let servicePrice = service.actualPrice || service.basePrice || 0;
+        
+        // Apply service discount if any
+        if (service.discountType === 'percentage' && service.discountPercentage > 0) {
+          servicePrice = servicePrice - (servicePrice * service.discountPercentage / 100);
+        } else if (service.discountType === 'fixed' && service.discount > 0) {
+          servicePrice = servicePrice - service.discount;
+        }
+        
+        return sum + Math.max(0, servicePrice);
       }, 0);
     }
     if (bill.devices && bill.devices.length > 0) {
       subtotal += bill.devices.reduce((sum, device) => {
         const qty = Number(device.quantity) || 0;
         const price = Number(device.unitPrice) || 0;
-        return sum + (qty * price);
+        let deviceTotal = qty * price;
+        
+        // Apply device discount if any
+        if (device.discountType === 'percentage' && device.discountPercentage > 0) {
+          deviceTotal = deviceTotal - (deviceTotal * device.discountPercentage / 100);
+        } else if (device.discountType === 'fixed' && device.discount > 0) {
+          deviceTotal = deviceTotal - device.discount;
+        }
+        
+        return sum + Math.max(0, deviceTotal);
       }, 0);
     }
     
@@ -410,7 +427,6 @@ const BillPDF = ({ appointment }) => {
             <View style={styles.table}>
               <View style={styles.tableHeader}>
                 <Text style={[styles.tableHeaderText, styles.serviceDescription]}>Service Description</Text>
-                <Text style={[styles.tableHeaderText, styles.serviceDetails]}>Details</Text>
                 <Text style={[styles.tableHeaderText, styles.serviceAmount]}>Amount (Rs)</Text>
               </View>
               
@@ -418,7 +434,6 @@ const BillPDF = ({ appointment }) => {
               {(appointment.billId?.consultationFee || 0) > 0 && (
                 <View style={styles.tableRow}>
                   <Text style={[styles.tableCellBold, styles.serviceDescription]}>Consultation Fee</Text>
-                  <Text style={[styles.tableCell, styles.serviceDetails]}>Doctor consultation and examination</Text>
                   <Text style={[styles.tableCellBoldRight, styles.serviceAmount]}>Rs {(appointment.billId.consultationFee || 0).toFixed(2)}</Text>
                 </View>
               )}
@@ -426,7 +441,6 @@ const BillPDF = ({ appointment }) => {
               {(appointment.billId?.treatmentFee || 0) > 0 && (
                 <View style={styles.tableRow}>
                   <Text style={[styles.tableCellBold, styles.serviceDescription]}>Treatment Fee</Text>
-                  <Text style={[styles.tableCell, styles.serviceDetails]}>Medical treatment and procedures</Text>
                   <Text style={[styles.tableCellBoldRight, styles.serviceAmount]}>Rs {(appointment.billId.treatmentFee || 0).toFixed(2)}</Text>
                 </View>
               )}
@@ -434,7 +448,6 @@ const BillPDF = ({ appointment }) => {
               {(appointment.billId?.medicineFee || 0) > 0 && (
                 <View style={styles.tableRow}>
                   <Text style={[styles.tableCellBold, styles.serviceDescription]}>Medicine Fee</Text>
-                  <Text style={[styles.tableCell, styles.serviceDetails]}>Prescribed medications and supplies</Text>
                   <Text style={[styles.tableCellBoldRight, styles.serviceAmount]}>Rs {(appointment.billId.medicineFee || 0).toFixed(2)}</Text>
                 </View>
               )}
@@ -442,7 +455,6 @@ const BillPDF = ({ appointment }) => {
               {(appointment.billId?.otherCharges || 0) > 0 && (
                 <View style={styles.tableRow}>
                   <Text style={[styles.tableCellBold, styles.serviceDescription]}>Additional Services</Text>
-                  <Text style={[styles.tableCell, styles.serviceDetails]}>Other medical services and tests</Text>
                   <Text style={[styles.tableCellBoldRight, styles.serviceAmount]}>Rs {(appointment.billId.otherCharges || 0).toFixed(2)}</Text>
                 </View>
               )}
@@ -450,7 +462,6 @@ const BillPDF = ({ appointment }) => {
               {(appointment.billId?.hearingAidFee || 0) > 0 && (
                 <View style={styles.tableRow}>
                   <Text style={[styles.tableCellBold, styles.serviceDescription]}>Hearing Aid Services</Text>
-                  <Text style={[styles.tableCell, styles.serviceDetails]}>Hearing aid fitting and maintenance</Text>
                   <Text style={[styles.tableCellBoldRight, styles.serviceAmount]}>Rs {(appointment.billId.hearingAidFee || 0).toFixed(2)}</Text>
                 </View>
               )}
@@ -458,19 +469,38 @@ const BillPDF = ({ appointment }) => {
               {(appointment.billId?.audiometryFee || 0) > 0 && (
                 <View style={styles.tableRow}>
                   <Text style={[styles.tableCellBold, styles.serviceDescription]}>Audiometry Test</Text>
-                  <Text style={[styles.tableCell, styles.serviceDetails]}>Hearing assessment and testing</Text>
                   <Text style={[styles.tableCellBoldRight, styles.serviceAmount]}>Rs {(appointment.billId.audiometryFee || 0).toFixed(2)}</Text>
                 </View>
               )}
               
               {/* Services from services array */}
-              {appointment.billId?.services && appointment.billId.services.map((service, index) => (
-                <View key={index} style={styles.tableRow}>
-                  <Text style={[styles.tableCellBold, styles.serviceDescription]}>{service.name}</Text>
-                  <Text style={[styles.tableCell, styles.serviceDetails]}>{service.description || 'Service provided'}</Text>
-                  <Text style={[styles.tableCellBoldRight, styles.serviceAmount]}>Rs {((service.actualPrice || service.basePrice) || 0).toFixed(2)}</Text>
-                </View>
-              ))}
+              {appointment.billId?.services && appointment.billId.services.map((service, index) => {
+                const originalPrice = service.actualPrice || service.basePrice || 0;
+                let discountAmount = 0;
+                let finalPrice = originalPrice;
+                
+                if (service.discountType === 'percentage' && service.discountPercentage > 0) {
+                  discountAmount = originalPrice * service.discountPercentage / 100;
+                  finalPrice = originalPrice - discountAmount;
+                } else if (service.discountType === 'fixed' && service.discount > 0) {
+                  discountAmount = service.discount;
+                  finalPrice = originalPrice - discountAmount;
+                }
+                
+                return (
+                  <View key={index} style={styles.tableRow}>
+                    <Text style={[styles.tableCellBold, styles.serviceDescription]}>
+                      {service.name}
+                      {discountAmount > 0 && (
+                        <Text style={{ fontSize: 10, color: '#e53e3e', fontWeight: 'normal' }}>
+                          {'\n'}Discount: -Rs {discountAmount.toFixed(2)} ({service.discountType === 'percentage' ? `${service.discountPercentage}%` : 'Fixed'})
+                        </Text>
+                      )}
+                    </Text>
+                    <Text style={[styles.tableCellBoldRight, styles.serviceAmount]}>Rs {Math.max(0, finalPrice).toFixed(2)}</Text>
+                  </View>
+                );
+              })}
             </View>
 
             {/* Devices */}
@@ -481,13 +511,34 @@ const BillPDF = ({ appointment }) => {
                   <Text style={[styles.tableHeaderText, styles.serviceDetails]}>Qty × Unit</Text>
                   <Text style={[styles.tableHeaderText, styles.serviceAmount]}>Total (Rs)</Text>
                 </View>
-                {appointment.billId.devices.map((device, idx) => (
-                  <View key={idx} style={styles.tableRow}>
-                    <Text style={[styles.tableCellBold, styles.serviceDescription]}>{device.deviceName}</Text>
-                    <Text style={[styles.tableCell, styles.serviceDetails]}>{Number(device.quantity || 0)} × Rs {Number(device.unitPrice || 0).toFixed(2)}</Text>
-                    <Text style={[styles.tableCellBoldRight, styles.serviceAmount]}>Rs {((Number(device.quantity) || 0) * (Number(device.unitPrice) || 0)).toFixed(2)}</Text>
-                  </View>
-                ))}
+                {appointment.billId.devices.map((device, idx) => {
+                  const originalTotal = (Number(device.quantity) || 0) * (Number(device.unitPrice) || 0);
+                  let discountAmount = 0;
+                  let finalTotal = originalTotal;
+                  
+                  if (device.discountType === 'percentage' && device.discountPercentage > 0) {
+                    discountAmount = originalTotal * device.discountPercentage / 100;
+                    finalTotal = originalTotal - discountAmount;
+                  } else if (device.discountType === 'fixed' && device.discount > 0) {
+                    discountAmount = device.discount;
+                    finalTotal = originalTotal - discountAmount;
+                  }
+                  
+                  return (
+                    <View key={idx} style={styles.tableRow}>
+                      <Text style={[styles.tableCellBold, styles.serviceDescription]}>{device.deviceName}</Text>
+                      <Text style={[styles.tableCell, styles.serviceDetails]}>
+                        {Number(device.quantity || 0)} × Rs {Number(device.unitPrice || 0).toFixed(2)}
+                        {discountAmount > 0 && (
+                          <Text style={{ fontSize: 10, color: '#e53e3e' }}>
+                            {'\n'}Discount: -Rs {discountAmount.toFixed(2)} ({device.discountType === 'percentage' ? `${device.discountPercentage}%` : 'Fixed'})
+                          </Text>
+                        )}
+                      </Text>
+                      <Text style={[styles.tableCellBoldRight, styles.serviceAmount]}>Rs {Math.max(0, finalTotal).toFixed(2)}</Text>
+                    </View>
+                  );
+                })}
               </View>
             )}
 

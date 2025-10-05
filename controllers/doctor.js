@@ -22,7 +22,8 @@ export const createDoctor = async (req, res) => {
       languages,
       availableDays,
       availableTimeSlots,
-      status
+      status,
+      dateOfBirth
     } = req.body;
 
     // Validation
@@ -107,6 +108,7 @@ export const createDoctor = async (req, res) => {
       bannerUrl: finalBannerUrl,
       bannerUrlPublicId: finalBannerUrlPublicId,
       status: status || "active",
+      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
       degree,
       specialization,
       perSessionCharge: Number(perSessionCharge),
@@ -266,7 +268,8 @@ export const updateDoctor = async (req, res) => {
       bio,
       languages,
       availableDays,
-      availableTimeSlots
+      availableTimeSlots,
+      dateOfBirth
     } = req.body;
 
     // Check if doctor exists
@@ -370,6 +373,7 @@ export const updateDoctor = async (req, res) => {
       ...(phone && { phone }),
       ...(branch && { branch }),
       ...(status !== undefined && { status }),
+      ...(dateOfBirth !== undefined && { dateOfBirth: new Date(dateOfBirth) }),
       ...(degree && { degree }),
       ...(specialization && { specialization }),
       ...(perSessionCharge !== undefined && { perSessionCharge: Number(perSessionCharge) }),

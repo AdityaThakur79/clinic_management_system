@@ -1,5 +1,5 @@
 import express from "express";
-import { createAppointment, getAvailability, getMultipleDateAvailability, getAllAppointments, getTodayAppointments, getAppointmentById, updateAppointmentStatus, assignDoctorToAppointment, deleteAppointment } from "../controllers/appointment.js";
+import { createAppointment, getAvailability, getMultipleDateAvailability, getAllAppointments, getTodayAppointments, getAppointmentById, updateAppointmentStatus, updateAppointmentTimeSlot, assignDoctorToAppointment, deleteAppointment } from "../controllers/appointment.js";
 import { addAppointmentCommission } from "../controllers/appointmentCommission.js";
 import { isAuthenticated } from "../middlewares/isAuthenticated.js";
 
@@ -15,6 +15,7 @@ router.get("/", isAuthenticated, getAllAppointments);
 router.get("/today", isAuthenticated, getTodayAppointments);
 router.get("/:id", isAuthenticated, getAppointmentById);
 router.patch("/:id/status", isAuthenticated, updateAppointmentStatus);
+router.patch("/:id/timeslot", isAuthenticated, updateAppointmentTimeSlot);
 router.post("/assign-doctor", isAuthenticated, assignDoctorToAppointment);
 router.delete("/:id", isAuthenticated, deleteAppointment);
 

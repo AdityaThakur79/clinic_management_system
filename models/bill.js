@@ -47,6 +47,9 @@ const billSchema = new mongoose.Schema(
     deviceName: { type: String, required: false },
     unitPrice: { type: Number, default: 0, min: 0 },
     quantity: { type: Number, default: 0, min: 0 },
+    discount: { type: Number, default: 0, min: 0 }, // Device-specific discount
+    discountType: { type: String, enum: ['percentage', 'fixed'], default: 'fixed' },
+    discountPercentage: { type: Number, default: 0, min: 0, max: 100 },
     notes: { type: String }
   }],
     
@@ -106,11 +109,22 @@ billSchema.pre('save', function(next) {
     return sum + Math.max(0, servicePrice);
   }, 0) : 0;
   
-  // Calculate devices total (unitPrice * quantity)
+  // Calculate devices total with discounts
   const devicesTotal = this.devices ? this.devices.reduce((sum, d) => {
     const qty = parseFloat(d.quantity) || 0;
     const price = parseFloat(d.unitPrice) || 0;
-    return sum + Math.max(0, qty * price);
+    let deviceTotal = qty * price;
+    
+    // Apply device-specific discount
+    if (d.discount > 0) {
+      if (d.discountType === 'percentage') {
+        deviceTotal = deviceTotal - (deviceTotal * d.discountPercentage / 100);
+      } else {
+        deviceTotal = deviceTotal - d.discount;
+      }
+    }
+    
+    return sum + Math.max(0, deviceTotal);
   }, 0) : 0;
 
   // Calculate subtotal including all fees, services and devices

@@ -289,9 +289,21 @@ export const getInventoryById = async (req, res) => {
           { path: 'billId', select: 'billNumber totalAmount' }
         ]
       })
-      .populate({ path: 'transactions.patientId', select: 'name contact' })
-      .populate({ path: 'transactions.billId', select: 'billNumber totalAmount' })
-      .populate({ path: 'transactions.userId', select: 'name email' });
+      .populate({ 
+        path: 'transactions.patientId', 
+        select: 'name contact email',
+        model: 'Patient'
+      })
+      .populate({ 
+        path: 'transactions.billId', 
+        select: 'billNumber totalAmount',
+        model: 'Bill'
+      })
+      .populate({ 
+        path: 'transactions.userId', 
+        select: 'name email',
+        model: 'User'
+      });
 
     if (!inventory) {
       return res.status(404).json({ 
@@ -571,15 +583,34 @@ export const updateStock = async (req, res) => {
 
     // Log transaction
     inventory.transactions = inventory.transactions || [];
+    
+    // Ensure patientId is a valid ObjectId if provided
+    let validPatientId = undefined;
+    if (patientId && mongoose.Types.ObjectId.isValid(patientId)) {
+      validPatientId = patientId;
+    }
+    
+    // Ensure appointmentId is a valid ObjectId if provided
+    let validAppointmentId = undefined;
+    if (appointmentId && mongoose.Types.ObjectId.isValid(appointmentId)) {
+      validAppointmentId = appointmentId;
+    }
+    
+    // Ensure billId is a valid ObjectId if provided
+    let validBillId = undefined;
+    if (billId && mongoose.Types.ObjectId.isValid(billId)) {
+      validBillId = billId;
+    }
+    
     inventory.transactions.push({
       operation,
       quantity,
       balanceAfter: newStock,
       reason: reason || (operation === 'reduce' ? 'Used in appointment' : 'Manual update'),
       notes,
-      appointmentId: appointmentId || undefined,
-      patientId: patientId || undefined,
-      billId: billId || undefined,
+      appointmentId: validAppointmentId,
+      patientId: validPatientId,
+      billId: validBillId,
       userId: user._id,
       createdAt: new Date()
     });

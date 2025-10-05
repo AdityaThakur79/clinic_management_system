@@ -1,5 +1,22 @@
 import nodemailer from "nodemailer";
 
+export const brandTheme = {
+  primary: "#2BA8D1",
+  primaryDark: "#0C2F4D",
+  text: "#1a365d",
+  muted: "#64748b",
+  border: "#e2e8f0",
+};
+
+export const wrapEmail = (title, bodyHtml, headerImageUrl) => `
+  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:640px;margin:0 auto;background:white;border:1px solid ${brandTheme.border};border-radius:12px;overflow:hidden">
+    ${headerImageUrl ? `<img src="${headerImageUrl}" alt="Clinic" style="display:block;width:100%;height:200px;object-fit:cover;"/>` : ''}
+    <div style="background:${brandTheme.primary};color:white;padding:18px 22px;font-weight:700;font-size:18px">${title}</div>
+    <div style="padding:22px;color:${brandTheme.text};line-height:1.6">${bodyHtml}</div>
+    <div style="padding:14px 22px;color:${brandTheme.muted};font-size:12px;border-top:1px solid ${brandTheme.border}">Aartiket Speech & Hearing Care</div>
+  </div>
+`;
+
 // Create transporter with better error handling
 const createTransporter = () => {
   // Support both old and new environment variable names
@@ -131,114 +148,3 @@ export const sendEmail = async ({ to, subject, html, text, attachments }) => {
   }
 };
 
-// Send salary slip email
-export const sendSalarySlipEmail = async (email, employeeData, salarySlip, month, pdfBuffer) => {
-  try {
-    const transporter = createTransporter();
-    
-    // Verify connection before sending
-    const isVerified = await verifyTransporter(transporter);
-    if (!isVerified) {
-      throw new Error("Email service not available");
-    }
-
-    // Create salary slip HTML content
-    const salarySlipHTML = `
-      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-        <div style="text-align: center; border-bottom: 2px solid #007bff; padding-bottom: 20px; margin-bottom: 30px;">
-          <h1 style="color: #007bff; margin: 0;">JAI MATA DI STITCHING</h1>
-          <h2 style="color: #333; margin: 10px 0;">SALARY SLIP</h2>
-          <p style="color: #666; margin: 0;">${month}</p>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
-          <div>
-            <h3 style="color: #333; border-bottom: 1px solid #ddd; padding-bottom: 10px;">Employee Details</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="padding: 8px 0; color: #666;">Name:</td>
-                <td style="padding: 8px 0; font-weight: bold;">${employeeData.name}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #666;">Employee ID:</td>
-                <td style="padding: 8px 0; font-weight: bold;">${employeeData.employeeId}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #666;">Designation:</td>
-                <td style="padding: 8px 0; font-weight: bold;">${employeeData.designation || 'Not specified'}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #666;">Month:</td>
-                <td style="padding: 8px 0; font-weight: bold;">${month}</td>
-              </tr>
-            </table>
-          </div>
-          
-          <div>
-            <h3 style="color: #333; border-bottom: 1px solid #ddd; padding-bottom: 10px;">Salary Breakdown</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="padding: 8px 0; color: #666;">Basic Salary:</td>
-                <td style="padding: 8px 0; font-weight: bold; color: #28a745;">₹${salarySlip.basicSalary.toLocaleString('en-IN')}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #666;">Advances Deducted:</td>
-                <td style="padding: 8px 0; font-weight: bold; color: #dc3545;">-₹${salarySlip.advancesDeducted.toLocaleString('en-IN')}</td>
-              </tr>
-              <tr style="border-top: 2px solid #007bff;">
-                <td style="padding: 12px 0; font-weight: bold; font-size: 18px;">Final Payable:</td>
-                <td style="padding: 12px 0; font-weight: bold; font-size: 18px; color: #007bff;">₹${salarySlip.finalPayable.toLocaleString('en-IN')}</td>
-              </tr>
-            </table>
-          </div>
-        </div>
-        
-        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-          <h4 style="color: #333; margin: 0 0 10px 0;">Notes</h4>
-          <p style="color: #666; margin: 0;">${salarySlip.notes || 'No additional notes'}</p>
-        </div>
-        
-        <div style="text-align: center; color: #666; font-size: 14px; border-top: 1px solid #ddd; padding-top: 20px;">
-          <p>Generated on: ${new Date(salarySlip.generatedAt).toLocaleDateString('en-IN')}</p>
-          <p>This is an automated salary slip. Please contact HR for any queries.</p>
-        </div>
-      </div>
-    `;
-
-    const emailUser = process.env.SMTP_USER || process.env.EMAIL_USER;
-    
-    const mailOptions = {
-      from: emailUser,
-      to: email,
-      subject: `Salary Slip - ${month} - ${employeeData.name}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">Salary Slip for ${month}</h2>
-          <p>Dear ${employeeData.name},</p>
-          <p>Please find attached your official salary slip PDF for ${month}.</p>
-          <p>If you have any questions, please contact the HR department.</p>
-          <br>
-          <p>Best regards,<br>Jai Mata Di Stitching</p>
-          <hr>
-          <div style='color:#888;font-size:13px;margin:12px 0 0 0;'>Preview:</div>
-          ${salarySlipHTML}
-        </div>
-      `,
-      attachments: pdfBuffer ? [
-        {
-          filename: `SalarySlip-${employeeData.employeeId}-${month}.pdf`,
-          content: pdfBuffer,
-          contentType: 'application/pdf',
-        },
-      ] : [],
-    };
-
-    console.log('[Mail] Sending salary slip email', { to: email, month, employee: employeeData?.name });
-    const result = await transporter.sendMail(mailOptions);
-    console.log('[Mail] Salary slip email sent', { to: email, messageId: result?.messageId });
-    return result;
-  } catch (error) {
-    console.error('[Mail] Failed to send salary slip email:', error?.response || error?.message || error);
-    throw error;
-  }
-};

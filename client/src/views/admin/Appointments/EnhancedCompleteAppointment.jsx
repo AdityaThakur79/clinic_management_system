@@ -69,7 +69,7 @@ const EnhancedCompleteAppointment = () => {
     discount: 0,
     discountType: 'general',
     discountPercentage: 0,
-    taxPercentage: 18,
+    taxPercentage: 0,
     paymentMethod: 'cash',
     paidAmount: 0,
     notes: '',
@@ -115,6 +115,9 @@ const EnhancedCompleteAppointment = () => {
     unitPrice: 0,
     quantity: 1,
     availableStock: 0,
+    discount: 0,
+    discountType: 'fixed',
+    discountPercentage: 0,
     notes: ''
   });
 
@@ -207,6 +210,9 @@ const EnhancedCompleteAppointment = () => {
             deviceName: d.deviceName,
             unitPrice: d.unitPrice,
             quantity: d.quantity,
+            discount: d.discount || 0,
+            discountType: d.discountType || 'fixed',
+            discountPercentage: d.discountPercentage || 0,
             notes: d.notes || ''
           }))
         }));
@@ -329,12 +335,10 @@ const EnhancedCompleteAppointment = () => {
   const calculateSubtotal = () => {
     const servicesTotal = bill.services.reduce((sum, service) => {
       let servicePrice = service.actualPrice || service.basePrice || 0;
-      if (service.discount > 0) {
-        if (service.discountType === 'percentage') {
-          servicePrice = servicePrice - (servicePrice * service.discountPercentage / 100);
-        } else {
-          servicePrice = servicePrice - service.discount;
-        }
+      if (service.discountType === 'percentage' && service.discountPercentage > 0) {
+        servicePrice = servicePrice - (servicePrice * service.discountPercentage / 100);
+      } else if (service.discountType === 'fixed' && service.discount > 0) {
+        servicePrice = servicePrice - service.discount;
       }
       return sum + Math.max(0, servicePrice);
     }, 0);
@@ -342,7 +346,16 @@ const EnhancedCompleteAppointment = () => {
     const devicesTotal = bill.devices.reduce((sum, device) => {
       const qty = Number(device.quantity) || 0;
       const price = Number(device.unitPrice) || 0;
-      return sum + Math.max(0, qty * price);
+      let deviceTotal = qty * price;
+      
+      // Apply discount if any
+      if (device.discountType === 'percentage' && device.discountPercentage > 0) {
+        deviceTotal = deviceTotal - (deviceTotal * device.discountPercentage / 100);
+      } else if (device.discountType === 'fixed' && device.discount > 0) {
+        deviceTotal = deviceTotal - device.discount;
+      }
+      
+      return sum + Math.max(0, deviceTotal);
     }, 0);
 
     return bill.consultationFee + bill.treatmentFee + bill.medicineFee + 
@@ -407,11 +420,28 @@ const EnhancedCompleteAppointment = () => {
         }
 
         const stockOps = [];
+        const patientId = appointment?.patientId?._id || appointment?.patientId;
         deltas.forEach((delta, inventoryId) => {
           if (delta > 0) {
-            stockOps.push(updateInventoryStock({ id: inventoryId, operation: 'reduce', quantity: delta, notes: `Used in appointment ${id} (edit adjustment)`, appointmentId: id, patientId: appointment?.patientId?._id || appointment?.patientId, reason: 'Edit adjustment' }).unwrap());
+            stockOps.push(updateInventoryStock({ 
+              id: inventoryId, 
+              operation: 'reduce', 
+              quantity: delta, 
+              notes: `Used in appointment ${id} (edit adjustment)`, 
+              appointmentId: id, 
+              patientId: patientId, 
+              reason: 'Edit adjustment' 
+            }).unwrap());
           } else if (delta < 0) {
-            stockOps.push(updateInventoryStock({ id: inventoryId, operation: 'add', quantity: Math.abs(delta), notes: `Returned from appointment ${id} (edit adjustment)`, appointmentId: id, patientId: appointment?.patientId?._id || appointment?.patientId, reason: 'Edit adjustment' }).unwrap());
+            stockOps.push(updateInventoryStock({ 
+              id: inventoryId, 
+              operation: 'add', 
+              quantity: Math.abs(delta), 
+              notes: `Returned from appointment ${id} (edit adjustment)`, 
+              appointmentId: id, 
+              patientId: patientId, 
+              reason: 'Edit adjustment' 
+            }).unwrap());
           }
         });
 
@@ -423,9 +453,18 @@ const EnhancedCompleteAppointment = () => {
       } else {
         // Reduce stock for devices on completion
         if (bill.devices.length > 0) {
+          const patientId = appointment?.patientId?._id || appointment?.patientId;
           await Promise.all(
             bill.devices.map(d => 
-              updateInventoryStock({ id: d.inventoryId, operation: 'reduce', quantity: Number(d.quantity) || 0, notes: `Used in appointment ${id}`, appointmentId: id, patientId: appointment?.patientId?._id || appointment?.patientId, reason: 'Used in appointment' }).unwrap()
+              updateInventoryStock({ 
+                id: d.inventoryId, 
+                operation: 'reduce', 
+                quantity: Number(d.quantity) || 0, 
+                notes: `Used in appointment ${id}`, 
+                appointmentId: id, 
+                patientId: patientId, 
+                reason: 'Used in appointment' 
+              }).unwrap()
             )
           );
         }
@@ -1031,7 +1070,7 @@ const EnhancedCompleteAppointment = () => {
                     <Heading size="sm">Add Device</Heading>
                   </CardHeader>
                   <CardBody>
-                    <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
+                    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                       <FormControl>
                         <FormLabel>Select Device</FormLabel>
                         <Select
@@ -1104,6 +1143,41 @@ const EnhancedCompleteAppointment = () => {
                           </NumberInputStepper>
                         </NumberInput>
                       </FormControl>
+
+                      <FormControl>
+                        <FormLabel>Discount Type</FormLabel>
+                        <Select
+                          value={newDevice.discountType}
+                          onChange={(e) => setNewDevice(prev => ({ ...prev, discountType: e.target.value }))}
+                        >
+                          <option value="fixed">Fixed Amount</option>
+                          <option value="percentage">Percentage</option>
+                        </Select>
+                      </FormControl>
+
+                      <FormControl>
+                        <FormLabel>
+                          Discount {newDevice.discountType === 'percentage' ? '(%)' : '(₹)'}
+                        </FormLabel>
+                        <NumberInput
+                          value={newDevice.discountType === 'percentage' ? newDevice.discountPercentage : newDevice.discount}
+                          onChange={(value) => {
+                            if (newDevice.discountType === 'percentage') {
+                              setNewDevice(prev => ({ ...prev, discountPercentage: parseFloat(value) || 0 }));
+                            } else {
+                              setNewDevice(prev => ({ ...prev, discount: parseFloat(value) || 0 }));
+                            }
+                          }}
+                          min={0}
+                          max={newDevice.discountType === 'percentage' ? 100 : undefined}
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                      </FormControl>
                     </SimpleGrid>
 
                     <Button
@@ -1130,10 +1204,13 @@ const EnhancedCompleteAppointment = () => {
                             deviceName: newDevice.deviceName,
                             unitPrice: newDevice.unitPrice,
                             quantity: newDevice.quantity,
+                            discount: newDevice.discount,
+                            discountType: newDevice.discountType,
+                            discountPercentage: newDevice.discountPercentage,
                             notes: newDevice.notes || ''
                           }]
                         }));
-                        setNewDevice({ inventoryId: '', deviceName: '', unitPrice: 0, quantity: 1, availableStock: 0, notes: '' });
+                        setNewDevice({ inventoryId: '', deviceName: '', unitPrice: 0, quantity: 1, availableStock: 0, discount: 0, discountType: 'fixed', discountPercentage: 0, notes: '' });
                       }}
                       mt={4}
                       isDisabled={inventoriesLoading}
@@ -1151,74 +1228,88 @@ const EnhancedCompleteAppointment = () => {
                         <Th>Device</Th>
                         <Th>Unit Price</Th>
                         <Th>Quantity</Th>
-                        <Th>Total</Th>
+                        <Th>Discount</Th>
+                        <Th>Final Price</Th>
                         <Th>Actions</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
-                      {bill.devices.map((device, index) => (
-                        <Tr key={index}>
-                          <Td>
-                            <VStack align="start" spacing={1}>
-                              <Text fontWeight="bold">{device.deviceName}</Text>
-                            </VStack>
-                          </Td>
-                          <Td>₹{Number(device.unitPrice || 0)}</Td>
-                          <Td>
-                            {editingDevice === index ? (
-                              <NumberInput
-                                size="sm"
-                                value={device.quantity}
-                                onChange={(value) => {
-                                  const updated = [...bill.devices];
-                                  updated[index].quantity = Math.max(0, parseInt(value || '0', 10));
-                                  setBill(prev => ({ ...prev, devices: updated }));
-                                }}
-                                min={1}
-                              >
-                                <NumberInputField />
-                              </NumberInput>
-                            ) : (
-                              device.quantity
-                            )}
-                          </Td>
-                          <Td fontWeight="bold">₹{((Number(device.unitPrice) || 0) * (Number(device.quantity) || 0)).toFixed(2)}</Td>
-                          <Td>
-                            <HStack spacing={1}>
+                      {bill.devices.map((device, index) => {
+                        const discountAmount = device.discountType === 'percentage' 
+                          ? ((Number(device.unitPrice) || 0) * (Number(device.quantity) || 0) * device.discountPercentage / 100)
+                          : device.discount;
+                        const finalPrice = Math.max(0, ((Number(device.unitPrice) || 0) * (Number(device.quantity) || 0)) - discountAmount);
+
+                        return (
+                          <Tr key={index}>
+                            <Td>
+                              <VStack align="start" spacing={1}>
+                                <Text fontWeight="bold">{device.deviceName}</Text>
+                              </VStack>
+                            </Td>
+                            <Td>₹{Number(device.unitPrice || 0)}</Td>
+                            <Td>
                               {editingDevice === index ? (
-                                <Button
+                                <NumberInput
                                   size="sm"
-                                  leftIcon={<Icon as={MdSave} />}
-                                  variant="solid"
-                                  onClick={() => setEditingDevice(null)}
-                                  {...brandPrimary}
+                                  value={device.quantity}
+                                  onChange={(value) => {
+                                    const updated = [...bill.devices];
+                                    updated[index].quantity = Math.max(0, parseInt(value || '0', 10));
+                                    setBill(prev => ({ ...prev, devices: updated }));
+                                  }}
+                                  min={1}
                                 >
-                                  Save
-                                </Button>
+                                  <NumberInputField />
+                                </NumberInput>
                               ) : (
+                                device.quantity
+                              )}
+                            </Td>
+                            <Td>
+                              {device.discountType === 'percentage' 
+                                ? `${device.discountPercentage}%`
+                                : `₹${device.discount}`
+                              }
+                            </Td>
+                            <Td fontWeight="bold">₹{finalPrice.toFixed(2)}</Td>
+                            <Td>
+                              <HStack spacing={1}>
+                                {editingDevice === index ? (
+                                  <Button
+                                    size="sm"
+                                    leftIcon={<Icon as={MdSave} />}
+                                    variant="solid"
+                                    onClick={() => setEditingDevice(null)}
+                                    {...brandPrimary}
+                                  >
+                                    Save
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    leftIcon={<Icon as={MdEdit} />}
+                                    variant="outline"
+                                    onClick={() => setEditingDevice(index)}
+                                    {...brandHover}
+                                  >
+                                    Edit
+                                  </Button>
+                                )}
                                 <Button
                                   size="sm"
-                                  leftIcon={<Icon as={MdEdit} />}
+                                  leftIcon={<Icon as={MdRemove} />}
+                                  colorScheme="red"
                                   variant="outline"
-                                  onClick={() => setEditingDevice(index)}
-                                  {...brandHover}
+                                  onClick={() => setBill(prev => ({ ...prev, devices: prev.devices.filter((_, i) => i !== index) }))}
                                 >
-                                  Edit
+                                  Remove
                                 </Button>
-                              )}
-                              <Button
-                                size="sm"
-                                leftIcon={<Icon as={MdRemove} />}
-                                colorScheme="red"
-                                variant="outline"
-                                onClick={() => setBill(prev => ({ ...prev, devices: prev.devices.filter((_, i) => i !== index) }))}
-                              >
-                                Remove
-                              </Button>
-                            </HStack>
-                          </Td>
-                        </Tr>
-                      ))}
+                              </HStack>
+                            </Td>
+                          </Tr>
+                        );
+                      })}
                     </Tbody>
                   </Table>
                 </TableContainer>

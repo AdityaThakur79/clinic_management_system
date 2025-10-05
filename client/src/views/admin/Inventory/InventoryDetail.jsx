@@ -146,7 +146,7 @@ const InventoryDetail = () => {
                   <Th isNumeric>Qty</Th>
                   <Th isNumeric>Balance</Th>
                   <Th>Reason/Notes</Th>
-                  <Th>Patient</Th>
+                  <Th>User/Patient</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -169,7 +169,7 @@ const InventoryDetail = () => {
                     <Td isNumeric>{t.quantity}</Td>
                     <Td isNumeric>{t.balanceAfter}</Td>
                     <Td>{t.reason || t.notes || '-'}</Td>
-                    <Td>{t.patientId?.name || '-'}</Td>
+                    <Td>{t.userId?.name || t.patientId?.name || '-'}</Td>
                   </Tr>
                 ))}
                 {(inventory.transactions || []).length === 0 && (

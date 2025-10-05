@@ -22,7 +22,7 @@ import {
 } from "@chakra-ui/react";
 import { assets } from "../../../assets/assets";
 import { useGetAllBranchesQuery } from "../../../features/api/branchApi";
-import { useCreateAppointmentMutation } from "../../../features/api/appointments";
+import { useCreateAppointmentMutation, useGetMultipleDateAvailabilityQuery } from "../../../features/api/appointments";
 
 const brand = {
   primary: "#3AC0E7",
@@ -35,7 +35,43 @@ export default function PopupAppointmentModal() {
   const { data: branchesData } = useGetAllBranchesQuery();
   const [createAppointment, { isLoading }] = useCreateAppointmentMutation();
 
-  const [form, setForm] = React.useState({ name: "", phone: "", branchId: "", preferredDate: "" });
+  const [form, setForm] = React.useState({ 
+    name: "", 
+    phone: "", 
+    email: "",
+    branchId: "", 
+    preferredDate: "",
+    preferredTime: "09:00"
+  });
+
+  // Availability-driven date/time like HearingAidBrand
+  const [selectedDate, setSelectedDate] = React.useState("");
+  const [availableTimeSlots, setAvailableTimeSlots] = React.useState([]);
+
+  const { data: availabilityData, isLoading: isAvailabilityLoading } = useGetMultipleDateAvailabilityQuery(
+    {
+      branchId: form.branchId,
+      startDate: new Date().toISOString().split("T")[0],
+      days: 7,
+    },
+    {
+      skip: !form.branchId,
+    }
+  );
+
+  React.useEffect(() => {
+    if (availabilityData?.data && selectedDate) {
+      const dayAvailability = availabilityData.data.find((d) => d.date === selectedDate);
+      if (dayAvailability?.availableSlots) {
+        const slots = dayAvailability.availableSlots
+          .filter((s) => s.isAvailable)
+          .map((s) => s.time);
+        setAvailableTimeSlots(slots);
+      } else {
+        setAvailableTimeSlots([]);
+      }
+    }
+  }, [availabilityData, selectedDate]);
 
   // Show once per session after 30s
   React.useEffect(() => {
@@ -49,7 +85,36 @@ export default function PopupAppointmentModal() {
     return () => clearTimeout(timer);
   }, [onOpen]);
 
-  const handleChange = (key) => (e) => setForm((p) => ({ ...p, [key]: e.target.value }));
+  // Global trigger so any button can open this modal
+  React.useEffect(() => {
+    const handler = () => onOpen();
+    window.addEventListener("open-quick-appointment", handler);
+    // expose convenience function
+    window.openQuickAppointmentModal = () => {
+      window.dispatchEvent(new Event("open-quick-appointment"));
+    };
+    return () => {
+      window.removeEventListener("open-quick-appointment", handler);
+      if (window.openQuickAppointmentModal) delete window.openQuickAppointmentModal;
+    };
+  }, [onOpen]);
+
+  const handleChange = (key) => (e) => {
+    const value = e.target.value;
+    if (key === "branchId") {
+      // reset date/time when branch changes
+      setSelectedDate("");
+      setAvailableTimeSlots([]);
+      setForm((p) => ({ ...p, branchId: value, preferredDate: "", preferredTime: "09:00" }));
+      return;
+    }
+    if (key === "preferredDate") {
+      setSelectedDate(value);
+      setForm((p) => ({ ...p, preferredDate: value }));
+      return;
+    }
+    setForm((p) => ({ ...p, [key]: value }));
+  };
 
   // Doctor selection is optional; we won't fetch or require it
 
@@ -59,18 +124,34 @@ export default function PopupAppointmentModal() {
       return;
     }
     try {
-      const isoDate = (form.preferredDate && new Date(form.preferredDate).toISOString()) || new Date().toISOString();
+      // Use date in YYYY-MM-DD format for backend
+      const appointmentDate = form.preferredDate || new Date().toISOString().split('T')[0];
+      
+      // Optional context passed by other components (e.g., style selector)
+      const contextNote = typeof window !== 'undefined' && window.quickAppointmentContext?.note
+        ? `\nContext: ${window.quickAppointmentContext.note}`
+        : "";
+
       await createAppointment({
         name: form.name || undefined,
         phone: form.phone,
+        email: form.email || undefined,
         branchId: form.branchId,
+        service: "Quick Consultation Request", // Add required service field
         // doctorId intentionally omitted (optional)
-        date: isoDate,
-        timeSlot: "Any",
-        notes: "Quick popup appointment request",
-        patient: { name: form.name || "Website Lead", contact: form.phone },
+        date: appointmentDate,
+        timeSlot: form.preferredTime || "09:00",
+        notes: `Consultation request - Quick popup appointment request\nNote: Please schedule at your convenience${contextNote}`,
+        patient: { name: form.name || "Website Lead", contact: form.phone, email: form.email || undefined },
       }).unwrap();
-      toast({ title: "Appointment request sent!", status: "success" });
+      toast({
+        title: "Appointment request booked!",
+        description:
+          "Thank you. You’ll receive an email and WhatsApp confirmation shortly, along with timely reminders before your visit.",
+        status: "success",
+        duration: 6000,
+        isClosable: true,
+      });
       onClose();
     } catch (e) {
       toast({ title: "Failed to submit. Please try again.", status: "error" });
@@ -127,6 +208,16 @@ export default function PopupAppointmentModal() {
                       size="md" 
                     />
                   </FormControl>
+                  <FormControl>
+                    <FormLabel fontSize="sm">Email</FormLabel>
+                    <Input 
+                      value={form.email}
+                      onChange={handleChange("email")}
+                      placeholder="Your email (optional)" 
+                      size="md" 
+                      type="email"
+                    />
+                  </FormControl>
                   
                   <FormControl isRequired>
                     <FormLabel fontSize="sm">Phone</FormLabel>
@@ -157,13 +248,78 @@ export default function PopupAppointmentModal() {
                   
                   <FormControl>
                     <FormLabel fontSize="sm">Preferred date (optional)</FormLabel>
-                    <Input 
-                      type="date" 
-                      value={form.preferredDate} 
-                      onChange={handleChange("preferredDate")} 
-                      size="md" 
-                      min={new Date().toISOString().split('T')[0]} 
-                    />
+                    <Select
+                      value={form.preferredDate || ""}
+                      onChange={handleChange("preferredDate")}
+                      placeholder="Select preferred date"
+                      size="md"
+                      disabled={!form.branchId}
+                    >
+                      {availabilityData?.data ? (
+                        availabilityData.data
+                          .filter((day) => day.isWorkingDay)
+                          .map((day) => {
+                            const d = new Date(day.date);
+                            const label = d.toLocaleDateString("en-US", {
+                              weekday: "short",
+                              month: "short",
+                              day: "numeric",
+                            });
+                            return (
+                              <option key={day.date} value={day.date}>
+                                {label}
+                              </option>
+                            );
+                          })
+                      ) : (
+                        <option value="">{isAvailabilityLoading ? "Loading dates..." : "Select a branch first"}</option>
+                      )}
+                    </Select>
+                    {!form.branchId && (
+                      <Text fontSize="xs" color="gray.500" mt={1}>
+                        Please select a branch first
+                      </Text>
+                    )}
+                    {isAvailabilityLoading && form.branchId && (
+                      <Text fontSize="xs" color="blue.500" mt={1}>
+                        Loading availability...
+                      </Text>
+                    )}
+                  </FormControl>
+
+                  <FormControl>
+                    <FormLabel fontSize="sm">Preferred time (optional)</FormLabel>
+                    <Select
+                      value={form.preferredTime || "09:00"}
+                      onChange={handleChange("preferredTime")}
+                      placeholder="Select preferred time"
+                      size="md"
+                      disabled={!selectedDate || availableTimeSlots.length === 0}
+                    >
+                      {availableTimeSlots.length > 0 ? (
+                        availableTimeSlots.map((slot) => (
+                          <option key={slot} value={slot}>
+                            {new Date(`2000-01-01T${slot}`).toLocaleTimeString("en-US", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: true,
+                            })}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="09:00">09:00 AM (Default)</option>
+                      )}
+                    </Select>
+                    {!selectedDate && (
+                      <Text fontSize="xs" color="gray.500" mt={1}>
+                        Please select a date first
+                      </Text>
+                    )}
+                    {selectedDate && availableTimeSlots.length === 0 && !isAvailabilityLoading && (
+                      <Text fontSize="xs" color="red.500" mt={1}>
+                        No available slots for this date
+                      </Text>
+                    )}
                   </FormControl>
                   
                   <Box fontSize="xs" color="gray.500" mt="auto">

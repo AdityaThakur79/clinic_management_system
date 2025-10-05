@@ -21,6 +21,7 @@ const UpdatePatient = () => {
     contact: '',
     email: '',
     address: '',
+    dateOfBirth: '',
     medicalHistory: '',
     branchId: '',
     referredDoctorId: '',
@@ -68,6 +69,7 @@ const UpdatePatient = () => {
         contact: patientToUse.contact || '',
         email: patientToUse.email || '',
         address: patientToUse.address || '',
+        dateOfBirth: patientToUse.dateOfBirth ? new Date(patientToUse.dateOfBirth).toISOString().split('T')[0] : '',
         medicalHistory: patientToUse.medicalHistory?.join('\n') || '',
         branchId: patientToUse.branchId?._id || patientToUse.branchId || '',
         referredDoctorId: patientToUse.referredDoctorId?._id || patientToUse.referredDoctorId || '',
@@ -239,6 +241,15 @@ const UpdatePatient = () => {
                       value={form.email}
                       onChange={(e) => handleChange('email', e.target.value)}
                       placeholder="Enter email address"
+                      borderRadius="lg"
+                    />
+                  </FormControl>
+                  <FormControl>
+                    <FormLabel>Date of Birth (optional)</FormLabel>
+                    <Input
+                      type="date"
+                      value={form.dateOfBirth}
+                      onChange={(e) => handleChange('dateOfBirth', e.target.value)}
                       borderRadius="lg"
                     />
                   </FormControl>

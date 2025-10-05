@@ -15,8 +15,11 @@ export const analyticsApi = createApi({
     getOverview: builder.query({
       query: (params = {}) => ({ url: '/overview', params }),
     }),
+    getBirthdaysToday: builder.query({
+      query: () => ({ url: '/birthdays/today' }),
+    }),
   }),
 });
 
-export const { useGetOverviewQuery } = analyticsApi;
+export const { useGetOverviewQuery, useGetBirthdaysTodayQuery } = analyticsApi;
 

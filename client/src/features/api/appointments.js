@@ -80,6 +80,17 @@ export const appointmentsApi = createApi({
       invalidatesTags: ['Appointment'],
     }),
 
+    // Update appointment time slot/date
+    updateAppointmentTimeSlot: builder.mutation({
+      query: ({ id, timeSlot, date }) => ({
+        url: `/${id}/timeslot`,
+        method: 'PATCH',
+        body: { timeSlot, date },
+        credentials: 'include',
+      }),
+      invalidatesTags: ['Appointment'],
+    }),
+
     // Delete appointment
     deleteAppointment: builder.mutation({
       query: (id) => ({
@@ -111,6 +122,7 @@ export const {
   useGetAppointmentByIdQuery,
   useCreateAppointmentMutation,
   useUpdateAppointmentStatusMutation,
+  useUpdateAppointmentTimeSlotMutation,
   useDeleteAppointmentMutation,
   useAssignDoctorToAppointmentMutation,
 } = appointmentsApi;

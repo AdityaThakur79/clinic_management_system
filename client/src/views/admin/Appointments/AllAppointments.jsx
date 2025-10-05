@@ -661,10 +661,15 @@ const AllAppointments = () => {
                                 />
                               </Tooltip>
                             )}
-                            {/* Debug: Show status for troubleshooting */}
-                            <Text fontSize="xs" color="gray.500" title={`Status: ${appointment.status}`}>
-                              {appointment.status}
-                            </Text>
+                            <Tooltip label="Edit Appointment">
+                              <IconButton
+                                icon={<EditIcon />}
+                                size="sm"
+                                variant="ghost"
+                                colorScheme="blue"
+                                onClick={() => navigate(`/admin/appointments/${appointment._id}/edit`)}
+                              />
+                            </Tooltip>
                             {(appointment.status === 'completed' || appointment.status === 'Completed') && (
                               <Tooltip label="View Bill">
                                 <IconButton

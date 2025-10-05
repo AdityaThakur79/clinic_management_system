@@ -88,7 +88,7 @@ const ServiceBookingPage = () => {
 
   // Get multiple date availability using RTK Query
   const today = new Date();
-  const startDate = today.toISOString().split('T')[0];
+  const startDate = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`; // local YYYY-MM-DD
   
   const { 
     data: multipleAvailabilityData, 
@@ -123,15 +123,15 @@ const ServiceBookingPage = () => {
     if (!multipleAvailabilityData?.data) return;
     
     const slots = [];
-    const today = new Date();
 
-    multipleAvailabilityData.data.forEach((dayData, index) => {
-      const currentDate = new Date(today);
-      currentDate.setDate(today.getDate() + index);
+    multipleAvailabilityData.data.forEach((dayData) => {
+      // Parse API date (YYYY-MM-DD) as local date
+      const [y,m,d] = dayData.date.split('-').map(Number);
+      const curr = new Date(y, m-1, d);
 
       if (dayData.isWorkingDay && dayData.availableSlots) {
         const daySlots = dayData.availableSlots.map(slot => ({
-          datetime: new Date(currentDate),
+          datetime: curr,
           time: slot.time,
           date: dayData.date,
           isAvailable: slot.isAvailable,
@@ -139,7 +139,6 @@ const ServiceBookingPage = () => {
         }));
         slots.push(daySlots);
       } else {
-        // If branch is closed or no slots available, add empty array
         slots.push([]);
       }
     });
@@ -148,20 +147,16 @@ const ServiceBookingPage = () => {
 
     // If no date selected yet, initialize selectedDateISO to first available day
     if (!selectedDateISO) {
-      const firstDayWithSlots = slots.find(dayArr => dayArr.length > 0);
-      if (firstDayWithSlots && firstDayWithSlots[0]?.datetime) {
-        const first = firstDayWithSlots[0].datetime;
-        const initISO = `${first.getFullYear()}-${String(first.getMonth()+1).padStart(2,'0')}-${String(first.getDate()).padStart(2,'0')}`;
-        setSelectedDateISO(initISO);
-      }
+      const firstDayWithSlots = multipleAvailabilityData.data.find(d => d.isWorkingDay && (d.availableSlots||[]).length);
+      if (firstDayWithSlots) setSelectedDateISO(firstDayWithSlots.date);
     }
   };
 
   // Handle date selection
   const handleDateSelection = (index) => {
-    const selectedSlot = availableSlots[index]?.[0];
-    if (selectedSlot) {
-      setSelectedDateISO(selectedSlot.datetime.toISOString().split('T')[0]);
+    const apiDay = multipleAvailabilityData?.data?.[index];
+    if (apiDay) {
+      setSelectedDateISO(apiDay.date);
       setSelectedDateIndex(index);
       setSelectedTime(''); // Reset selected time when changing date
     }
@@ -391,7 +386,7 @@ const ServiceBookingPage = () => {
                     </HStack>
 
                     <VStack spacing={3} align="stretch" w="full">
-                      <HStack justify="space-between" align="center" w="full">
+                      {/* <HStack justify="space-between" align="center" w="full">
                         <Text fontWeight="medium" fontSize={{ base: "xs", md: "sm" }}>Price:</Text>
                         <Badge 
                           colorScheme="green" 
@@ -401,7 +396,7 @@ const ServiceBookingPage = () => {
                         >
                           ₹{service.detailedContent?.cost || service.price || 'TBD'}
                         </Badge>
-                      </HStack>
+                      </HStack> */}
                       
                       <HStack justify="space-between" align="center" w="full">
                         <Text fontWeight="medium" fontSize={{ base: "xs", md: "sm" }}>Duration:</Text>

@@ -17,6 +17,7 @@ const AddPatient = () => {
     contact: '',
     email: '',
     address: '',
+    dateOfBirth: '',
     medicalHistory: '',
     branchId: '',
     referredDoctorId: '',
@@ -209,6 +210,15 @@ const AddPatient = () => {
                       borderRadius="lg"
                     />
                     {errors.email && <FormErrorMessage>{errors.email}</FormErrorMessage>}
+                  </FormControl>
+                  <FormControl>
+                    <FormLabel>Date of Birth (optional)</FormLabel>
+                    <Input
+                      type="date"
+                      value={form.dateOfBirth}
+                      onChange={(e) => handleChange('dateOfBirth', e.target.value)}
+                      borderRadius="lg"
+                    />
                   </FormControl>
                 </HStack>
 

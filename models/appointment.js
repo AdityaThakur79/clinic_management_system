@@ -4,12 +4,12 @@ const appointmentSchema = new mongoose.Schema(
   {
     patientId: { type: mongoose.Schema.Types.ObjectId, ref: "Patient", required: true },
     doctorId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Optional - assigned later
-    service: { type: String, required: true }, // Service name as string
+    service: { type: String, required: false }, // Optional service name
     branchId: { type: mongoose.Schema.Types.ObjectId, ref: "Branch", required: true },
     referredDoctorId: { type: mongoose.Schema.Types.ObjectId, ref: "ReferredDoctor" },
 
     date: { type: Date, required: true },
-    timeSlot: { type: String, required: true }, // e.g., "10:00-10:30"
+    timeSlot: { type: String, default: "09:00" }, // Default time for consultation requests
     status: { type: String, enum: ["booked", "assigned", "completed", "cancelled"], default: "booked" },
 
     reminder: { type: Date },

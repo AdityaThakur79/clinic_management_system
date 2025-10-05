@@ -13,7 +13,9 @@ export const createBranchAdmin = async (req, res) => {
       phone,
       photoUrl, 
       bannerUrl,
-      bio
+      bio,
+      status,
+      dateOfBirth
     } = req.body;
 
     // Validation
@@ -73,7 +75,8 @@ export const createBranchAdmin = async (req, res) => {
       photoUrlPublicId: finalPhotoUrlPublicId,
       bannerUrl: finalBannerUrl,
       bannerUrlPublicId: finalBannerUrlPublicId,
-      status: true,
+      status: status || "active",
+      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
       bio: bio || "",
     });
 
@@ -120,7 +123,7 @@ export const getAllBranchAdmins = async (req, res) => {
 
     // Status filter
     if (status) {
-      filter.status = status === 'true';
+      filter.status = status;
     }
 
     const branchAdmins = await User.find(filter)
@@ -192,6 +195,7 @@ export const updateBranchAdmin = async (req, res) => {
       phone,
       status,
       bio,
+      dateOfBirth,
     } = req.body;
 
     // Check if branchAdmin exists
@@ -255,6 +259,7 @@ export const updateBranchAdmin = async (req, res) => {
       ...(phone !== undefined && { phone }),
       ...(status !== undefined && { status }),
       ...(bio !== undefined && { bio }),
+      ...(dateOfBirth !== undefined && { dateOfBirth: new Date(dateOfBirth) }),
       photoUrl,
       photoUrlPublicId,
       bannerUrl,

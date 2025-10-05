@@ -107,7 +107,7 @@ export const registerController = async (req, res) => {
 export const updateProfileController = async (req, res) => {
   try {
     const userId = req.id;
-    const { name } = req.body;
+    const { name, dateOfBirth } = req.body;
 
     if (!name) {
       return res.status(500).send({
@@ -144,6 +144,7 @@ export const updateProfileController = async (req, res) => {
       bannerUrlPublicId = req.files.bannerImage[0].filename
     }
     const updatedData = { name };
+    if (dateOfBirth !== undefined) updatedData.dateOfBirth = new Date(dateOfBirth);
     if (photoUrl) { updatedData.photoUrl = photoUrl; updatedData.photoUrlPublicId = photoUrlPublicId }
     if (bannerUrl) { updatedData.bannerUrl = bannerUrl; updatedData.bannerUrlPublicId = bannerUrlPublicId }
 

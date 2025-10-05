@@ -31,6 +31,10 @@ import ServiceBookingPage from '../views/User/Pages/ServiceBookingPage';
 import Blogs from '../views/User/Pages/Blogs';
 import BlogDetail from '../views/User/Pages/BlogDetail';
 import Settings from '../views/admin/Settings/Settings';
+import HearingAids from '../views/User/Pages/HearingAids';
+import AllAppointments from '../views/admin/Appointments/AllAppointments';
+import EditAppointment from '../views/admin/Appointments/EditAppointment';
+import EnhancedCompleteAppointment from '../views/admin/Appointments/EnhancedCompleteAppointment';
 
 // Public Routes (No authentication required)
 export const publicRoutes = [
@@ -38,6 +42,12 @@ export const publicRoutes = [
     path: '/',
     element: <Home />,
     name: 'Home',
+    showInNav: true,
+  },
+  {
+    path: '/hearing-aids',
+    element: <HearingAids />,
+    name: 'Hearing Aids',
     showInNav: true,
   },
   {
@@ -129,6 +139,28 @@ export const publicRoutes = [
 
 // Admin Routes (Authentication required)
 export const adminRoutes = [
+  // Appointments
+  {
+    path: '/admin/appointments/all',
+    element: <AllAppointments />,
+    name: 'All Appointments',
+    showInSidebar: true,
+    category: 'Appointments',
+  },
+  {
+    path: '/admin/appointments/:id/edit',
+    element: <EditAppointment />,
+    name: 'Edit Appointment',
+    showInSidebar: false,
+    category: 'Appointments',
+  },
+  {
+    path: '/admin/appointments/:id/enhanced-complete',
+    element: <EnhancedCompleteAppointment />,
+    name: 'Complete Appointment',
+    showInSidebar: false,
+    category: 'Appointments',
+  },
   //Branch
   {
     path: '/admin/branches',

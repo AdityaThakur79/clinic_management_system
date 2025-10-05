@@ -26,6 +26,7 @@ const Navbar = () => {
   const navLinks = [
     { name: "HOME", path: "/" },
     { name: "ABOUT US", path: "/about" },
+    { name: "HEARING AIDS", path: "/hearing-aids" },
     { name: "SERVICES", path: "/services" },
     { name: "BOOK AN APPOINTMENT", path: "/book-an-appointment" },
     { name: "CONTACT", path: "/contact" },

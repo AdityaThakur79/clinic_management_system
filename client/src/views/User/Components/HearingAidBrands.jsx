@@ -125,15 +125,31 @@ const HearingAidBrands = () => {
                     transform={isVisible[`brand-${index}`] ? 'translateY(0) scale(1)' : 'translateY(30px) scale(0.95)'}
                     transition={`all 0.6s ease-out`}
                     transitionDelay={`${index * 0.1}s`}
-                    _hover={{ 
-                      shadow: "2xl", 
-                      transform: "translateY(-8px) scale(1.02)" 
+                    position="relative"
+                    _hover={{
+                      shadow: "2xl",
+                      transform: "translateY(-8px) scale(1.02)",
+                      borderColor: brandColors.primary,
+                      bg: "linear-gradient(135deg, rgba(43,168,209,0.03) 0%, rgba(58,192,231,0.06) 100%)",
                     }}
                     h="400px"
                     display="flex"
                     flexDirection="column"
                     mx={2}
                   >
+                    {/* Hover decoration layers similar to WhyChooseUs */}
+                    <Box
+                      position="absolute"
+                      top="-50%"
+                      left="-50%"
+                      width="200%"
+                      height="200%"
+                      background="conic-gradient(from 0deg, transparent, rgba(43,168,209,0.08), transparent)"
+                      opacity={0}
+                      transform="translateY(100%) rotate(0deg)"
+                      transition="all 0.6s ease"
+                      _groupHover={{ opacity: 1, transform: "translateY(0)" }}
+                    />
                     <VStack spacing={6} align="center" h="100%" justify="space-between">
                       <VStack spacing={4} align="center">
                         <Image
@@ -145,10 +161,7 @@ const HearingAidBrands = () => {
                           borderRadius="lg"
                           filter="contrast(1.1) brightness(1.05)"
                           transition="all 0.3s ease"
-                          _hover={{
-                            transform: "scale(1.05)",
-                            filter: "contrast(1.2) brightness(1.1)"
-                          }}
+                          _hover={{ transform: "scale(1.08)", filter: "contrast(1.2) brightness(1.1)" }}
                         />
                         <VStack spacing={3} align="center">
                           <Heading
@@ -197,7 +210,7 @@ const HearingAidBrands = () => {
                         to={`/hearing-aids/${brandItem.brandSlug}`}
                         bg={brandColors.primary}
                         color="white"
-                        _hover={{ bg: brandColors.primaryDark }}
+                        _hover={{ bg: brandColors.primaryDark, transform: "translateY(-2px)" }}
                         size="md"
                         w="100%"
                         mt="auto"

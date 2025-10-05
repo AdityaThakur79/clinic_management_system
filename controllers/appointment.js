@@ -5,6 +5,8 @@ import Branch from "../models/branch.js";
 import { User as Doctor } from "../models/user.js";
 import { Service } from "../models/services.js";
 import { sendEmail } from "../utils/common/sendMail.js";
+import { sendAppointmentNotifications } from "../utils/services/notifications.js";
+import { sendReferralDoctorWhatsapp } from "../utils/services/notifications.js";
 
 export const getAvailability = async (req, res) => {
   try {
@@ -19,7 +21,16 @@ export const getAvailability = async (req, res) => {
       return res.status(404).json({ success: false, message: "Branch not found" });
     }
 
-    const requestedDate = new Date(date);
+    // Parse YYYY-MM-DD as local date to avoid UTC shift issues
+    const parseDateOnly = (ds) => {
+      if (typeof ds === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(ds)) {
+        const [y, m, d] = ds.split('-').map(Number);
+        return new Date(y, m - 1, d);
+      }
+      return new Date(ds);
+    };
+
+    const requestedDate = parseDateOnly(date);
     const dayName = requestedDate.toLocaleDateString('en-US', { weekday: 'long' });
     
     // Check if branch is open on this day using flexible working hours
@@ -180,7 +191,15 @@ export const getMultipleDateAvailability = async (req, res) => {
       });
     }
 
-    const start = new Date(startDate);
+    // Parse startDate as local date
+    const parseDateOnly = (ds) => {
+      if (typeof ds === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(ds)) {
+        const [y, m, d] = ds.split('-').map(Number);
+        return new Date(y, m - 1, d);
+      }
+      return new Date(ds);
+    };
+    const start = parseDateOnly(startDate);
     const results = [];
 
     for (let i = 0; i < days; i++) {
@@ -195,7 +214,7 @@ export const getMultipleDateAvailability = async (req, res) => {
       
       if (!isWorkingDay) {
         results.push({
-          date: currentDate.toISOString().split('T')[0],
+          date: `${currentDate.getFullYear()}-${String(currentDate.getMonth()+1).padStart(2,'0')}-${String(currentDate.getDate()).padStart(2,'0')}`,
           availableSlots: [],
           bookedTimeSlots: [],
           isWorkingDay: false,
@@ -239,7 +258,7 @@ export const getMultipleDateAvailability = async (req, res) => {
       }));
 
       results.push({
-        date: currentDate.toISOString().split('T')[0],
+        date: `${currentDate.getFullYear()}-${String(currentDate.getMonth()+1).padStart(2,'0')}-${String(currentDate.getDate()).padStart(2,'0')}`,
         availableSlots: finalAvailableSlots,
         bookedTimeSlots,
         isWorkingDay: true
@@ -270,12 +289,13 @@ export const createAppointment = async (req, res) => {
   try {
     const { branchId, service, date, timeSlot, notes, referredDoctorId, patient, patientId, servicePrice, serviceDuration, serviceDetails } = req.body;
 
-    // Validate required fields
-    if (!branchId || !service || !date || !timeSlot) {
-      return res.status(400).json({ success: false, message: "Missing required fields: branchId, service, date, timeSlot" });
-    }
-    if (!patientId && !patient?.name) {
-      return res.status(400).json({ success: false, message: "Missing patient information" });
+    // Validate required fields (service is optional)
+    const missing = [];
+    if (!branchId) missing.push('branchId');
+    if (!date) missing.push('date');
+    if (!patientId && !patient?.name) missing.push('patientId or patient.name');
+    if (missing.length) {
+      return res.status(400).json({ success: false, message: `Missing required fields: ${missing.join(', ')}` });
     }
 
     // Validate branch
@@ -325,8 +345,10 @@ export const createAppointment = async (req, res) => {
       }
     }
 
-    // Create appointment (normalize timeSlot to HH:mm if a range was passed)
-    const timeSlotNormalized = typeof timeSlot === 'string' && timeSlot.includes('-') ? timeSlot.split('-')[0] : timeSlot;
+    // Create appointment (normalize timeSlot to HH:mm if a range was passed, or set default for consultation requests)
+    const timeSlotNormalized = !timeSlot ? "09:00" : 
+                              (timeSlot === "Any" ? "09:00" : 
+                              (typeof timeSlot === 'string' && timeSlot.includes('-') ? timeSlot.split('-')[0] : timeSlot));
     let appointmentDoc;
     try {
       appointmentDoc = await Appointment.create([
@@ -362,487 +384,16 @@ export const createAppointment = async (req, res) => {
     session.endSession();
     // Send notifications in background (non-blocking)
     try {
-      // Service details will be passed from frontend
-      
       const [populatedAppointment, populatedBranch] = await Promise.all([
         Appointment.findById(appointmentDoc._id)
           .populate('patientId', 'name email contact')
           .populate('branchId', 'branchName address'),
         Branch.findById(branchId),
       ]);
-
-      // Email notifications
-      (async () => {
-        try {
-          const superAdminEmail = process.env.SUPERADMIN_EMAIL || process.env.ADMIN_EMAIL;
-          const formatDate = (d) => new Date(d).toLocaleDateString('en-IN', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric',
-            weekday: 'long'
-          });
-          const patientEmail = populatedAppointment?.patientId?.email;
-          const toSend = [
-            { to: patientEmail, role: 'Patient' },
-            { to: superAdminEmail, role: 'SuperAdmin' },
-          ].filter(e => !!e.to);
-      
-          const subject = `✅ Appointment Confirmed - ${populatedAppointment?.service} - ${formatDate(populatedAppointment?.date)} ${populatedAppointment?.timeSlot}`;
-          
-          const html = `
-            <!doctype html>
-            <html>
-            <head>
-              <meta charset="utf-8"/>
-              <meta name="viewport" content="width=device-width, initial-scale=1"/>
-              <title>Appointment Confirmed - Aartiket Speech and Hearing Care</title>
-              <style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body {
-                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                  line-height: 1.6;
-                  color: #333;
-                  background-color: white;
-                }
-                .container {
-                  max-width: 600px;
-                  margin: 0 auto;
-                  background: white;
-                  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                }
-                
-                /* Header with Cover Image */
-                .header {
-                  position: relative;
-                  background: #2BA8D1;
-                  text-align: center;
-                  color: white;
-                  overflow: hidden;
-                }
-                .cover-image {
-                  width: 100%;
-                  height: 250px;
-                  object-fit: cover;
-                  object-position: center;
-                  display: block;
-                }
-                .header-overlay {
-                  position: absolute;
-                  top: 0;
-                  left: 0;
-                  right: 0;
-                  bottom: 0;
-                  background: rgba(43, 168, 209, 0.85);
-                  display: flex;
-                  flex-direction: column;
-                  justify-content: center;
-                  align-items: center;
-                  padding: 20px;
-                }
-                .clinic-name {
-                  font-size: 24px;
-                  font-weight: bold;
-                  margin-bottom: 8px;
-                }
-                .confirmation-badge {
-                  display: inline-flex;
-                  align-items: center;
-                  gap: 8px;
-                  background: rgba(255,255,255,0.2);
-                  padding: 8px 16px;
-                  border-radius: 20px;
-                  font-weight: 600;
-                }
-                
-                /* Content */
-                .content {
-                  padding: 30px;
-                }
-                .success-message {
-                  text-align: center;
-                  margin-bottom: 30px;
-                  padding: 20px;
-                  background: #f0f9ff;
-                  border-radius: 12px;
-                  border: 2px solid #2BA8D1;
-                }
-                .success-title {
-                  font-size: 22px;
-                  color: #2BA8D1;
-                  font-weight: bold;
-                  margin-bottom: 8px;
-                }
-                .success-text {
-                  color: #666;
-                  font-size: 16px;
-                }
-                
-                /* Appointment Details */
-                .appointment-details {
-                  background: #f8fafc;
-                  border-radius: 12px;
-                  padding: 24px;
-                  margin-bottom: 30px;
-                  border: 1px solid #e2e8f0;
-                }
-                .details-title {
-                  font-size: 18px;
-                  color: #2BA8D1;
-                  font-weight: bold;
-                  margin-bottom: 16px;
-                  display: flex;
-                  align-items: center;
-                  gap: 8px;
-                }
-                .detail-item {
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: center;
-                  padding: 12px 0;
-                  border-bottom: 1px solid #e2e8f0;
-                }
-                .detail-item:last-child {
-                  border-bottom: none;
-                }
-                .detail-label {
-                  font-weight: 600;
-                  color: #64748b;
-                }
-                .detail-value {
-                  font-weight: 600;
-                  color: #1a365d;
-                  text-align: right;
-                }
-                .highlight {
-                  color: #2BA8D1;
-                  font-weight: bold;
-                }
-                
-                 /* Action Buttons */
-                 .actions {
-                   margin-bottom: 30px;
-                   text-align: center;
-                 }
-                 .btn {
-                   display: inline-block;
-                   min-width: 160px;
-                   padding: 14px 24px;
-                   border-radius: 8px;
-                   text-decoration: none;
-                   font-weight: 600;
-                   text-align: center;
-                   margin: 0 10px 10px 10px;
-                 }
-                 .btn-primary {
-                   background: white;
-                   color: #2BA8D1;
-                   border: 2px solid #2BA8D1;
-                 }
-                 .btn-primary:hover {
-                   background: #2BA8D1;
-                   color: white;
-                   transform: translateY(-2px);
-                 }
-                 .btn-secondary {
-                   background: white;
-                   color: #2BA8D1;
-                   border: 2px solid #2BA8D1;
-                 }
-                 .btn-secondary:hover {
-                   background: #2BA8D1;
-                   color: white;
-                   transform: translateY(-2px);
-                 }
-                 
-                 /* Service Information */
-                 .service-info {
-                   background: #f8fafc;
-                   border-radius: 12px;
-                   padding: 24px;
-                   margin-bottom: 24px;
-                   border: 2px solid #e2e8f0;
-                 }
-                 .service-title {
-                   font-size: 18px;
-                   font-weight: bold;
-                   color: #2BA8D1;
-                   margin-bottom: 16px;
-                   display: flex;
-                   align-items: center;
-                   gap: 8px;
-                 }
-                 .service-details {
-                   display: grid;
-                   grid-template-columns: 1fr;
-                   gap: 16px;
-                 }
-                 @media (min-width: 600px) {
-                   .service-details {
-                     grid-template-columns: repeat(2, 1fr);
-                   }
-                 }
-                 .service-section {
-                   background: white;
-                   padding: 16px;
-                   border-radius: 8px;
-                   border-left: 4px solid #2BA8D1;
-                 }
-                 .section-title {
-                   font-size: 14px;
-                   font-weight: bold;
-                   color: #1a365d;
-                   margin-bottom: 8px;
-                 }
-                 .section-content {
-                   font-size: 14px;
-                   color: #64748b;
-                   line-height: 1.5;
-                   margin: 0;
-                 }
-                 .benefits-list {
-                   margin: 0;
-                   padding-left: 16px;
-                 }
-                 .benefits-list li {
-                   font-size: 14px;
-                   color: #64748b;
-                   margin-bottom: 4px;
-                 }
-                
-                /* Quick Info */
-                .quick-info {
-                  background: #f0f9ff;
-                  border-radius: 8px;
-                  padding: 20px;
-                  margin-bottom: 20px;
-                }
-                .info-title {
-                  font-weight: bold;
-                  color: #2BA8D1;
-                  margin-bottom: 12px;
-                }
-                .info-list {
-                  list-style: none;
-                  padding: 0;
-                }
-                .info-list li {
-                  padding: 4px 0;
-                  color: #64748b;
-                  position: relative;
-                  padding-left: 20px;
-                }
-                .info-list li::before {
-                  content: '•';
-                  color: #2BA8D1;
-                  font-weight: bold;
-                  position: absolute;
-                  left: 0;
-                }
-                
-                /* Footer */
-                .footer {
-                  background: #2BA8D1;
-                  color: white;
-                  padding: 24px 30px;
-                  text-align: center;
-                }
-                .footer-title {
-                  font-size: 18px;
-                  font-weight: bold;
-                  margin-bottom: 8px;
-                }
-                .footer-text {
-                  opacity: 0.9;
-                  font-size: 14px;
-                  line-height: 1.5;
-                }
-                 .contact-info {
-                   margin-top: 16px;
-                   text-align: center;
-                 }
-                .contact-item {
-                  font-size: 14px;
-                  opacity: 0.9;
-                  display: inline-block;
-                  margin: 0 10px;
-                }
-                .contact-item a {
-                  color: white;
-                  text-decoration: none;
-                }
-                
-                @media (max-width: 600px) {
-                  .content { padding: 20px; }
-                  .footer { padding: 20px; }
-                  .btn { min-width: auto; margin: 5px; }
-                  .detail-item { display: block; }
-                  .detail-label { display: block; margin-bottom: 4px; }
-                  .detail-value { text-align: left; margin-left: 4px; }
-                  .contact-item { display: block; margin: 5px 0; }
-                }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <!-- Header with Cover Image -->
-                <div class="header">
-                  <img src="https://res.cloudinary.com/dydzcpu4w/image/upload/v1759043284/popup_modal_banner_uuc7wq.jpg" alt="Aartiket Speech and Hearing Care" class="cover-image" />
-                  
-                </div>
-      
-                <!-- Main Content -->
-                <div class="content">
-                  <!-- Success Message -->
-                  <div class="success-message">
-                    <h2 class="success-title">Your Appointment is Confirmed!</h2>
-                    <p class="success-text">Thank you for choosing us. We look forward to helping you with your hearing and speech needs.</p>
-                  </div>
-      
-                  <!-- Appointment Details -->
-                  <div class="appointment-details">
-                    <h3 class="details-title">
-                     
-                      Appointment Details
-                    </h3>
-                    <div class="detail-item">
-                      <span class="detail-label">Service</span>
-                      <span class="detail-value highlight">${populatedAppointment?.service}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Date</span>
-                      <span class="detail-value">${formatDate(populatedAppointment?.date)}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Time</span>
-                      <span class="detail-value">${populatedAppointment?.timeSlot}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Branch</span>
-                      <span class="detail-value">${populatedAppointment?.branchId?.branchName || populatedBranch?.branchName}</span>
-                    </div>
-                    <div class="detail-item">
-                      <span class="detail-label">Address</span>
-                      <span class="detail-value">${populatedAppointment?.branchId?.address || populatedBranch?.address}</span>
-                    </div>
-                  </div>
-      
-                  <!-- Action Buttons -->
-                  <div class="actions">
-                    <a class="btn btn-primary" href="https://maps.app.goo.gl/m3QhftKJFMj3it9N7" target="_blank">
-                      📍 Get Directions
-                    </a>
-                    <a class="btn btn-secondary" href="tel:+917977483031">
-                      📞 Call Clinic
-                    </a>
-                  </div>
-      
-
-                  ${serviceDetails ? `
-                  <!-- Service Information -->
-                  <div class="service-info">
-                    <h3 class="service-title">📋 About Your Service</h3>
-                    <div class="service-details">
-                      <div class="service-section">
-                        <h4 class="section-title">Why This Service is Important:</h4>
-                        <p class="section-content">${serviceDetails.importance}</p>
-                      </div>
-                      <div class="service-section">
-                        <h4 class="section-title">What to Expect:</h4>
-                        <p class="section-content">${serviceDetails.detailedInfo}</p>
-                      </div>
-                      ${serviceDetails.preparationInstructions ? `
-                      <div class="service-section">
-                        <h4 class="section-title">Preparation Instructions:</h4>
-                        <p class="section-content">${serviceDetails.preparationInstructions}</p>
-                      </div>
-                      ` : ''}
-                      ${serviceDetails.benefits && serviceDetails.benefits.length > 0 ? `
-                      <div class="service-section">
-                        <h4 class="section-title">Benefits:</h4>
-                        <ul class="benefits-list">
-                          ${serviceDetails.benefits.map(benefit => `<li>${benefit}</li>`).join('')}
-                        </ul>
-                      </div>
-                      ` : ''}
-                    </div>
-                  </div>
-                  ` : ''}
-
-                  <!-- Quick Info -->
-                  <div class="quick-info">
-                    <div class="info-title">Before Your Visit:</div>
-                    <ul class="info-list">
-                      <li>Arrive 15 minutes early</li>
-                      <li>Bring valid ID and medical reports</li>
-                      <li>List current medications</li>
-                    </ul>
-                  </div>
-                </div>
-      
-                <!-- Footer -->
-                <div class="footer">
-                  <h3 class="footer-title">Need Help?</h3>
-                  <p class="footer-text">Contact us for any questions or to reschedule your appointment.</p>
-                  <div class="contact-info">
-                    <div class="contact-item">📞 <a href="tel:+917977483031">+91 79774 83031</a></div>
-                    <div class="contact-item">✉️ <a href="mailto:aartiketspeechandhearing@gmail.com">Email Us</a></div>
-                    <div class="contact-item">⏰ Mon-Sat, 9:00 AM - 6:00 PM</div>
-                  </div>
-                </div>
-              </div>
-            </body>
-            </html>
-          `;
-      
-          await Promise.all(toSend.map(({ to }) => sendEmail({ to, subject, html })));
-        } catch (e) {
-          console.error('Email sending failed:', e);
-        }
-      })();
-
-      // WhatsApp notification to patient via AiSensy (commented until API key is available)
-      (async () => {
-        try {
-          const toPhone = populatedAppointment?.patientId?.contact;
-          // NOTE: Enable below when AiSensy credentials are available.
-          // Required env vars:
-          //   AISENSY_API_KEY, AISENSY_CAMPAIGN_ID (or TEMPLATE), AISENSY_SENDER_ID (if applicable)
-          // Docs: https://docs.aisensy.com/
-          // Example payload (template-based):
-          // if (process.env.AISENSY_API_KEY && toPhone) {
-          //   const formatDate = (d) => new Date(d).toLocaleDateString('en-IN');
-          //   const payload = {
-          //     apiKey: process.env.AISENSY_API_KEY,
-          //     campaignName: process.env.AISENSY_CAMPAIGN_ID, // or template/campaign identifier
-          //     destination: `+91${String(toPhone).replace(/\D/g, '').slice(-10)}`,
-          //     userName: populatedAppointment?.patientId?.name || 'Patient',
-          //     templateParams: [
-          //       populatedAppointment?.service,
-          //       formatDate(populatedAppointment?.date),
-          //       populatedAppointment?.timeSlot,
-          //       populatedAppointment?.branchId?.branchName || '',
-          //       populatedAppointment?.branchId?.address || '',
-          //       populatedAppointment?.charges || 'TBD',
-          //       serviceDetails?.importance || 'Important for your health',
-          //       serviceDetails?.benefits?.join(', ') || 'Improved health outcomes',
-          //       serviceDetails?.duration || '30 minutes',
-          //       serviceDetails?.preparationInstructions || 'Please arrive 15 minutes early',
-          //     ],
-          //     source: 'api'
-          //   };
-          //   await fetch('https://backend.aisensy.com/apis/sendTemplateMessage', {
-          //     method: 'POST',
-          //     headers: { 'Content-Type': 'application/json' },
-          //     body: JSON.stringify(payload)
-          //   });
-          // }
-          console.log('AiSensy WhatsApp notification skipped (no API key configured).');
-        } catch (e) {
-          console.error('WhatsApp notification (AiSensy) failed:', e?.message || e);
-        }
-      })();
+      // Pass through optional serviceDetails and media image (if provided by client)
+      await sendAppointmentNotifications({ appointment: populatedAppointment, branch: populatedBranch, serviceName: service, serviceDetails: serviceDetails || null, mediaUrl: process.env.EMAIL_HEADER_IMAGE_URL || process.env.WHATSAPP_MEDIA_URL || null });
     } catch (notifyErr) {
-
+      console.error('Notification error:', notifyErr?.message || notifyErr);
     }
 
     return res.status(201).json({ 
@@ -1011,6 +562,126 @@ export const getAppointmentById = async (req, res) => {
   }
 };
 
+export const updateAppointmentTimeSlot = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { timeSlot, date } = req.body;
+
+    if (!id || !timeSlot) {
+      return res.status(400).json({ success: false, message: "Appointment ID and timeSlot are required" });
+    }
+
+    // Find the appointment
+    const appointment = await Appointment.findById(id)
+      .populate('patientId', 'name email contact')
+      .populate('branchId', 'branchName address');
+
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: "Appointment not found" });
+    }
+
+    // Update the appointment with new timeSlot and optionally date
+    const updateData = { timeSlot };
+    if (date) {
+      updateData.date = new Date(date);
+    }
+
+    const updatedAppointment = await Appointment.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    ).populate('patientId', 'name email contact')
+     .populate('branchId', 'branchName address');
+
+    // Send notification emails/WhatsApp since timeSlot was updated
+    (async () => {
+      try {
+        const superAdminEmail = process.env.SUPERADMIN_EMAIL || process.env.ADMIN_EMAIL;
+        const formatDate = (d) => new Date(d).toLocaleDateString('en-IN', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric',
+          weekday: 'long'
+        });
+
+        // Email to patient
+        if (updatedAppointment.patientId?.email) {
+          await sendEmail({
+            to: updatedAppointment.patientId.email,
+            subject: `Appointment Confirmed - ${updatedAppointment.service}`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #2B5A8A;">Appointment Confirmed!</h2>
+                <p>Dear ${updatedAppointment.patientId.name},</p>
+                <p>Your appointment has been confirmed with the following details:</p>
+                <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                  <h3 style="color: #2B5A8A; margin-top: 0;">Appointment Details</h3>
+                  <p><strong>Service:</strong> ${updatedAppointment.service}</p>
+                  <p><strong>Date:</strong> ${formatDate(updatedAppointment.date)}</p>
+                  <p><strong>Time:</strong> ${updatedAppointment.timeSlot}</p>
+                  <p><strong>Branch:</strong> ${updatedAppointment.branchId?.branchName}</p>
+                  <p><strong>Address:</strong> ${updatedAppointment.branchId?.address}</p>
+                </div>
+                <p>Please arrive 10 minutes before your scheduled time.</p>
+                <p>If you need to reschedule or cancel, please contact us at least 24 hours in advance.</p>
+                <p>Best regards,<br>Your Healthcare Team</p>
+              </div>
+            `
+          });
+        }
+
+        // Email to admin
+        if (superAdminEmail) {
+          await sendEmail({
+            to: superAdminEmail,
+            subject: `New Appointment Confirmed - ${updatedAppointment.service}`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #2B5A8A;">Appointment Confirmed</h2>
+                <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                  <h3 style="color: #2B5A8A; margin-top: 0;">Appointment Details</h3>
+                  <p><strong>Patient:</strong> ${updatedAppointment.patientId?.name}</p>
+                  <p><strong>Contact:</strong> ${updatedAppointment.patientId?.contact}</p>
+                  <p><strong>Email:</strong> ${updatedAppointment.patientId?.email}</p>
+                  <p><strong>Service:</strong> ${updatedAppointment.service}</p>
+                  <p><strong>Date:</strong> ${formatDate(updatedAppointment.date)}</p>
+                  <p><strong>Time:</strong> ${updatedAppointment.timeSlot}</p>
+                  <p><strong>Branch:</strong> ${updatedAppointment.branchId?.branchName}</p>
+                  <p><strong>Notes:</strong> ${updatedAppointment.notes || 'No additional notes'}</p>
+                </div>
+              </div>
+            `
+          });
+        }
+
+        // WhatsApp notification (if enabled)
+        if (process.env.WHATSAPP_ENABLED === 'true' && updatedAppointment.patientId?.contact) {
+          const whatsappMessage = `Appointment Confirmed!\n\nService: ${updatedAppointment.service}\nDate: ${formatDate(updatedAppointment.date)}\nTime: ${updatedAppointment.timeSlot}\nBranch: ${updatedAppointment.branchId?.branchName}\n\nPlease arrive 10 minutes before your scheduled time.`;
+          
+          // Add WhatsApp API call here if you have WhatsApp integration
+          console.log('WhatsApp notification would be sent:', {
+            to: updatedAppointment.patientId.contact,
+            message: whatsappMessage
+          });
+        }
+
+      } catch (emailError) {
+        console.error('Error sending appointment confirmation emails:', emailError);
+      }
+    })();
+
+    res.status(200).json({
+      success: true,
+      message: "Appointment timeSlot updated successfully and notifications sent",
+      appointment: updatedAppointment
+    });
+
+  } catch (error) {
+    console.error('Error updating appointment timeSlot:', error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 export const updateAppointmentStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -1037,6 +708,17 @@ export const updateAppointmentStatus = async (req, res) => {
     if (!appointment) {
       return res.status(404).json({ success: false, message: "Appointment not found" });
     }
+
+    // If completed and has referred doctor, send thank-you WhatsApp
+    try {
+      if (status === 'completed' && appointment?.referredDoctorId?.contact) {
+        const doctorPhone = appointment.referredDoctorId.contact;
+        const doctorName = appointment.referredDoctorId.name;
+        const patientName = appointment.patientId?.name;
+        const dateStr = appointment.date ? new Date(appointment.date).toLocaleDateString('en-IN') : '';
+        await sendReferralDoctorWhatsapp({ doctorPhone, doctorName, patientName, date: dateStr });
+      }
+    } catch (_) {}
 
     return res.json({
       success: true,

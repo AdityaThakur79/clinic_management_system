@@ -81,6 +81,40 @@ import oae from "./OAE.jpeg"
 import bera from "./BERA.jpeg"
 import popup_modal_banner from "./popup_modal_banner.jpeg"
 
+// Brand device images
+import signia_1 from "./img/brands/signia/Signia_1.webp"
+import signia_2 from "./img/brands/signia/signia_2.webp"
+import signia_4 from "./img/brands/signia/signia_4.webp"
+import signia_5 from "./img/brands/signia/signia_5.webp"
+
+import phonak_1 from "./img/brands/phonak/phonal_1.avif"
+import phonak_2 from "./img/brands/phonak/phonak_2.avif"
+import phonak_3 from "./img/brands/phonak/phonak_3.avif"
+import phonak_4 from "./img/brands/phonak/phonal_4.avif"
+
+import resound_1 from "./img/brands/Resound/resound_1.png"
+import resound_2 from "./img/brands/Resound/resound_2.jpg"
+import resound_3 from "./img/brands/Resound/resound_3.png"
+import resound_4 from "./img/brands/Resound/resound_4.png"
+
+import oticon_2 from "./img/brands/Oticon/oticon_2.webp"
+import oticon_3 from "./img/brands/Oticon/oticon_3.jpeg"
+import oticon_4 from "./img/brands/Oticon/oticon_4.webp"
+
+// Hearing aid style images
+import style_1 from "./img/styles/style_1.jpg"
+import style_2 from "./img/styles/style_2.jpeg"
+import style_3 from "./img/styles/style_3.jpeg"
+import style_4 from "./img/styles/style_4.jpeg"
+import style_5 from "./img/styles/style_5.jpeg"
+import style_6 from "./img/styles/style_6.jpeg"
+import style_7 from "./img/styles/style_7.jpeg"
+import style_8 from "./img/styles/style_8.jpeg"
+import style_9 from "./img/styles/style_9.jpeg"
+import style_10 from "./img/styles/style_10.jpeg"
+import style_11 from "./img/styles/style_11.jpeg"
+import style_12 from "./img/styles/style_12.jpeg"
+
 export const assets = {
   popup_modal_banner,
   impedance_audiometry,
@@ -156,7 +190,39 @@ export const assets = {
   resound_logo,
   oticon_logo,
   unitron_logo,
-  widex_logo
+  widex_logo,
+  // Brand device images
+  signia_1,
+  signia_2,
+  signia_4,
+  signia_5,
+  phonak_1,
+  phonak_2,
+  phonak_3,
+  phonak_4,
+  resound_1,
+  resound_2,
+  resound_3,
+  resound_4,
+  oticon_2,
+  oticon_3,
+  oticon_4
+};
+
+// Grouped exports for easier access to style images
+assets.styles = {
+  style_1,
+  style_2,
+  style_3,
+  style_4,
+  style_5,
+  style_6,
+  style_7,
+  style_8,
+  style_9,
+  style_10,
+  style_11,
+  style_12,
 };
 
 export const specialityData = [

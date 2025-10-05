@@ -54,6 +54,7 @@ const UpdateBranchAdmin = () => {
     name: '',
     email: '',
     phone: '',
+    dateOfBirth: '',
     branch: '',
     bio: '',
     status: 'active',
@@ -106,6 +107,7 @@ const UpdateBranchAdmin = () => {
             name: admin.name || '',
             email: admin.email || '',
             phone: admin.phone || '',
+            dateOfBirth: admin.dateOfBirth ? admin.dateOfBirth.split('T')[0] : '',
             branch: admin.branch?._id || admin.branch || '',
             bio: admin.bio || '',
             status: admin.status || 'active',
@@ -232,6 +234,7 @@ const UpdateBranchAdmin = () => {
       formDataToSend.append('email', formData.email);
       formDataToSend.append('phone', formData.phone);
       formDataToSend.append('branch', formData.branch);
+      if (formData.dateOfBirth) formDataToSend.append('dateOfBirth', formData.dateOfBirth);
       formDataToSend.append('bio', formData.bio);
       formDataToSend.append('status', formData.status);
 
@@ -467,6 +470,27 @@ const UpdateBranchAdmin = () => {
                       <option value="active">Active</option>
                       <option value="inactive">Inactive</option>
                     </Select>
+                  </FormControl>
+                  <FormControl>
+                    <FormLabel fontWeight="600" color="gray.700" mb={2}>
+                      Date of Birth (optional)
+                    </FormLabel>
+                    <Input
+                      name="dateOfBirth"
+                      type="date"
+                      value={formData.dateOfBirth}
+                      onChange={handleInputChange}
+                      borderRadius="lg"
+                      border="2px solid"
+                      borderColor="gray.200"
+                      _focus={{
+                        borderColor: '#2BA8D1',
+                        boxShadow: '0 0 0 3px rgba(43, 168, 209, 0.1)',
+                      }}
+                      _hover={{ borderColor: 'gray.300' }}
+                      h="48px"
+                      fontSize="md"
+                    />
                   </FormControl>
                 </SimpleGrid>
 

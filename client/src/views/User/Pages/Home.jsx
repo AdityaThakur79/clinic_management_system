@@ -17,6 +17,7 @@ import HearingAidDevices from '../Components/HearingAidDevices'
 import HearingAidBrands from '../Components/HearingAidBrands'
 import PopupAppointmentModal from '../Components/PopupAppointmentModal'
 import BlogSection from '../Components/BlogSection'
+import HearingAidStyleSelector from '../Components/HearingAidStyleSelector'
 
 
 const Home = () => {
@@ -56,10 +57,11 @@ const Home = () => {
       <HearingAidBrands/>
       {/* <HearingAidDevices/> */}
       <Services/>
+      <HearingAidStyleSelector/>
       <Process/>
       <About3/>
-      <BlogSection/>
       <Testimonials/>
+      <BlogSection/>
       <CTA/>
       <Footer/>
     </div>

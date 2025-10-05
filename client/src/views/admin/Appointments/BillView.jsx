@@ -4,7 +4,7 @@ import {
 } from '@chakra-ui/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGetAppointmentByIdQuery } from '../../../features/api/appointments';
-import { MdPerson, MdSchedule, MdBusiness, MdPhone, MdEmail, MdAssignment, MdReceipt, MdPrint, MdDownload, MdArrowBack, MdLocalHospital } from 'react-icons/md';
+import { MdPerson, MdSchedule, MdBusiness, MdPhone, MdEmail, MdAssignment, MdReceipt, MdPrint, MdDownload, MdArrowBack, MdLocalHospital, MdEdit } from 'react-icons/md';
 import { PDFDownloadLink, PDFViewer, pdf } from '@react-pdf/renderer';
 import BillPDF from './BillPDF';
 
@@ -141,8 +141,16 @@ const BillView = () => {
     // Add services from services array
     if (bill.services && bill.services.length > 0) {
       subtotal += bill.services.reduce((sum, service) => {
-        const servicePrice = service.actualPrice || service.basePrice || 0;
-        return sum + servicePrice;
+        let servicePrice = service.actualPrice || service.basePrice || 0;
+        
+        // Apply service discount if any
+        if (service.discountType === 'percentage' && service.discountPercentage > 0) {
+          servicePrice = servicePrice - (servicePrice * service.discountPercentage / 100);
+        } else if (service.discountType === 'fixed' && service.discount > 0) {
+          servicePrice = servicePrice - service.discount;
+        }
+        
+        return sum + Math.max(0, servicePrice);
       }, 0);
     }
     // Add devices total
@@ -150,7 +158,16 @@ const BillView = () => {
       subtotal += bill.devices.reduce((sum, device) => {
         const qty = Number(device.quantity) || 0;
         const price = Number(device.unitPrice) || 0;
-        return sum + (qty * price);
+        let deviceTotal = qty * price;
+        
+        // Apply device discount if any
+        if (device.discountType === 'percentage' && device.discountPercentage > 0) {
+          deviceTotal = deviceTotal - (deviceTotal * device.discountPercentage / 100);
+        } else if (device.discountType === 'fixed' && device.discount > 0) {
+          deviceTotal = deviceTotal - device.discount;
+        }
+        
+        return sum + Math.max(0, deviceTotal);
       }, 0);
     }
     
@@ -182,26 +199,39 @@ const BillView = () => {
   };
 
   return (
-    <Box pt={{ base: '130px', md: '100px', xl: '100px' }} px={6} maxW="1200px" mx="auto">
+    <Box pt={{ base: '130px', md: '100px', xl: '100px' }} px={{ base: 4, md: 6 }} maxW="1200px" mx="auto">
       {/* Header */}
-      <Flex justify="space-between" align="center" mb={8}>
+      <Flex justify="space-between" align="center" mb={8} direction={{ base: 'column', md: 'row' }} gap={4}>
         <HStack spacing={4}>
-          <Button
+          {/* <Button
             leftIcon={<Icon as={MdArrowBack} />}
             variant="outline"
             onClick={() => navigate(-1)}
             {...brandHover}
+            size={{ base: 'sm', md: 'md' }}
           >
             Back
-          </Button>
-          <Heading size="xl" color="#2BA8D1">Medical Bill</Heading>
+          </Button> */}
+          <Heading size={{ base: 'lg', md: 'xl' }} color="#2BA8D1">Invoice</Heading>
         </HStack>
-        <HStack spacing={3}>
+        <HStack spacing={3} wrap="wrap">
+          {appointment && (
+            <Button
+              leftIcon={<Icon as={MdEdit} />}
+              variant="outline"
+              onClick={() => navigate(`/admin/appointments/${appointment._id}/enhanced-complete?edit=true`)}
+              {...brandHover}
+              size={{ base: 'sm', md: 'md' }}
+            >
+              Update Appointment
+            </Button>
+          )}
           <Button
             leftIcon={<Icon as={MdPrint} />}
             variant="outline"
             onClick={handlePrint}
             {...brandHover}
+            size={{ base: 'sm', md: 'md' }}
           >
             Print
           </Button>
@@ -215,6 +245,7 @@ const BillView = () => {
                   leftIcon={<Icon as={MdDownload} />}
                   isLoading={loading}
                   {...brandPrimary}
+                  size={{ base: 'sm', md: 'md' }}
                 >
                   Download PDF
                 </Button>
@@ -244,42 +275,42 @@ const BillView = () => {
       <Card bg={cardBg} borderColor={borderColor} boxShadow="xl" borderRadius="xl">
         <CardBody p={0}>
           {/* Invoice Header */}
-          <Box bg="#2BA8D1" p={8} borderTopRadius="xl" color="white">
-            <Flex justify="space-between" align="start">
+          <Box bg="#2BA8D1" p={{ base: 4, md: 8 }} borderTopRadius="xl" color="white">
+            <Flex justify="space-between" align="start" direction={{ base: 'column', lg: 'row' }} gap={6}>
               {/* Company Info */}
-              <Box>
+              <Box flex={1}>
                 <HStack spacing={4} mb={4}>
                   <Image 
                     src={`/aartiket_logo.jpeg`} 
                     alt="Aartiket Logo" 
-                    boxSize="60px" 
+                    boxSize={{ base: "50px", md: "60px" }}
                     objectFit="contain"
-                    fallback={<Icon as={MdLocalHospital} boxSize="60px" color="white" />}
+                    fallback={<Icon as={MdLocalHospital} boxSize={{ base: "50px", md: "60px" }} color="white" />}
                   />
                   <Box>
-                    <Heading size="xl" color="white" mb={2}>
+                    <Heading size={{ base: 'lg', md: 'xl' }} color="white" mb={2}>
                       Aartiket Speech & Hearing Care
                     </Heading>
-                    <Text color="white" fontSize="lg" fontWeight="medium" opacity={0.9}>
+                    <Text color="white" fontSize={{ base: 'md', md: 'lg' }} fontWeight="medium" opacity={0.9}>
                       Hearing test, hearing aid trial and fitting, speech therapy
                     </Text>
                   </Box>
                 </HStack>
                 <VStack align="start" spacing={1} color="white" opacity={0.9}>
-                  <Text><Icon as={MdBusiness} mr={2} />{appointment.branchId?.address || 'Ghatkopar, Mumbai'}</Text>
-                  <Text><Icon as={MdPhone} mr={2} />79 7748 3031</Text>
-                  <Text><Icon as={MdEmail} mr={2} />aartiketspeechandhearing@gmail.com</Text>
+                  <Text fontSize={{ base: 'sm', md: 'md' }}><Icon as={MdBusiness} mr={2} />{appointment.branchId?.address || 'Ghatkopar, Mumbai'}</Text>
+                  <Text fontSize={{ base: 'sm', md: 'md' }}><Icon as={MdPhone} mr={2} />79 7748 3031</Text>
+                  <Text fontSize={{ base: 'sm', md: 'md' }}><Icon as={MdEmail} mr={2} />aartiketspeechandhearing@gmail.com</Text>
                 </VStack>
               </Box>
 
               {/* Invoice Details */}
-              <Box textAlign="right">
-                <Heading size="lg" color="white" mb={4}>INVOICE</Heading>
-                <VStack spacing={2} align="end">
-                  <Text><strong>Bill No:</strong> {appointment.billId?.billNumber || `BILL-${appointment._id.slice(-8).toUpperCase()}`}</Text>
-                  <Text><strong>Date:</strong> {formatDate(appointment.date)}</Text>
-                  <Text><strong>Time:</strong> {formatTime(appointment.timeSlot)}</Text>
-                  <Badge colorScheme={appointment.status === 'completed' ? 'green' : 'yellow'} size="lg" px={3} py={1}>
+              <Box textAlign={{ base: 'left', lg: 'right' }}>
+                <Heading size={{ base: 'md', md: 'lg' }} color="white" mb={4}>INVOICE</Heading>
+                <VStack spacing={2} align={{ base: 'start', lg: 'end' }}>
+                  <Text fontSize={{ base: 'sm', md: 'md' }}><strong>Bill No:</strong> {appointment.billId?.billNumber || `BILL-${appointment._id.slice(-8).toUpperCase()}`}</Text>
+                  <Text fontSize={{ base: 'sm', md: 'md' }}><strong>Date:</strong> {formatDate(appointment.date)}</Text>
+                  <Text fontSize={{ base: 'sm', md: 'md' }}><strong>Time:</strong> {formatTime(appointment.timeSlot)}</Text>
+                  <Badge colorScheme={appointment.status === 'completed' ? 'green' : 'yellow'} size={{ base: 'md', md: 'lg' }} px={3} py={1}>
                     {appointment.status?.toUpperCase()}
                   </Badge>
                 </VStack>
@@ -290,8 +321,8 @@ const BillView = () => {
           <Divider />
 
           {/* Patient & Doctor Info */}
-          <Box p={8}>
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8}>
+          <Box p={{ base: 4, md: 8 }}>
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={{ base: 6, md: 8 }}>
               {/* Patient Details */}
               <Box>
                 <Heading size="md" color="#2BA8D1" mb={4} display="flex" alignItems="center">
@@ -359,19 +390,18 @@ const BillView = () => {
           <Divider />
 
           {/* Services & Charges Table */}
-          <Box p={8}>
+          <Box p={{ base: 4, md: 8 }}>
             <Heading size="md" color="#2BA8D1" mb={6} display="flex" alignItems="center">
               <Icon as={MdReceipt} mr={2} />
               Services & Charges
             </Heading>
             
-            <TableContainer>
-              <Table variant="simple" size="lg">
+            <TableContainer overflowX="auto">
+              <Table variant="simple" size={{ base: 'sm', md: 'lg' }}>
                 <Thead bg="#2BA8D1" color="white">
                   <Tr>
-                    <Th color="white" fontWeight="bold" fontSize="md">Service Description</Th>
-                    <Th color="white" fontWeight="bold" fontSize="md">Details</Th>
-                    <Th isNumeric color="white" fontWeight="bold" fontSize="md">Amount (Rs)</Th>
+                    <Th color="white" fontWeight="bold" fontSize={{ base: 'sm', md: 'md' }}>Service Description</Th>
+                    <Th isNumeric color="white" fontWeight="bold" fontSize={{ base: 'sm', md: 'md' }}>Amount (Rs)</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
@@ -379,7 +409,6 @@ const BillView = () => {
                   {(appointment.billId?.consultationFee || 0) > 0 && (
                     <Tr>
                       <Td fontWeight="semibold">Consultation Fee</Td>
-                      <Td color="gray.600">Doctor consultation and examination</Td>
                       <Td isNumeric fontWeight="semibold">Rs {(appointment.billId.consultationFee || 0).toFixed(2)}</Td>
                     </Tr>
                   )}
@@ -387,7 +416,6 @@ const BillView = () => {
                   {(appointment.billId?.treatmentFee || 0) > 0 && (
                     <Tr>
                       <Td fontWeight="semibold">Treatment Fee</Td>
-                      <Td color="gray.600">Medical treatment and procedures</Td>
                       <Td isNumeric fontWeight="semibold">Rs {(appointment.billId.treatmentFee || 0).toFixed(2)}</Td>
                     </Tr>
                   )}
@@ -395,7 +423,6 @@ const BillView = () => {
                   {(appointment.billId?.medicineFee || 0) > 0 && (
                     <Tr>
                       <Td fontWeight="semibold">Medicine Fee</Td>
-                      <Td color="gray.600">Prescribed medications and supplies</Td>
                       <Td isNumeric fontWeight="semibold">Rs {(appointment.billId.medicineFee || 0).toFixed(2)}</Td>
                     </Tr>
                   )}
@@ -403,7 +430,6 @@ const BillView = () => {
                   {(appointment.billId?.otherCharges || 0) > 0 && (
                     <Tr>
                       <Td fontWeight="semibold">Additional Services</Td>
-                      <Td color="gray.600">Other medical services and tests</Td>
                       <Td isNumeric fontWeight="semibold">Rs {(appointment.billId.otherCharges || 0).toFixed(2)}</Td>
                     </Tr>
                   )}
@@ -411,7 +437,6 @@ const BillView = () => {
                   {(appointment.billId?.hearingAidFee || 0) > 0 && (
                     <Tr>
                       <Td fontWeight="semibold">Hearing Aid Services</Td>
-                      <Td color="gray.600">Hearing aid fitting and maintenance</Td>
                       <Td isNumeric fontWeight="semibold">Rs {(appointment.billId.hearingAidFee || 0).toFixed(2)}</Td>
                     </Tr>
                   )}
@@ -419,46 +444,103 @@ const BillView = () => {
                   {(appointment.billId?.audiometryFee || 0) > 0 && (
                     <Tr>
                       <Td fontWeight="semibold">Audiometry Test</Td>
-                      <Td color="gray.600">Hearing assessment and testing</Td>
                       <Td isNumeric fontWeight="semibold">Rs {(appointment.billId.audiometryFee || 0).toFixed(2)}</Td>
                     </Tr>
                   )}
                   
                   {/* Services from services array */}
-                  {appointment.billId?.services && appointment.billId.services.map((service, index) => (
-                    <Tr key={index}>
-                      <Td fontWeight="semibold">{service.name}</Td>
-                      <Td color="gray.600"> {'Service provided'}</Td>
-                      <Td isNumeric fontWeight="semibold">Rs {((service.actualPrice || service.basePrice) || 0).toFixed(2)}</Td>
-                    </Tr>
-                  ))}
+                  {appointment.billId?.services && appointment.billId.services.map((service, index) => {
+                    const originalPrice = service.actualPrice || service.basePrice || 0;
+                    let discountAmount = 0;
+                    let finalPrice = originalPrice;
+                    
+                    if (service.discountType === 'percentage' && service.discountPercentage > 0) {
+                      discountAmount = originalPrice * service.discountPercentage / 100;
+                      finalPrice = originalPrice - discountAmount;
+                    } else if (service.discountType === 'fixed' && service.discount > 0) {
+                      discountAmount = service.discount;
+                      finalPrice = originalPrice - discountAmount;
+                    }
+                    
+                    return (
+                      <Tr key={index}>
+                        <Td fontWeight="semibold">{service.name}</Td>
+                        <Td isNumeric>
+                          {discountAmount > 0 ? (
+                            <VStack spacing={1} align="end">
+                              <Text fontSize="sm" color="red.500" textDecoration="line-through">
+                                Rs {originalPrice.toFixed(2)}
+                              </Text>
+                              <Text fontSize="sm" color="green.500">
+                                -Rs {discountAmount.toFixed(2)} ({service.discountType === 'percentage' ? `${service.discountPercentage}%` : 'Fixed'})
+                              </Text>
+                              <Text fontWeight="semibold">
+                                Rs {Math.max(0, finalPrice).toFixed(2)}
+                              </Text>
+                            </VStack>
+                          ) : (
+                            <Text fontWeight="semibold">Rs {originalPrice.toFixed(2)}</Text>
+                          )}
+                        </Td>
+                      </Tr>
+                    );
+                  })}
                 </Tbody>
               </Table>
             </TableContainer>
 
             {/* Devices Table */}
             {appointment.billId?.devices && appointment.billId.devices.length > 0 && (
-              <Box mt={10}>
+              <Box mt={{ base: 6, md: 10 }}>
                 <Heading size="md" color="#2BA8D1" mb={4}>Devices</Heading>
-                <TableContainer>
-                  <Table variant="simple" size="lg">
+                <TableContainer overflowX="auto">
+                  <Table variant="simple" size={{ base: 'sm', md: 'lg' }}>
                     <Thead bg="#2BA8D1" color="white">
                       <Tr>
-                        <Th color="white">Device</Th>
-                        <Th isNumeric color="white">Unit Price (Rs)</Th>
-                        <Th isNumeric color="white">Qty</Th>
-                        <Th isNumeric color="white">Total (Rs)</Th>
+                        <Th color="white" fontSize={{ base: 'xs', md: 'sm' }}>Device</Th>
+                        <Th isNumeric color="white" fontSize={{ base: 'xs', md: 'sm' }}>Unit Price (Rs)</Th>
+                        <Th isNumeric color="white" fontSize={{ base: 'xs', md: 'sm' }}>Qty</Th>
+                        <Th isNumeric color="white" fontSize={{ base: 'xs', md: 'sm' }}>Discount</Th>
+                        <Th isNumeric color="white" fontSize={{ base: 'xs', md: 'sm' }}>Final Total (Rs)</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
-                      {appointment.billId.devices.map((device, idx) => (
-                        <Tr key={idx}>
-                          <Td fontWeight="semibold">{device.deviceName}</Td>
-                          <Td isNumeric>Rs {Number(device.unitPrice || 0).toFixed(2)}</Td>
-                          <Td isNumeric>{Number(device.quantity || 0)}</Td>
-                          <Td isNumeric fontWeight="semibold">Rs {((Number(device.unitPrice) || 0) * (Number(device.quantity) || 0)).toFixed(2)}</Td>
-                        </Tr>
-                      ))}
+                      {appointment.billId.devices.map((device, idx) => {
+                        const originalTotal = (Number(device.unitPrice) || 0) * (Number(device.quantity) || 0);
+                        let discountAmount = 0;
+                        let finalTotal = originalTotal;
+                        
+                        if (device.discountType === 'percentage' && device.discountPercentage > 0) {
+                          discountAmount = originalTotal * device.discountPercentage / 100;
+                          finalTotal = originalTotal - discountAmount;
+                        } else if (device.discountType === 'fixed' && device.discount > 0) {
+                          discountAmount = device.discount;
+                          finalTotal = originalTotal - discountAmount;
+                        }
+                        
+                        return (
+                          <Tr key={idx}>
+                            <Td fontWeight="semibold">{device.deviceName}</Td>
+                            <Td isNumeric>Rs {Number(device.unitPrice || 0).toFixed(2)}</Td>
+                            <Td isNumeric>{Number(device.quantity || 0)}</Td>
+                            <Td isNumeric>
+                              {discountAmount > 0 ? (
+                                <VStack spacing={1} align="end">
+                                  <Text fontSize="sm" color="red.500" textDecoration="line-through">
+                                    Rs {originalTotal.toFixed(2)}
+                                  </Text>
+                                  <Text fontSize="sm" color="green.500">
+                                    -Rs {discountAmount.toFixed(2)} ({device.discountType === 'percentage' ? `${device.discountPercentage}%` : 'Fixed'})
+                                  </Text>
+                                </VStack>
+                              ) : (
+                                <Text>No discount</Text>
+                              )}
+                            </Td>
+                            <Td isNumeric fontWeight="semibold">Rs {Math.max(0, finalTotal).toFixed(2)}</Td>
+                          </Tr>
+                        );
+                      })}
                     </Tbody>
                   </Table>
                 </TableContainer>
@@ -466,11 +548,11 @@ const BillView = () => {
             )}
 
             {/* Financial Summary */}
-            <Box mt={8} maxW="400px" ml="auto">
+            <Box mt={{ base: 6, md: 8 }} maxW={{ base: "100%", md: "400px" }} ml={{ base: 0, md: "auto" }}>
               <VStack spacing={3} align="stretch">
                 <Flex justify="space-between" py={2} borderBottom="1px solid" borderColor="gray.200">
-                  <Text fontWeight="bold" fontSize="lg">Subtotal:</Text>
-                  <Text fontWeight="bold" fontSize="lg">Rs {calculateSubtotal(appointment.billId).toFixed(2)}</Text>
+                  <Text fontWeight="bold" fontSize={{ base: 'md', md: 'lg' }}>Subtotal:</Text>
+                  <Text fontWeight="bold" fontSize={{ base: 'md', md: 'lg' }}>Rs {calculateSubtotal(appointment.billId).toFixed(2)}</Text>
                 </Flex>
                 
                 {appointment.billId?.discount > 0 && (
@@ -493,8 +575,8 @@ const BillView = () => {
                 <Divider />
                 
                 <Flex justify="space-between" py={4} bg="#2BA8D1" px={4} borderRadius="md" border="2px solid" borderColor="#2BA8D1">
-                  <Text fontWeight="bold" fontSize="xl" color="white">TOTAL AMOUNT:</Text>
-                  <Text fontWeight="bold" fontSize="xl" color="white">Rs {calculateTotal(appointment.billId).toFixed(2)}</Text>
+                  <Text fontWeight="bold" fontSize={{ base: 'lg', md: 'xl' }} color="white">TOTAL AMOUNT:</Text>
+                  <Text fontWeight="bold" fontSize={{ base: 'lg', md: 'xl' }} color="white">Rs {calculateTotal(appointment.billId).toFixed(2)}</Text>
                 </Flex>
               </VStack>
             </Box>
@@ -504,12 +586,12 @@ const BillView = () => {
 
           {/* Prescription Section */}
           {appointment.prescription && (
-            <Box p={8} bg="gray.50">
+            <Box p={{ base: 4, md: 8 }} bg="gray.50">
               <Heading size="md" color="#2BA8D1" mb={6} display="flex" alignItems="center">
                 <Icon as={MdAssignment} mr={2} />
                 Prescription Details
               </Heading>
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={{ base: 4, md: 6 }}>
                 {appointment.prescription.diagnosis && (
                   <Box>
                     <Text fontWeight="bold" mb={2} color="gray.700">Diagnosis:</Text>
@@ -529,9 +611,9 @@ const BillView = () => {
               </SimpleGrid>
               
               {appointment.prescription.medicines && appointment.prescription.medicines.length > 0 && (
-                <Box mt={6}>
+                <Box mt={{ base: 4, md: 6 }}>
                   <Text fontWeight="bold" mb={4} color="gray.700">Prescribed Medicines:</Text>
-                  <TableContainer bg="white" borderRadius="md" border="1px solid" borderColor="gray.200">
+                  <TableContainer bg="white" borderRadius="md" border="1px solid" borderColor="gray.200" overflowX="auto">
                     <Table variant="simple" size="sm">
                       <Thead bg="#2BA8D1">
                         <Tr>
@@ -559,13 +641,13 @@ const BillView = () => {
           )}
 
           {/* Footer */}
-          <Box bg="#2BA8D1" color="white" p={6} borderBottomRadius="xl">
+          <Box bg="#2BA8D1" color="white" p={{ base: 4, md: 6 }} borderBottomRadius="xl">
             <VStack spacing={2}>
-              <Text fontSize="lg" fontWeight="bold">Thank you for choosing Aartiket Speech & Hearing Care</Text>
-              <Text fontSize="sm" opacity={0.9}>
+              <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold" textAlign="center">Thank you for choosing Aartiket Speech & Hearing Care</Text>
+              <Text fontSize={{ base: 'xs', md: 'sm' }} opacity={0.9} textAlign="center">
                 For any queries, please contact us at 79 7748 3031 or email aartiketspeechandhearing@gmail.com
               </Text>
-              <Text fontSize="xs" opacity={0.7} mt={2}>
+              <Text fontSize="xs" opacity={0.7} mt={2} textAlign="center">
                 Generated on {new Date().toLocaleDateString('en-IN')} at {new Date().toLocaleTimeString('en-IN')}
               </Text>
             </VStack>

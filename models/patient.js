@@ -8,6 +8,7 @@ const patientSchema = new mongoose.Schema(
     contact: { type: String, trim: true, unique: true, sparse: true },
     email: { type: String, trim: true, lowercase: true, unique: true, sparse: true },
     address: { type: String, trim: true },
+    dateOfBirth: { type: Date },
     medicalHistory: [{ type: String, trim: true }],
     branchId: { type: mongoose.Schema.Types.ObjectId, ref: "Branch" },
 

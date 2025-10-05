@@ -40,6 +40,7 @@ const AddBranchAdmin = () => {
     password: '',
     branch: '',
     phone: '',
+    dateOfBirth: '',
     bio: '',
     status: 'active',
   });
@@ -165,6 +166,7 @@ const AddBranchAdmin = () => {
       formDataToSend.append('password', formData.password);
       formDataToSend.append('branch', formData.branch);
       formDataToSend.append('phone', formData.phone);
+      if (formData.dateOfBirth) formDataToSend.append('dateOfBirth', formData.dateOfBirth);
       formDataToSend.append('bio', formData.bio);
       formDataToSend.append('status', formData.status);
 
@@ -193,6 +195,7 @@ const AddBranchAdmin = () => {
         password: '',
         branch: '',
         phone: '',
+        dateOfBirth: '',
         bio: '',
         status: 'active',
       });
@@ -202,7 +205,7 @@ const AddBranchAdmin = () => {
       setBannerImage(null);
 
       // Navigate to branch admins list
-      navigate('/admin/branch-admin/all');
+      navigate('/admin/admins/all');
     } catch (error) {
 
       toast({
@@ -341,6 +344,27 @@ const AddBranchAdmin = () => {
                       fontSize="md"
                     />
                     <FormErrorMessage>{errors.phone}</FormErrorMessage>
+                  </FormControl>
+                  <FormControl>
+                    <FormLabel fontWeight="600" color="gray.700" mb={2}>
+                      Date of Birth (optional)
+                    </FormLabel>
+                    <Input
+                      name="dateOfBirth"
+                      type="date"
+                      value={formData.dateOfBirth}
+                      onChange={handleInputChange}
+                      borderRadius="lg"
+                      border="2px solid"
+                      borderColor="gray.200"
+                      _focus={{
+                        borderColor: '#2BA8D1',
+                        boxShadow: '0 0 0 3px rgba(43, 168, 209, 0.1)',
+                      }}
+                      _hover={{ borderColor: 'gray.300' }}
+                      h="48px"
+                      fontSize="md"
+                    />
                   </FormControl>
                 </SimpleGrid>
 
