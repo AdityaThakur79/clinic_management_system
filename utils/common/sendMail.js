@@ -49,25 +49,51 @@ const createTransporter = () => {
 // Send OTP email
 export const sendOTPEmail = async (email, otp) => {
   try {
+    // Prefer Brevo HTTPS API if configured (avoids SMTP egress issues)
+    const brevoKey = process.env.BREVO_API_KEY;
+    const fromEmail = process.env.SMTP_FROM || process.env.SMTP_USER || process.env.EMAIL_USER;
+    if (brevoKey) {
+      const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': brevoKey,
+          'accept': 'application/json',
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: { email: fromEmail, name: process.env.SMTP_FROM_NAME || 'Clinic Management System' },
+          to: [{ email }],
+          subject: 'OTP for Registration',
+          htmlContent: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #333;">OTP Verification</h2>
+              <p>Your OTP for registration is: <strong style=\"color: #007bff; font-size: 24px;\">${otp}</strong></p>
+              <p>This OTP will expire in 10 minutes.</p>
+              <p>If you didn't request this OTP, please ignore this email.</p>
+            </div>`
+        })
+      });
+      if (!resp.ok) {
+        const txt = await resp.text().catch(() => '');
+        throw new Error(`Brevo API error (${resp.status}): ${txt}`);
+      }
+      return { ok: true };
+    }
+
+    // Fallback to SMTP
     const transporter = createTransporter();
-    const emailUser = process.env.SMTP_USER || process.env.EMAIL_USER;
-    
-    const mailOptions = {
-      from: emailUser,
+    return await transporter.sendMail({
+      from: fromEmail,
       to: email,
-      subject: "OTP for Registration",
+      subject: 'OTP for Registration',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #333;">OTP Verification</h2>
-          <p>Your OTP for registration is: <strong style="color: #007bff; font-size: 24px;">${otp}</strong></p>
+          <p>Your OTP for registration is: <strong style=\"color: #007bff; font-size: 24px;\">${otp}</strong></p>
           <p>This OTP will expire in 10 minutes.</p>
           <p>If you didn't request this OTP, please ignore this email.</p>
-        </div>
-      `,
-    };
-
-    const result = await transporter.sendMail(mailOptions);
-    return result;
+        </div>`
+    });
   } catch (error) {
     throw error;
   }
@@ -76,21 +102,44 @@ export const sendOTPEmail = async (email, otp) => {
 // Generic email sender for reuse
 export const sendEmail = async ({ to, subject, html, text, attachments }) => {
   try {
-    const transporter = createTransporter();
-
-    const emailUser = process.env.SMTP_FROM || process.env.SMTP_USER || process.env.EMAIL_USER;
+    // Prefer Brevo HTTPS API if configured
+    const brevoKey = process.env.BREVO_API_KEY;
+    const fromEmail = process.env.SMTP_FROM || process.env.SMTP_USER || process.env.EMAIL_USER;
     const fromName = process.env.SMTP_FROM_NAME || 'Clinic Management System';
 
-    const mailOptions = {
-      from: `${fromName} <${emailUser}>`,
+    if (brevoKey) {
+      const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': brevoKey,
+          'accept': 'application/json',
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: { email: fromEmail, name: fromName },
+          to: Array.isArray(to) ? to.map((e)=> ({ email: e })) : [{ email: to }],
+          subject,
+          htmlContent: html,
+          textContent: text,
+        })
+      });
+      if (!resp.ok) {
+        const txt = await resp.text().catch(() => '');
+        throw new Error(`Brevo API error (${resp.status}): ${txt}`);
+      }
+      return { ok: true };
+    }
+
+    // Fallback to SMTP
+    const transporter = createTransporter();
+    return await transporter.sendMail({
+      from: `${fromName} <${fromEmail}>`,
       to,
       subject,
       html,
       text,
       attachments: attachments || [],
-    };
-    const result = await transporter.sendMail(mailOptions);
-    return result;
+    });
   } catch (error) {
     throw error;
   }
