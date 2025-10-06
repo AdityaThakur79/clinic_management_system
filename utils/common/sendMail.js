@@ -17,13 +17,25 @@ export const wrapEmail = (title, bodyHtml, headerImageUrl) => `
   </div>
 `;
 
-// Minimal transporter (Gmail, port 465) – no verification, no pooling, no extras
+// Minimal transporter with optional custom SMTP (e.g., Brevo). Falls back to Gmail if none provided.
 const createTransporter = () => {
   const emailUser = process.env.SMTP_USER || process.env.EMAIL_USER;
   const emailPass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
   if (!emailUser || !emailPass) {
     throw new Error("Email credentials not configured. Please set SMTP_USER and SMTP_PASS.");
   }
+  const customHost = process.env.SMTP_HOST;
+  if (customHost) {
+    const port = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
+    const secure = typeof process.env.SMTP_SECURE === 'string' ? process.env.SMTP_SECURE === 'true' : false;
+    return nodemailer.createTransport({
+      host: customHost,
+      port,
+      secure,
+      auth: { user: emailUser, pass: emailPass },
+    });
+  }
+  // Fallback: Gmail
   return nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 465,
