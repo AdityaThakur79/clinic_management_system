@@ -17,137 +17,27 @@ export const wrapEmail = (title, bodyHtml, headerImageUrl) => `
   </div>
 `;
 
-// Create transporter with better error handling
+// Minimal transporter (Gmail, port 465) – no verification, no pooling, no extras
 const createTransporter = () => {
-  // Support both old and new environment variable names
   const emailUser = process.env.SMTP_USER || process.env.EMAIL_USER;
   const emailPass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
-  
-  // Check if email credentials are configured
   if (!emailUser || !emailPass) {
-    throw new Error("Email credentials not configured. Please set SMTP_USER and SMTP_PASS environment variables.");
+    throw new Error("Email credentials not configured. Please set SMTP_USER and SMTP_PASS.");
   }
-
-  // Allow custom SMTP or fallback to Gmail service
-  const smtpHost = process.env.SMTP_HOST;
-  const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : undefined;
-  const smtpSecure = process.env.SMTP_SECURE ? process.env.SMTP_SECURE === 'true' : undefined;
-
-  let transporter;
-  if (smtpHost) {
-    console.log('[Mail] Using custom SMTP host configuration', {
-      host: smtpHost,
-      port: smtpPort ?? 587,
-      secure: smtpSecure ?? false,
-      user: (process.env.SMTP_USER || process.env.EMAIL_USER) ? '***provided***' : '***missing***'
-    });
-    transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort ?? 587,
-      secure: smtpSecure ?? false,
-      auth: { user: emailUser, pass: emailPass },
-      tls: { rejectUnauthorized: false },
-    });
-  } else {
-    // For Gmail, use the same configuration as working projects
-    console.log('[Mail] Using Gmail SMTP configuration', {
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      user: (process.env.SMTP_USER || process.env.EMAIL_USER) ? '***provided***' : '***missing***'
-    });
-    // Try service-based configuration first (more reliable on cloud hosting)
-    try {
-      transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: emailUser,
-          pass: emailPass,
-        },
-        secure: true,
-        port: 465,
-        pool: true,
-        maxConnections: 1,
-        maxMessages: 3,
-        family: 4, // force IPv4 (some hosts have issues with IPv6)
-        tls: {
-          rejectUnauthorized: false
-        }
-      });
-    } catch (serviceError) {
-      console.log('[Mail] Service-based config failed, trying host-based config...');
-      // Fallback to host-based configuration
-      transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 465,
-        secure: true,
-        auth: {
-          user: emailUser,
-          pass: emailPass,
-        },
-        pool: true,
-        maxConnections: 1,
-        maxMessages: 3,
-        family: 4,
-        connectionTimeout: 45000,
-        greetingTimeout: 20000,
-        socketTimeout: 45000,
-        tls: {
-          rejectUnauthorized: false,
-          ciphers: 'SSLv3'
-        }
-      });
-    }
-  }
-
-  return transporter;
+  return nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: { user: emailUser, pass: emailPass },
+  });
 };
 
-// Verify transporter connection with timeout
-const verifyTransporter = async (transporter) => {
-  try {
-    console.log('[Mail] Starting transporter verification...');
-    
-    // Add timeout to verification
-    const verificationPromise = transporter.verify();
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Verification timeout after 30 seconds')), 30000)
-    );
-    
-    await Promise.race([verificationPromise, timeoutPromise]);
-    console.log('[Mail] Transporter verification successful');
-    return true;
-  } catch (error) {
-    console.error('[Mail] Transporter verification failed:', {
-      error: error?.message || error,
-      code: error?.code,
-      response: error?.response,
-      command: error?.command,
-      errno: error?.errno,
-      syscall: error?.syscall,
-      address: error?.address,
-      port: error?.port
-    });
-    // Allow bypassing verify when providers block/no-op the NOOP/VRFY commands
-    if (String(process.env.EMAIL_SKIP_VERIFY).toLowerCase() === 'true') {
-      console.warn('[Mail] EMAIL_SKIP_VERIFY=true → proceeding without transporter.verify');
-      return true;
-    }
-    return false;
-  }
-};
+// No verification step – send directly
 
 // Send OTP email
 export const sendOTPEmail = async (email, otp) => {
   try {
     const transporter = createTransporter();
-    
-    // Verify connection before sending
-    const isVerified = await verifyTransporter(transporter);
-    if (!isVerified) {
-      throw new Error("Email service not available");
-    }
-
     const emailUser = process.env.SMTP_USER || process.env.EMAIL_USER;
     
     const mailOptions = {
@@ -164,32 +54,17 @@ export const sendOTPEmail = async (email, otp) => {
       `,
     };
 
-    console.log('[Mail] Sending OTP email', { to: email });
     const result = await transporter.sendMail(mailOptions);
-    console.log('[Mail] OTP email sent', { to: email, messageId: result?.messageId });
     return result;
   } catch (error) {
-    console.error('[Mail] Failed to send OTP email:', error?.response || error?.message || error);
     throw error;
   }
 };
 
 // Generic email sender for reuse
 export const sendEmail = async ({ to, subject, html, text, attachments }) => {
-  console.log('[Mail] Starting sendEmail function...', { to, subject, timestamp: new Date().toISOString() });
-  
   try {
-    console.log('[Mail] Creating transporter...');
     const transporter = createTransporter();
-    console.log('[Mail] Transporter created successfully');
-    
-    console.log('[Mail] Verifying transporter connection...');
-    const isVerified = await verifyTransporter(transporter);
-    if (!isVerified) {
-      console.error('[Mail] Transporter verification failed');
-      throw new Error("Email service not available");
-    }
-    console.log('[Mail] Transporter verification successful');
 
     const emailUser = process.env.SMTP_FROM || process.env.SMTP_USER || process.env.EMAIL_USER;
     const fromName = process.env.SMTP_FROM_NAME || 'Clinic Management System';
@@ -202,38 +77,9 @@ export const sendEmail = async ({ to, subject, html, text, attachments }) => {
       text,
       attachments: attachments || [],
     };
-
-    console.log('[Mail] Prepared mail options:', { 
-      from: `${fromName} <${emailUser}>`, 
-      to, 
-      subject, 
-      hasHtml: Boolean(html), 
-      hasText: Boolean(text),
-      htmlLength: html?.length || 0
-    });
-    
-    console.log('[Mail] Attempting to send email...');
     const result = await transporter.sendMail(mailOptions);
-    console.log('[Mail] Email sent successfully!', { 
-      to, 
-      subject, 
-      messageId: result?.messageId,
-      response: result?.response,
-      accepted: result?.accepted,
-      rejected: result?.rejected
-    });
     return result;
   } catch (error) {
-    console.error('[Mail] Failed to send email - Full error details:', { 
-      to, 
-      subject, 
-      error: error?.message || error,
-      code: error?.code,
-      response: error?.response,
-      command: error?.command,
-      stack: error?.stack,
-      timestamp: new Date().toISOString()
-    });
     throw error;
   }
 };
