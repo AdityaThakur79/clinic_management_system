@@ -382,19 +382,28 @@ export const createAppointment = async (req, res) => {
 
     await session.commitTransaction();
     session.endSession();
-    // Send notifications in background (non-blocking)
-    try {
-      const [populatedAppointment, populatedBranch] = await Promise.all([
-        Appointment.findById(appointmentDoc._id)
-          .populate('patientId', 'name email contact')
-          .populate('branchId', 'branchName address'),
-        Branch.findById(branchId),
-      ]);
-      // Pass through optional serviceDetails and media image (if provided by client)
-      await sendAppointmentNotifications({ appointment: populatedAppointment, branch: populatedBranch, serviceName: service, serviceDetails: serviceDetails || null, mediaUrl: process.env.EMAIL_HEADER_IMAGE_URL || process.env.WHATSAPP_MEDIA_URL || null });
-    } catch (notifyErr) {
-      console.error('Notification error:', notifyErr?.message || notifyErr);
-    }
+
+    // Send notifications in background (non-blocking) after successful appointment creation
+    (async () => {
+      try {
+        const [populatedAppointment, populatedBranch] = await Promise.all([
+          Appointment.findById(appointmentDoc._id)
+            .populate('patientId', 'name email contact')
+            .populate('branchId', 'branchName address'),
+          Branch.findById(branchId),
+        ]);
+        // Pass through optional serviceDetails and media image (if provided by client)
+        await sendAppointmentNotifications({ 
+          appointment: populatedAppointment, 
+          branch: populatedBranch, 
+          serviceName: service, 
+          serviceDetails: serviceDetails || null, 
+          mediaUrl: process.env.EMAIL_HEADER_IMAGE_URL || process.env.WHATSAPP_MEDIA_URL || null 
+        });
+      } catch (notifyErr) {
+        console.error('Notification error:', notifyErr?.message || notifyErr);
+      }
+    })();
 
     return res.status(201).json({ 
       success: true, 
