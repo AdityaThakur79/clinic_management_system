@@ -7,6 +7,14 @@ import { User } from "../../models/user.js";
 import { Service } from "../../models/services.js";
 
 export const sendAppointmentNotifications = async ({ appointment, branch, serviceName, serviceDetails, mediaUrl }) => {
+  console.log('[NOTIFICATIONS] Starting sendAppointmentNotifications...', {
+    appointmentId: appointment?._id,
+    hasPatientEmail: !!appointment?.patientId?.email,
+    hasPatientContact: !!appointment?.patientId?.contact,
+    serviceName,
+    timestamp: new Date().toISOString()
+  });
+
   const formatDate = (d) => new Date(d).toLocaleDateString('en-IN', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
   const fmtDate = formatDate(appointment?.date);
   const fmtTime = appointment?.timeSlot || '09:00';
@@ -15,6 +23,16 @@ export const sendAppointmentNotifications = async ({ appointment, branch, servic
   const branchName = branch?.branchName || appointment?.branchId?.branchName;
   const branchAddress = branch?.address || appointment?.branchId?.address;
   const service = serviceName || appointment?.service;
+
+  console.log('[NOTIFICATIONS] Formatted data:', {
+    fmtDate,
+    fmtTime,
+    patientEmail,
+    patientName,
+    branchName,
+    branchAddress,
+    service
+  });
 
   // If no structured serviceDetails provided, try to enrich from Service model
   let enrichedServiceDetails = serviceDetails || null;
@@ -34,26 +52,70 @@ export const sendAppointmentNotifications = async ({ appointment, branch, servic
 
   // Patient email
   if (patientEmail) {
-    const html = appointmentPatientEmail({ name: patientName, service, date: fmtDate, time: fmtTime, branch: branchName, address: branchAddress, serviceDetails: enrichedServiceDetails, headerImageUrl: mediaUrl || process.env.EMAIL_HEADER_IMAGE_URL });
-    await sendEmail({ to: patientEmail, subject: `Appointment Confirmed - ${service} - ${fmtDate} ${fmtTime}`, html });
+    console.log('[NOTIFICATIONS] Sending patient email...', { to: patientEmail });
+    try {
+      const html = appointmentPatientEmail({ name: patientName, service, date: fmtDate, time: fmtTime, branch: branchName, address: branchAddress, serviceDetails: enrichedServiceDetails, headerImageUrl: mediaUrl || process.env.EMAIL_HEADER_IMAGE_URL });
+      await sendEmail({ to: patientEmail, subject: `Appointment Confirmed - ${service} - ${fmtDate} ${fmtTime}`, html });
+      console.log('[NOTIFICATIONS] Patient email sent successfully!', { to: patientEmail });
+    } catch (emailError) {
+      console.error('[NOTIFICATIONS] Failed to send patient email:', { to: patientEmail, error: emailError?.message || emailError });
+    }
+  } else {
+    console.log('[NOTIFICATIONS] No patient email found, skipping patient notification');
   }
+
   // Admin copies
   const superAdminEmail = process.env.SUPERADMIN_EMAIL || process.env.ADMIN_EMAIL;
   if (superAdminEmail) {
-    const htmlAdmin = appointmentAdminEmail({ patientName, service, date: fmtDate, time: fmtTime, branch: branchName, address: branchAddress, headerImageUrl: mediaUrl || process.env.EMAIL_HEADER_IMAGE_URL });
-    await sendEmail({ to: superAdminEmail, subject: `New Appointment - ${service} - ${fmtDate} ${fmtTime}`, html: htmlAdmin });
+    console.log('[NOTIFICATIONS] Sending admin email...', { to: superAdminEmail });
+    try {
+      const htmlAdmin = appointmentAdminEmail({ patientName, service, date: fmtDate, time: fmtTime, branch: branchName, address: branchAddress, headerImageUrl: mediaUrl || process.env.EMAIL_HEADER_IMAGE_URL });
+      await sendEmail({ to: superAdminEmail, subject: `New Appointment - ${service} - ${fmtDate} ${fmtTime}`, html: htmlAdmin });
+      console.log('[NOTIFICATIONS] Admin email sent successfully!', { to: superAdminEmail });
+    } catch (emailError) {
+      console.error('[NOTIFICATIONS] Failed to send admin email:', { to: superAdminEmail, error: emailError?.message || emailError });
+    }
+  } else {
+    console.log('[NOTIFICATIONS] No admin email configured, skipping admin notification');
   }
   // Branch admins
   try {
+    console.log('[NOTIFICATIONS] Fetching branch admins...', { branchId: appointment?.branchId });
     const branchAdmins = await User.find({ role: 'branchAdmin', branch: appointment?.branchId }).select('email');
-    await Promise.all(branchAdmins.map((ba)=> ba.email ? sendEmail({ to: ba.email, subject: `New Appointment - ${service} - ${fmtDate} ${fmtTime}`, html: appointmentAdminEmail({ patientName, service, date: fmtDate, time: fmtTime, branch: branchName, address: branchAddress, headerImageUrl: mediaUrl || process.env.EMAIL_HEADER_IMAGE_URL }) }) : null));
-  } catch(_) {}
+    console.log('[NOTIFICATIONS] Found branch admins:', { count: branchAdmins.length, emails: branchAdmins.map(ba => ba.email) });
+    
+    if (branchAdmins.length > 0) {
+      await Promise.all(branchAdmins.map(async (ba) => {
+        if (ba.email) {
+          console.log('[NOTIFICATIONS] Sending branch admin email...', { to: ba.email });
+          try {
+            await sendEmail({ to: ba.email, subject: `New Appointment - ${service} - ${fmtDate} ${fmtTime}`, html: appointmentAdminEmail({ patientName, service, date: fmtDate, time: fmtTime, branch: branchName, address: branchAddress, headerImageUrl: mediaUrl || process.env.EMAIL_HEADER_IMAGE_URL }) });
+            console.log('[NOTIFICATIONS] Branch admin email sent successfully!', { to: ba.email });
+          } catch (emailError) {
+            console.error('[NOTIFICATIONS] Failed to send branch admin email:', { to: ba.email, error: emailError?.message || emailError });
+          }
+        }
+      }));
+    }
+  } catch (branchAdminError) {
+    console.error('[NOTIFICATIONS] Error with branch admin notifications:', branchAdminError?.message || branchAdminError);
+  }
 
   // WhatsApp to patient
   if (appointment?.patientId?.contact) {
-    const wa = waTemplates.appointmentPatient({ name: patientName, service, date: fmtDate, time: fmtTime, branch: branchName, address: branchAddress });
-    await sendWhatsAppTemplate({ toPhone: appointment.patientId.contact, templateName: wa.templateName, templateParams: wa.params, mediaUrl: mediaUrl || process.env.WHATSAPP_MEDIA_URL });
+    console.log('[NOTIFICATIONS] Sending WhatsApp notification...', { to: appointment.patientId.contact });
+    try {
+      const wa = waTemplates.appointmentPatient({ name: patientName, service, date: fmtDate, time: fmtTime, branch: branchName, address: branchAddress });
+      await sendWhatsAppTemplate({ toPhone: appointment.patientId.contact, templateName: wa.templateName, templateParams: wa.params, mediaUrl: mediaUrl || process.env.WHATSAPP_MEDIA_URL });
+      console.log('[NOTIFICATIONS] WhatsApp notification sent successfully!', { to: appointment.patientId.contact });
+    } catch (whatsappError) {
+      console.error('[NOTIFICATIONS] Failed to send WhatsApp notification:', { to: appointment.patientId.contact, error: whatsappError?.message || whatsappError });
+    }
+  } else {
+    console.log('[NOTIFICATIONS] No patient contact found, skipping WhatsApp notification');
   }
+
+  console.log('[NOTIFICATIONS] All notifications processed!');
 };
 
 export const sendReminderNotifications = async ({ appointment, mediaUrl }) => {

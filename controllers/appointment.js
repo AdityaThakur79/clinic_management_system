@@ -385,13 +385,54 @@ export const createAppointment = async (req, res) => {
 
     // Send notifications in background (non-blocking) after successful appointment creation
     (async () => {
+      console.log('[APPOINTMENT] Starting notification process...', {
+        appointmentId: appointmentDoc._id,
+        branchId,
+        service,
+        timestamp: new Date().toISOString()
+      });
+      
       try {
+        console.log('[APPOINTMENT] Fetching populated appointment and branch data...');
         const [populatedAppointment, populatedBranch] = await Promise.all([
           Appointment.findById(appointmentDoc._id)
             .populate('patientId', 'name email contact')
             .populate('branchId', 'branchName address'),
           Branch.findById(branchId),
         ]);
+        
+        console.log('[APPOINTMENT] Data fetched successfully:', {
+          appointment: {
+            id: populatedAppointment?._id,
+            patientEmail: populatedAppointment?.patientId?.email,
+            patientName: populatedAppointment?.patientId?.name,
+            patientContact: populatedAppointment?.patientId?.contact,
+            service: populatedAppointment?.service,
+            date: populatedAppointment?.date,
+            timeSlot: populatedAppointment?.timeSlot
+          },
+          branch: {
+            id: populatedBranch?._id,
+            name: populatedBranch?.branchName,
+            address: populatedBranch?.address
+          }
+        });
+
+        // Check environment variables for email configuration
+        console.log('[APPOINTMENT] Email configuration check:', {
+          smtpUser: process.env.SMTP_USER ? '***provided***' : '***missing***',
+          smtpPass: process.env.SMTP_PASS ? '***provided***' : '***missing***',
+          emailUser: process.env.EMAIL_USER ? '***provided***' : '***missing***',
+          emailPass: process.env.EMAIL_PASS ? '***provided***' : '***missing***',
+          smtpHost: process.env.SMTP_HOST || 'not set (using Gmail)',
+          smtpPort: process.env.SMTP_PORT || 'not set (using default)',
+          smtpSecure: process.env.SMTP_SECURE || 'not set (using default)',
+          superAdminEmail: process.env.SUPERADMIN_EMAIL || process.env.ADMIN_EMAIL || 'not set',
+          emailHeaderImageUrl: process.env.EMAIL_HEADER_IMAGE_URL || 'not set',
+          whatsappMediaUrl: process.env.WHATSAPP_MEDIA_URL || 'not set'
+        });
+
+        console.log('[APPOINTMENT] Calling sendAppointmentNotifications...');
         // Pass through optional serviceDetails and media image (if provided by client)
         await sendAppointmentNotifications({ 
           appointment: populatedAppointment, 
@@ -400,8 +441,16 @@ export const createAppointment = async (req, res) => {
           serviceDetails: serviceDetails || null, 
           mediaUrl: process.env.EMAIL_HEADER_IMAGE_URL || process.env.WHATSAPP_MEDIA_URL || null 
         });
+        
+        console.log('[APPOINTMENT] Notifications sent successfully!');
       } catch (notifyErr) {
-        console.error('Notification error:', notifyErr?.message || notifyErr);
+        console.error('[APPOINTMENT] Notification error details:', {
+          error: notifyErr?.message || notifyErr,
+          stack: notifyErr?.stack,
+          code: notifyErr?.code,
+          response: notifyErr?.response,
+          timestamp: new Date().toISOString()
+        });
       }
     })();
 
