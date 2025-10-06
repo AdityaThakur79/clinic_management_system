@@ -66,6 +66,10 @@ const createTransporter = () => {
         },
         secure: true,
         port: 465,
+        pool: true,
+        maxConnections: 1,
+        maxMessages: 3,
+        family: 4, // force IPv4 (some hosts have issues with IPv6)
         tls: {
           rejectUnauthorized: false
         }
@@ -81,9 +85,13 @@ const createTransporter = () => {
           user: emailUser,
           pass: emailPass,
         },
-        connectionTimeout: 60000,
-        greetingTimeout: 30000,
-        socketTimeout: 60000,
+        pool: true,
+        maxConnections: 1,
+        maxMessages: 3,
+        family: 4,
+        connectionTimeout: 45000,
+        greetingTimeout: 20000,
+        socketTimeout: 45000,
         tls: {
           rejectUnauthorized: false,
           ciphers: 'SSLv3'
@@ -120,6 +128,11 @@ const verifyTransporter = async (transporter) => {
       address: error?.address,
       port: error?.port
     });
+    // Allow bypassing verify when providers block/no-op the NOOP/VRFY commands
+    if (String(process.env.EMAIL_SKIP_VERIFY).toLowerCase() === 'true') {
+      console.warn('[Mail] EMAIL_SKIP_VERIFY=true → proceeding without transporter.verify');
+      return true;
+    }
     return false;
   }
 };

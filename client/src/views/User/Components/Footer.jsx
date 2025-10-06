@@ -349,13 +349,13 @@ const Footer = () => {
               <Box flex={{ lg: '1 1 33%' }} display="flex" justifyContent="center">
                 <HStack spacing={4}>
                   <Link href="https://www.instagram.com/aartiketspeechhearing/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                    <Icon as={FaInstagram} boxSize={5} color="#0C2F4D" _hover={{ color: "#2BA8D1" }} />
+                    <Icon as={FaInstagram} boxSize={5} color="#2BA8D1" _hover={{ color: "#0C2F4D" }} />
                   </Link>
                   <Link href="https://www.facebook.com/people/Aartiket-Speech-HearingCare/100090886389223/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-                    <Icon as={FaFacebook} boxSize={5} color="#0C2F4D" _hover={{ color: "#2BA8D1" }} />
+                    <Icon as={FaFacebook} boxSize={5} color="#2BA8D1" _hover={{ color: "#0C2F4D" }} />
                   </Link>
                   <Link href="https://www.youtube.com/@Aartiketcare" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
-                    <Icon as={FaYoutube} boxSize={5} color="#0C2F4D" _hover={{ color: "#2BA8D1" }} />
+                    <Icon as={FaYoutube} boxSize={5} color="#2BA8D1" _hover={{ color: "#0C2F4D" }} />
                   </Link>
                 </HStack>
               </Box>
