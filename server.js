@@ -163,58 +163,98 @@ app.get("/api/health/email", async (req, res) => {
   }
 });
 
-// Simple Gmail test endpoint (using basic nodemailer config like your other projects)
+// Test different Gmail configurations
 app.get("/api/test/gmail", async (req, res) => {
-  try {
-    console.log('[GMAIL_TEST] Testing with basic Gmail configuration...');
-    
-    const nodemailer = await import('nodemailer');
-    
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.SMTP_USER || process.env.EMAIL_USER,
-        pass: process.env.SMTP_PASS || process.env.EMAIL_PASS,
-      },
-      secure: true,
-      port: 465,
-      tls: {
-        rejectUnauthorized: false
+  const nodemailer = await import('nodemailer');
+  const testEmail = req.query.test;
+  const results = [];
+
+  // Test configurations
+  const configs = [
+    {
+      name: "Service-based (port 465)",
+      config: {
+        service: "gmail",
+        auth: {
+          user: process.env.SMTP_USER || process.env.EMAIL_USER,
+          pass: process.env.SMTP_PASS || process.env.EMAIL_PASS,
+        },
+        secure: true,
+        port: 465,
+        tls: { rejectUnauthorized: false }
       }
-    });
-
-    console.log('[GMAIL_TEST] Verifying connection...');
-    await transporter.verify();
-    console.log('[GMAIL_TEST] Connection verified successfully!');
-
-    const testEmail = req.query.test;
-    if (testEmail) {
-      console.log('[GMAIL_TEST] Sending test email...');
-      const result = await transporter.sendMail({
-        from: process.env.SMTP_USER || process.env.EMAIL_USER,
-        to: testEmail,
-        subject: 'Gmail Test - Basic Config',
-        html: '<h1>Gmail Test Successful!</h1><p>This email was sent using the basic Gmail configuration.</p>'
-      });
-      console.log('[GMAIL_TEST] Email sent:', result.messageId);
+    },
+    {
+      name: "Host-based (port 465)",
+      config: {
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        auth: {
+          user: process.env.SMTP_USER || process.env.EMAIL_USER,
+          pass: process.env.SMTP_PASS || process.env.EMAIL_PASS,
+        },
+        tls: { rejectUnauthorized: false }
+      }
+    },
+    {
+      name: "Host-based (port 587)",
+      config: {
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.SMTP_USER || process.env.EMAIL_USER,
+          pass: process.env.SMTP_PASS || process.env.EMAIL_PASS,
+        },
+        tls: { rejectUnauthorized: false }
+      }
     }
+  ];
 
-    res.json({
-      success: true,
-      message: "Gmail basic configuration works!",
-      testEmail: testEmail || 'not provided (add ?test=your-email@example.com to test)',
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error) {
-    console.error('[GMAIL_TEST] Basic Gmail test failed:', error);
-    res.status(500).json({
-      success: false,
-      message: "Basic Gmail test failed",
-      error: error.message,
-      timestamp: new Date().toISOString()
-    });
+  for (const { name, config } of configs) {
+    try {
+      console.log(`[GMAIL_TEST] Testing ${name}...`);
+      const transporter = nodemailer.createTransport(config);
+      
+      // Test connection with timeout
+      const verifyPromise = transporter.verify();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection timeout')), 10000)
+      );
+      
+      await Promise.race([verifyPromise, timeoutPromise]);
+      
+      if (testEmail) {
+        const result = await transporter.sendMail({
+          from: process.env.SMTP_USER || process.env.EMAIL_USER,
+          to: testEmail,
+          subject: `Gmail Test - ${name}`,
+          html: `<h1>Gmail Test Successful!</h1><p>Configuration: ${name}</p>`
+        });
+        results.push({ name, status: 'success', messageId: result.messageId });
+      } else {
+        results.push({ name, status: 'success', message: 'Connection verified' });
+      }
+      
+      console.log(`[GMAIL_TEST] ${name} - SUCCESS`);
+      break; // Stop on first success
+      
+    } catch (error) {
+      console.log(`[GMAIL_TEST] ${name} - FAILED:`, error.message);
+      results.push({ name, status: 'failed', error: error.message });
+    }
   }
+
+  const successCount = results.filter(r => r.status === 'success').length;
+  
+  res.json({
+    success: successCount > 0,
+    message: successCount > 0 ? "At least one Gmail configuration works!" : "All Gmail configurations failed",
+    results,
+    testEmail: testEmail || 'not provided (add ?test=your-email@example.com to test)',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Serve static files from uploads directory

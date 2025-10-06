@@ -56,15 +56,40 @@ const createTransporter = () => {
       secure: true,
       user: (process.env.SMTP_USER || process.env.EMAIL_USER) ? '***provided***' : '***missing***'
     });
-    transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: emailUser,
-        pass: emailPass,
-      },
-    });
+    // Try service-based configuration first (more reliable on cloud hosting)
+    try {
+      transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: emailUser,
+          pass: emailPass,
+        },
+        secure: true,
+        port: 465,
+        tls: {
+          rejectUnauthorized: false
+        }
+      });
+    } catch (serviceError) {
+      console.log('[Mail] Service-based config failed, trying host-based config...');
+      // Fallback to host-based configuration
+      transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        auth: {
+          user: emailUser,
+          pass: emailPass,
+        },
+        connectionTimeout: 60000,
+        greetingTimeout: 30000,
+        socketTimeout: 60000,
+        tls: {
+          rejectUnauthorized: false,
+          ciphers: 'SSLv3'
+        }
+      });
+    }
   }
 
   return transporter;
