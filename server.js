@@ -163,6 +163,60 @@ app.get("/api/health/email", async (req, res) => {
   }
 });
 
+// Simple Gmail test endpoint (using basic nodemailer config like your other projects)
+app.get("/api/test/gmail", async (req, res) => {
+  try {
+    console.log('[GMAIL_TEST] Testing with basic Gmail configuration...');
+    
+    const nodemailer = await import('nodemailer');
+    
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.SMTP_USER || process.env.EMAIL_USER,
+        pass: process.env.SMTP_PASS || process.env.EMAIL_PASS,
+      },
+      secure: true,
+      port: 465,
+      tls: {
+        rejectUnauthorized: false
+      }
+    });
+
+    console.log('[GMAIL_TEST] Verifying connection...');
+    await transporter.verify();
+    console.log('[GMAIL_TEST] Connection verified successfully!');
+
+    const testEmail = req.query.test;
+    if (testEmail) {
+      console.log('[GMAIL_TEST] Sending test email...');
+      const result = await transporter.sendMail({
+        from: process.env.SMTP_USER || process.env.EMAIL_USER,
+        to: testEmail,
+        subject: 'Gmail Test - Basic Config',
+        html: '<h1>Gmail Test Successful!</h1><p>This email was sent using the basic Gmail configuration.</p>'
+      });
+      console.log('[GMAIL_TEST] Email sent:', result.messageId);
+    }
+
+    res.json({
+      success: true,
+      message: "Gmail basic configuration works!",
+      testEmail: testEmail || 'not provided (add ?test=your-email@example.com to test)',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('[GMAIL_TEST] Basic Gmail test failed:', error);
+    res.status(500).json({
+      success: false,
+      message: "Basic Gmail test failed",
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Serve static files from uploads directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

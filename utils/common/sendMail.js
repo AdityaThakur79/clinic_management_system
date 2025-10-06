@@ -49,33 +49,52 @@ const createTransporter = () => {
       tls: { rejectUnauthorized: false },
     });
   } else {
-    // For Gmail, use App Password
+    // For Gmail, use the same configuration as working projects
     console.log('[Mail] Using Gmail SMTP configuration', {
-      service: 'gmail',
+      host: 'smtp.gmail.com',
       port: 465,
       secure: true,
       user: (process.env.SMTP_USER || process.env.EMAIL_USER) ? '***provided***' : '***missing***'
     });
     transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user: emailUser, pass: emailPass },
-      secure: true,
+      host: "smtp.gmail.com",
       port: 465,
-      tls: { rejectUnauthorized: false }
+      secure: true,
+      auth: {
+        user: emailUser,
+        pass: emailPass,
+      },
     });
   }
 
   return transporter;
 };
 
-// Verify transporter connection
+// Verify transporter connection with timeout
 const verifyTransporter = async (transporter) => {
   try {
-    await transporter.verify();
+    console.log('[Mail] Starting transporter verification...');
+    
+    // Add timeout to verification
+    const verificationPromise = transporter.verify();
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Verification timeout after 30 seconds')), 30000)
+    );
+    
+    await Promise.race([verificationPromise, timeoutPromise]);
     console.log('[Mail] Transporter verification successful');
     return true;
   } catch (error) {
-    console.error('[Mail] Transporter verification failed:', error?.response || error?.message || error);
+    console.error('[Mail] Transporter verification failed:', {
+      error: error?.message || error,
+      code: error?.code,
+      response: error?.response,
+      command: error?.command,
+      errno: error?.errno,
+      syscall: error?.syscall,
+      address: error?.address,
+      port: error?.port
+    });
     return false;
   }
 };
@@ -119,12 +138,20 @@ export const sendOTPEmail = async (email, otp) => {
 
 // Generic email sender for reuse
 export const sendEmail = async ({ to, subject, html, text, attachments }) => {
+  console.log('[Mail] Starting sendEmail function...', { to, subject, timestamp: new Date().toISOString() });
+  
   try {
+    console.log('[Mail] Creating transporter...');
     const transporter = createTransporter();
+    console.log('[Mail] Transporter created successfully');
+    
+    console.log('[Mail] Verifying transporter connection...');
     const isVerified = await verifyTransporter(transporter);
     if (!isVerified) {
+      console.error('[Mail] Transporter verification failed');
       throw new Error("Email service not available");
     }
+    console.log('[Mail] Transporter verification successful');
 
     const emailUser = process.env.SMTP_FROM || process.env.SMTP_USER || process.env.EMAIL_USER;
     const fromName = process.env.SMTP_FROM_NAME || 'Clinic Management System';
@@ -138,12 +165,37 @@ export const sendEmail = async ({ to, subject, html, text, attachments }) => {
       attachments: attachments || [],
     };
 
-    console.log('[Mail] Sending email', { to, subject, hasHtml: Boolean(html), hasText: Boolean(text) });
+    console.log('[Mail] Prepared mail options:', { 
+      from: `${fromName} <${emailUser}>`, 
+      to, 
+      subject, 
+      hasHtml: Boolean(html), 
+      hasText: Boolean(text),
+      htmlLength: html?.length || 0
+    });
+    
+    console.log('[Mail] Attempting to send email...');
     const result = await transporter.sendMail(mailOptions);
-    console.log('[Mail] Email sent', { to, subject, messageId: result?.messageId });
+    console.log('[Mail] Email sent successfully!', { 
+      to, 
+      subject, 
+      messageId: result?.messageId,
+      response: result?.response,
+      accepted: result?.accepted,
+      rejected: result?.rejected
+    });
     return result;
   } catch (error) {
-    console.error('[Mail] Failed to send email:', { to, subject, error: error?.response || error?.message || error });
+    console.error('[Mail] Failed to send email - Full error details:', { 
+      to, 
+      subject, 
+      error: error?.message || error,
+      code: error?.code,
+      response: error?.response,
+      command: error?.command,
+      stack: error?.stack,
+      timestamp: new Date().toISOString()
+    });
     throw error;
   }
 };
