@@ -6,7 +6,9 @@ import { User as Doctor } from "../models/user.js";
 import { Service } from "../models/services.js";
 import { sendEmail } from "../utils/common/sendMail.js";
 import { sendAppointmentNotifications } from "../utils/services/notifications.js";
+import { sendReminderNotifications } from "../utils/services/notifications.js";
 import { sendReferralDoctorWhatsapp } from "../utils/services/notifications.js";
+import { ReminderSettings } from "../models/reminder.js";
 
 export const getAvailability = async (req, res) => {
   try {
@@ -289,6 +291,15 @@ export const createAppointment = async (req, res) => {
   try {
     const { branchId, service, date, timeSlot, notes, referredDoctorId, patient, patientId, servicePrice, serviceDuration, serviceDetails } = req.body;
 
+    const normalizeIndianPhone = (raw) => {
+      if (!raw) return raw;
+      const digits = String(raw).replace(/\D/g, '');
+      if (digits.startsWith('91') && digits.length === 12) return digits;
+      if (digits.length === 10) return `91${digits}`;
+      if (digits.length === 11 && digits.startsWith('0')) return `91${digits.slice(1)}`;
+      return digits; // fallback, at least numeric
+    };
+
     // Validate required fields (service is optional)
     const missing = [];
     if (!branchId) missing.push('branchId');
@@ -316,7 +327,7 @@ export const createAppointment = async (req, res) => {
     } else {
       // Find or create patient by phone/email
       const patientQuery = [];
-      if (patient?.contact) patientQuery.push({ contact: patient.contact });
+      if (patient?.contact) patientQuery.push({ contact: normalizeIndianPhone(patient.contact) });
       if (patient?.email) patientQuery.push({ email: patient.email.toLowerCase() });
 
       if (patientQuery.length > 0) {
@@ -328,7 +339,7 @@ export const createAppointment = async (req, res) => {
             name: patient.name,
             age: patient.age,
             gender: patient.gender,
-            contact: patient.contact,
+            contact: normalizeIndianPhone(patient.contact),
             email: patient.email,
             address: patient.address,
             medicalHistory: patient.medicalHistory || [],
@@ -341,6 +352,7 @@ export const createAppointment = async (req, res) => {
         if (patient.age !== undefined) patientDoc.age = patient.age;
         if (patient.gender) patientDoc.gender = patient.gender;
         if (patient.address) patientDoc.address = patient.address;
+        if (patient.contact) patientDoc.contact = normalizeIndianPhone(patient.contact);
         await patientDoc.save({ session });
       }
     }
@@ -443,6 +455,41 @@ export const createAppointment = async (req, res) => {
         });
         
         console.log('[APPOINTMENT] Notifications sent successfully!');
+
+        // Schedule a reminder after confirmation based on superAdmin settings
+        try {
+          const settings = await ReminderSettings.findOne();
+          const leadTimes = settings?.leadTimesMinutes?.length ? settings.leadTimesMinutes : [360];
+          const minLead = Math.min(...leadTimes);
+
+          // Build exact appointment datetime (date + timeSlot)
+          const apptDateTime = new Date(dayStart);
+          const base = typeof timeSlotNormalized === 'string' ? timeSlotNormalized.split('-')[0] : '09:00';
+          const [hhStr, mmStr] = base.split(':');
+          const hh = parseInt(hhStr || '9', 10);
+          const mm = parseInt(mmStr || '0', 10);
+          apptDateTime.setHours(isNaN(hh) ? 9 : hh, isNaN(mm) ? 0 : mm, 0, 0);
+
+          // Calculate when to send reminder: appointment time minus minLead minutes
+          const sendAt = new Date(apptDateTime.getTime() - minLead * 60000);
+          const nowTs = Date.now();
+          const delayMs = Math.max(0, sendAt.getTime() - nowTs);
+
+          setTimeout(async () => {
+            try {
+              const freshApt = await Appointment.findById(appointmentDoc._id)
+                .populate('patientId', 'name email contact')
+                .populate('doctorId', 'name')
+                .populate('branchId', 'branchName address');
+              if (freshApt) {
+                await sendReminderNotifications({ appointment: freshApt, mediaUrl: process.env.EMAIL_HEADER_IMAGE_URL || null });
+                console.log('[APPOINTMENT] Post-confirmation reminder sent (lead minutes:', minLead, ')');
+              }
+            } catch (remErr) {
+              console.error('[APPOINTMENT] Post-confirmation reminder failed:', remErr?.message || remErr);
+            }
+          }, delayMs);
+        } catch (_) {}
       } catch (notifyErr) {
         console.error('[APPOINTMENT] Notification error details:', {
           error: notifyErr?.message || notifyErr,
@@ -874,3 +921,55 @@ export const deleteAppointment = async (req, res) => {
   }
 };
 
+
+// Test endpoint: resend appointment confirmation (email + WhatsApp)
+export const resendAppointmentConfirmation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const appointment = await Appointment.findById(id)
+      .populate('patientId', 'name email contact')
+      .populate('branchId', 'branchName address')
+      .populate('doctorId', 'name');
+
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: 'Appointment not found' });
+    }
+
+    try {
+      const branch = await Branch.findById(appointment.branchId);
+      await sendAppointmentNotifications({ appointment, branch, serviceName: appointment.service, serviceDetails: null, mediaUrl: process.env.EMAIL_HEADER_IMAGE_URL || null });
+    } catch (e) {
+      return res.status(500).json({ success: false, message: 'Failed to send confirmation', error: e?.message || String(e) });
+    }
+
+    return res.json({ success: true, message: 'Confirmation sent' });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// Test endpoint: send reminder now (email + WhatsApp)
+export const sendAppointmentReminderNow = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const appointment = await Appointment.findById(id)
+      .populate('patientId', 'name email contact')
+      .populate('branchId', 'branchName address')
+      .populate('doctorId', 'name');
+
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: 'Appointment not found' });
+    }
+
+    try {
+      // Reuse reminder notification pipeline (handles email + WhatsApp)
+      await sendAppointmentNotifications({ appointment, branch: appointment.branchId, serviceName: appointment.service, serviceDetails: null, mediaUrl: process.env.EMAIL_HEADER_IMAGE_URL || null });
+    } catch (e) {
+      return res.status(500).json({ success: false, message: 'Failed to send reminder', error: e?.message || String(e) });
+    }
+
+    return res.json({ success: true, message: 'Reminder sent' });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};

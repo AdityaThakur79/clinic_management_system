@@ -772,9 +772,19 @@ const HearingAidBrand = () => {
       </Box>
 
       {/* Booking Modal */}
-      <Modal isOpen={isBookingModalOpen} onClose={() => setIsBookingModalOpen(false)} size="lg" isCentered>
+  <Modal isOpen={isBookingModalOpen} onClose={() => setIsBookingModalOpen(false)} size={{ base: 'full', md: 'lg' }} isCentered>
         <ModalOverlay />
-        <ModalContent bg="white" maxW="620px" borderRadius="xl" boxShadow="2xl" border="1px solid" borderColor="gray.200">
+    <ModalContent 
+      bg="white" 
+      maxW={{ base: '95vw', md: '620px' }} 
+      maxH="90vh" 
+      borderRadius="xl" 
+      boxShadow="2xl" 
+      border="1px solid" 
+      borderColor="gray.200"
+      display="flex"
+      flexDirection="column"
+    >
           <ModalHeader borderBottom="1px solid" borderColor="gray.200" pb={3}>
             <Text fontSize="xl" fontWeight="bold" color={brandColors.primaryDark}>
               Book Consultation
@@ -785,7 +795,7 @@ const HearingAidBrand = () => {
           </ModalHeader>
           <ModalCloseButton />
           
-          <ModalBody>
+    <ModalBody overflowY="auto" maxH="calc(90vh - 120px)">
             <VStack spacing={5} align="stretch">
               {/* Service Details */}
               <Box w="full" p={4} bg={`${brandColors.primary}15`} borderRadius="lg" border="1px solid" borderColor={`${brandColors.primary}40`}>
@@ -944,7 +954,13 @@ const HearingAidBrand = () => {
                 <Input
                   type="tel"
                   value={bookingForm.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={10}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    handleInputChange('phone', digits);
+                  }}
                   placeholder="Enter your phone number"
                   size="sm"
                 />
@@ -962,7 +978,7 @@ const HearingAidBrand = () => {
               </FormControl>
             </VStack>
           </ModalBody>
-          <ModalFooter borderTop="1px solid" borderColor="gray.200">
+    <ModalFooter borderTop="1px solid" borderColor="gray.200" position="sticky" bottom={0} bg="white">
             <HStack spacing={3}>
               <Button 
                 variant="outline" 

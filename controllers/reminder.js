@@ -477,46 +477,56 @@ export const processUpcomingReminders = async (req, res) => {
   try {
     const settings = await ReminderSettings.findOne();
     const leadTimes = settings?.leadTimesMinutes?.length ? settings.leadTimesMinutes : [360];
+    const maxLeadMinutes = Math.max(...leadTimes);
 
     const now = new Date();
-    const horizon = new Date(now.getTime() + Math.max(...leadTimes) * 60000);
+    // Search window: from start of today to max lead horizon + 1 day buffer
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const searchEnd = new Date(now.getTime() + (maxLeadMinutes + 24 * 60) * 60000);
 
-    // Find upcoming appointments in the horizon
+    // Pull appointments roughly in the forward window by date (stored at 00:00)
     const appts = await Appointment.find({
-      date: { $gte: now, $lte: horizon },
+      date: { $gte: todayStart, $lte: searchEnd },
       status: 'booked'
-    }).populate('patientId', 'name email contact')
+    })
+      .populate('patientId', 'name email contact')
       .populate('doctorId', 'name')
       .populate('branchId', 'branchName address');
 
     let sentCount = 0;
-    for (const appt of appts) {
-      const minutesUntil = Math.round((appt.date.getTime() - now.getTime()) / 60000);
-      // Match any configured lead time within +/- 2 minutes window
-      if (leadTimes.some(lt => Math.abs(lt - minutesUntil) <= 2)) {
-        try {
-          const subject = `Appointment Reminder - ${appt.doctorId?.name} - ${appt.date.toLocaleDateString('en-IN')} ${appt.timeSlot}`;
-          const html = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style=\"color:#2BA8D1; margin-bottom: 8px;\">Appointment Reminder</h2>
-              <p>This is a reminder for your upcoming appointment.</p>
-            </div>
-          `;
-          if (appt.patientId?.email) {
-            await sendEmail({ to: appt.patientId.email, subject, html });
-            sentCount += 1;
-          }
-          // WhatsApp via AiSensy (commented)
-          // if (process.env.AISENSY_API_KEY && appt.patientId?.contact) { ... }
-        } catch (e) {
+    let checked = 0;
 
-        }
+    const parseTimeSlot = (t) => {
+      if (!t) return { h: 9, m: 0 }; // default 09:00
+      const base = String(t).split('-')[0]; // handle ranges "HH:mm-HH:mm"
+      const [hh, mm] = base.split(':').map((n) => parseInt(n, 10));
+      return { h: isNaN(hh) ? 9 : hh, m: isNaN(mm) ? 0 : mm };
+    };
+
+    for (const appt of appts) {
+      // Combine date + timeSlot into actual appointment DateTime
+      const apptDate = new Date(appt.date);
+      const { h, m } = parseTimeSlot(appt.timeSlot);
+      apptDate.setHours(h, m, 0, 0);
+
+      // Only consider future times within horizon
+      if (apptDate <= now) continue;
+
+      const minutesUntil = Math.round((apptDate.getTime() - now.getTime()) / 60000);
+      checked += 1;
+
+      // Match any configured lead time within +/- 2 minutes window
+      if (leadTimes.some((lt) => Math.abs(lt - minutesUntil) <= 2)) {
+        try {
+          // Use unified reminder pipeline (email + WhatsApp)
+          await sendReminderNotifications({ appointment: appt, mediaUrl: process.env.EMAIL_HEADER_IMAGE_URL || null });
+          sentCount += 1;
+        } catch (_) {}
       }
     }
 
-    return res.json({ success: true, sentCount, checked: appts.length });
+    return res.json({ success: true, sentCount, checked, leadTimes });
   } catch (e) {
-
     return res.status(500).json({ success: false, message: 'Server error' });
   }
 };

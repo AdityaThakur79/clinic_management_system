@@ -90,8 +90,16 @@ export const createPatient = async (req, res) => {
       }
     }
 
-    // Normalize contact to digits and email to lowercase for uniqueness check
-    const normalizedContact = typeof contact === 'string' ? contact.replace(/\D/g, '') : contact;
+    // Normalize contact to E.164 (India) and email to lowercase for uniqueness check
+    const normalizeIndianPhone = (raw) => {
+      if (!raw) return raw;
+      const digits = String(raw).replace(/\D/g, '');
+      if (digits.startsWith('91') && digits.length === 12) return digits;
+      if (digits.length === 10) return `91${digits}`;
+      if (digits.length === 11 && digits.startsWith('0')) return `91${digits.slice(1)}`;
+      return digits;
+    };
+    const normalizedContact = normalizeIndianPhone(contact);
     const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : undefined;
 
     // Check if patient already exists with same contact or email (case/format insensitive)
@@ -193,6 +201,14 @@ export const updatePatient = async (req, res) => {
       if (!branch) {
         return res.status(404).json({ success: false, message: "Branch not found" });
       }
+    }
+
+    // Normalize contact if provided
+    if (updateData.contact) {
+      const digits = String(updateData.contact).replace(/\D/g, '');
+      updateData.contact = digits.startsWith('91') && digits.length === 12
+        ? digits
+        : (digits.length === 10 ? `91${digits}` : (digits.length === 11 && digits.startsWith('0') ? `91${digits.slice(1)}` : digits));
     }
 
     // Check for duplicate contact/email if being updated

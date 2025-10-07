@@ -83,6 +83,14 @@ const AppointmentFormModal = ({
   const borderColor = useColorModeValue('gray.200', 'gray.600');
   const headerSubColor = useColorModeValue('gray.500', 'gray.400');
 
+  // Default branch to first available branch when none selected
+  useEffect(() => {
+    if (!formData.branchId && branchesData?.branches?.length > 0) {
+      const first = branchesData.branches[0];
+      setFormData(prev => ({ ...prev, branchId: first._id }));
+    }
+  }, [branchesData, formData.branchId]);
+
   // Update available time slots when availability data changes
   useEffect(() => {
     if (availabilityData?.data && currentSelectedDate) {
@@ -260,9 +268,19 @@ const AppointmentFormModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered>
+    <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: 'lg' }} isCentered>
       <ModalOverlay />
-      <ModalContent bg={bg} maxW="620px" borderRadius="xl" boxShadow="2xl" border="1px solid" borderColor={borderColor}>
+      <ModalContent 
+        bg={bg}
+        maxW={{ base: '95vw', md: '620px' }}
+        maxH="90vh"
+        borderRadius="xl"
+        boxShadow="2xl"
+        border="1px solid"
+        borderColor={borderColor}
+        display="flex"
+        flexDirection="column"
+      >
         <ModalHeader borderBottom="1px solid" borderColor={borderColor} pb={3}>
           <Text fontSize="xl" fontWeight="bold" color="brand.600">
             Book Appointment
@@ -273,8 +291,8 @@ const AppointmentFormModal = ({
         </ModalHeader>
         <ModalCloseButton />
         
-        <form onSubmit={handleSubmit}>
-          <ModalBody>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <ModalBody overflowY="auto" maxH="calc(90vh - 120px)">
             <VStack spacing={5} align="stretch">
               {/* Appointment Details */}
               <Box w="full" p={4} bg="brand.50" borderRadius="lg" border="1px solid" borderColor="brand.200">
@@ -422,7 +440,13 @@ const AppointmentFormModal = ({
                   <FormLabel fontSize="sm">Phone Number</FormLabel>
                   <Input
                     value={formData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={10}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      handleInputChange('phone', digits);
+                    }}
                     placeholder="Enter phone number (optional)"
                     size="sm"
                   />
@@ -479,7 +503,7 @@ const AppointmentFormModal = ({
             </VStack>
           </ModalBody>
 
-          <ModalFooter borderTop="1px solid" borderColor={borderColor}>
+          <ModalFooter borderTop="1px solid" borderColor={borderColor} position="sticky" bottom={0} bg={bg}>
             <HStack spacing={3}>
               <Button variant="outline" colorScheme="brand" onClick={onClose} size="sm">
                 Cancel

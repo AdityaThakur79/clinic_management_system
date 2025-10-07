@@ -289,7 +289,7 @@ const HeroSection = () => {
                           fontSize={{ base: 'md', md: 'xl' }}
                           fontWeight="bold"
                         >
-                          Personalized care in Ghatkopar
+                          Personalized care for you
                         </Text>
                         <Text
                           color="gray.200"
@@ -327,7 +327,7 @@ const HeroSection = () => {
                       fontSize={{ base: 'xs', sm: 'sm', md: 'md' }}
                     >
                       {[
-                        'Ghatkopar Location',
+                        'Multiple Locations',
                         '15+ Years Experience',
                         'Free Consultation',
                       ].map((label, i) => (

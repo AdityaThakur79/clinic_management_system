@@ -1,5 +1,5 @@
 import express from "express";
-import { createAppointment, getAvailability, getMultipleDateAvailability, getAllAppointments, getTodayAppointments, getAppointmentById, updateAppointmentStatus, updateAppointmentTimeSlot, assignDoctorToAppointment, deleteAppointment } from "../controllers/appointment.js";
+import { createAppointment, getAvailability, getMultipleDateAvailability, getAllAppointments, getTodayAppointments, getAppointmentById, updateAppointmentStatus, updateAppointmentTimeSlot, assignDoctorToAppointment, deleteAppointment, resendAppointmentConfirmation, sendAppointmentReminderNow } from "../controllers/appointment.js";
 import { addAppointmentCommission } from "../controllers/appointmentCommission.js";
 import { isAuthenticated } from "../middlewares/isAuthenticated.js";
 
@@ -19,8 +19,11 @@ router.patch("/:id/timeslot", isAuthenticated, updateAppointmentTimeSlot);
 router.post("/assign-doctor", isAuthenticated, assignDoctorToAppointment);
 router.delete("/:id", isAuthenticated, deleteAppointment);
 
+// Test utilities (protected)
+router.post("/:id/send-confirmation", isAuthenticated, resendAppointmentConfirmation);
+router.post("/:id/send-reminder", isAuthenticated, sendAppointmentReminderNow);
+
 // Commission management routes
 router.post("/:id/commission", isAuthenticated, addAppointmentCommission);
 
 export default router;
-

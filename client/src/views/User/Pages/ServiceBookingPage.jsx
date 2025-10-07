@@ -169,9 +169,9 @@ const ServiceBookingPage = () => {
     }
   }, [multipleAvailabilityData]);
 
-  // Set default branch when branches data loads
+  // Set default branch to first one when data loads
   useEffect(() => {
-    if (branchesData?.branches?.length > 0 && !selectedBranchId) {
+    if (!selectedBranchId && branchesData?.branches?.length > 0) {
       const firstBranch = branchesData.branches[0];
       setSelectedBranchId(firstBranch._id);
       setSelectedBranchName(firstBranch.branchName);
@@ -727,7 +727,13 @@ const ServiceBookingPage = () => {
                             <FormLabel fontSize={{ base: "xs", md: "sm" }}>Phone Number</FormLabel>
                             <Input
                               value={formData.phone}
-                              onChange={(e) => handleInputChange('phone', e.target.value)}
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              maxLength={10}
+                              onChange={(e) => {
+                                const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                handleInputChange('phone', digits);
+                              }}
                               placeholder="Enter phone number"
                               size={{ base: "sm", md: "md" }}
                             />
