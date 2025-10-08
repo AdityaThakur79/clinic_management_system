@@ -105,7 +105,16 @@ export const sendAppointmentNotifications = async ({ appointment, branch, servic
   if (appointment?.patientId?.contact) {
     console.log('[NOTIFICATIONS] Sending WhatsApp notification...', { to: appointment.patientId.contact });
     try {
-      const wa = waTemplates.appointmentPatient({ name: patientName, service, date: fmtDate, time: fmtTime, branch: branchName, address: branchAddress });
+      const wa = waTemplates.appointmentPatient({ 
+        name: patientName, 
+        service, 
+        date: fmtDate, 
+        time: fmtTime, 
+        branch: branchName, 
+        address: branchAddress,
+        preparation: enrichedServiceDetails?.preparationInstructions || 'None',
+        duration: enrichedServiceDetails?.duration || 'N/A'
+      });
       await sendWhatsAppTemplate({ toPhone: appointment.patientId.contact, templateName: wa.templateName, templateParams: wa.params, mediaUrl: mediaUrl || process.env.WHATSAPP_MEDIA_URL });
       console.log('[NOTIFICATIONS] WhatsApp notification sent successfully!', { to: appointment.patientId.contact });
     } catch (whatsappError) {
@@ -162,7 +171,29 @@ export const sendReminderNotifications = async ({ appointment, mediaUrl }) => {
   } catch(_) {}
 
   if (appointment?.patientId?.contact) {
-    const wa = waTemplates.reminderPatient({ name: patientName, date: fmtDate, time: fmtTime, branch: branchName });
+    // Get service details for reminder
+    let serviceDetails = null;
+    try {
+      const svc = await Service.findOne({ name: serviceName }).lean();
+      if (svc) {
+        serviceDetails = {
+          preparationInstructions: svc.preparationInstructions || 'None',
+          duration: svc.duration || 'N/A',
+          fee: svc.fee || 'N/A',
+        };
+      }
+    } catch (_) {}
+    
+    const wa = waTemplates.reminderPatient({ 
+      name: patientName, 
+      service: serviceName,
+      date: fmtDate, 
+      time: fmtTime, 
+      branch: branchName,
+      address: branchAddress,
+      preparation: serviceDetails?.preparationInstructions || 'None',
+      duration: serviceDetails?.duration || 'N/A'
+    });
     await sendWhatsAppTemplate({ toPhone: appointment.patientId.contact, templateName: wa.templateName, templateParams: wa.params, mediaUrl: mediaUrl || process.env.WHATSAPP_MEDIA_URL });
   }
 };
@@ -174,15 +205,23 @@ export const sendBirthdayNotifications = async ({ person }) => {
   if (email) {
     await sendEmail({ to: email, subject: `Happy Birthday, ${name}!`, html: birthdayEmail({ name }) });
   }
-  if (phone) {
-    const wa = waTemplates.birthday({ name });
-    await sendWhatsAppTemplate({ toPhone: phone, templateName: wa.templateName, templateParams: wa.params, mediaUrl: process.env.WHATSAPP_MEDIA_URL });
-  }
+  // WhatsApp birthday template not approved yet - disabled
+  // if (phone) {
+  //   const wa = waTemplates.birthday({ name });
+  //   await sendWhatsAppTemplate({ toPhone: phone, templateName: wa.templateName, templateParams: wa.params, mediaUrl: process.env.WHATSAPP_MEDIA_URL });
+  // }
 };
 
-export const sendReferralDoctorWhatsapp = async ({ doctorPhone, doctorName, patientName, date }) => {
+export const sendReferralDoctorWhatsapp = async ({ doctorPhone, doctorName, patientName, date, clinicName, service, address }) => {
   if (!doctorPhone) return;
-  const wa = waTemplates.referralDoctor({ doctorName, patientName, date });
+  const wa = waTemplates.referralDoctor({ 
+    doctorName, 
+    patientName, 
+    date,
+    clinicName: clinicName || 'Aartiket Speech & Hearing Care',
+    service: service || 'Consultation',
+    address: address || ''
+  });
   await sendWhatsAppTemplate({ toPhone: doctorPhone, templateName: wa.templateName, templateParams: wa.params, mediaUrl: process.env.WHATSAPP_MEDIA_URL });
 };
 

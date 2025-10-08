@@ -3,6 +3,19 @@ import Appointment from "../models/appointment.js";
 import Bill from "../models/bill.js";
 import Patient from "../models/patient.js";
 
+// Helper function to format phone number with 91 prefix (no +)
+const formatPhoneNumber = (phone) => {
+  if (!phone) return phone;
+  const cleaned = String(phone).replace(/\D/g, ''); // Remove non-digits
+  if (cleaned.startsWith('91') && cleaned.length === 12) {
+    return cleaned; // Already has 91
+  }
+  if (cleaned.length === 10) {
+    return `91${cleaned}`; // Add 91 prefix
+  }
+  return cleaned; // Return cleaned digits
+};
+
 export const createReferredDoctor = async (req, res) => {
   try {
     const { 
@@ -17,9 +30,12 @@ export const createReferredDoctor = async (req, res) => {
     
     if (!name) return res.status(400).json({ success: false, message: "Name is required" });
     
+    // Format contact number
+    const formattedContact = contact ? formatPhoneNumber(contact) : contact;
+    
     const doc = await ReferredDoctor.create({ 
       name, 
-      contact, 
+      contact: formattedContact, 
       clinicName, 
       branchId,
       email,
@@ -154,11 +170,14 @@ export const updateReferredDoctor = async (req, res) => {
       specialization
     } = req.body;
     
+    // Format contact number if provided
+    const formattedContact = contact ? formatPhoneNumber(contact) : contact;
+    
     const doc = await ReferredDoctor.findByIdAndUpdate(
       id,
       { 
         name, 
-        contact, 
+        contact: formattedContact, 
         clinicName, 
         branchId, 
         isActive, 

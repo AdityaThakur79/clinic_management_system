@@ -7,6 +7,9 @@ import Bill from "../models/bill.js";
 import ReferredDoctor from "../models/referredDoctor.js";
 import { Reminder } from "../models/reminder.js";
 import { User } from "../models/user.js";
+import { sendReferralDoctorWhatsapp } from "../utils/services/notifications.js";
+import { sendEmail } from "../utils/common/sendMail.js";
+import { referralDoctorThankYouEmail } from "../utils/emailTemplate/referralDoctorTemplates.js";
 
 export const getAllPatients = async (req, res) => {
   try {
@@ -672,13 +675,100 @@ export const completeAppointment = async (req, res) => {
       await updateReferredDoctorEarnings(appointment.referredDoctorId, billDoc.totalAmount);
     }
 
-    // Populate the updated appointment
+    // Populate the updated appointment (with referredDoctorId and branchId for notifications)
     await appointment.populate([
       { path: 'prescriptionId' },
       { path: 'billId' },
       { path: 'patientId', select: 'name contact email' },
-      { path: 'doctorId', select: 'name specialization' }
+      { path: 'doctorId', select: 'name specialization' },
+      { path: 'referredDoctorId', select: 'name clinicName contact email' },
+      { path: 'branchId', select: 'branchName address' }
     ]);
+
+    // Send referral doctor thank-you notifications (WhatsApp + Email)
+    try {
+      console.log('========================================');
+      console.log('[COMPLETE APPOINTMENT] Checking for referral doctor notifications...');
+      console.log('[COMPLETE APPOINTMENT] Has referredDoctorId:', !!appointment?.referredDoctorId);
+      
+      if (appointment?.referredDoctorId) {
+        const doctorPhone = appointment.referredDoctorId.contact;
+        const doctorEmail = appointment.referredDoctorId.email;
+        const doctorName = appointment.referredDoctorId.name;
+        const patientName = appointment.patientId?.name;
+        const dateStr = appointment.date ? new Date(appointment.date).toLocaleDateString('en-IN', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        }) : '';
+        const branchName = appointment.branchId?.branchName || 'Aartiket Speech & Hearing Care';
+        const branchAddress = appointment.branchId?.address || '';
+        const serviceName = appointment.service || 'Consultation';
+        const clinicName = `Aartiket Speech & Hearing Care (${branchName})`;
+        
+        console.log('[COMPLETE APPOINTMENT] Referral doctor details:', {
+          doctorName,
+          doctorPhone,
+          doctorEmail,
+          patientName,
+          clinicName,
+          serviceName
+        });
+        
+        // Send WhatsApp if contact number exists
+        if (doctorPhone) {
+          console.log('[COMPLETE APPOINTMENT] Sending referral doctor thank you WhatsApp...');
+          try {
+            await sendReferralDoctorWhatsapp({ 
+              doctorPhone, 
+              doctorName, 
+              patientName, 
+              date: dateStr,
+              clinicName,
+              service: serviceName,
+              address: branchAddress
+            });
+            console.log('[COMPLETE APPOINTMENT] Referral doctor WhatsApp sent successfully!');
+          } catch (whatsappError) {
+            console.error('[COMPLETE APPOINTMENT] Error sending referral doctor WhatsApp:', whatsappError?.message || whatsappError);
+          }
+        } else {
+          console.log('[COMPLETE APPOINTMENT] No contact number for referral doctor, skipping WhatsApp');
+        }
+        
+        // Send Email if email exists
+        if (doctorEmail) {
+          console.log('[COMPLETE APPOINTMENT] Sending referral doctor thank you email...');
+          try {
+            const emailHtml = referralDoctorThankYouEmail({
+              doctorName,
+              patientName,
+              date: dateStr,
+              clinicName,
+              service: serviceName,
+              address: branchAddress,
+              headerImageUrl: process.env.EMAIL_HEADER_IMAGE_URL
+            });
+            
+            await sendEmail({
+              to: doctorEmail,
+              subject: `Thank You for Referring ${patientName} - ${clinicName}`,
+              html: emailHtml
+            });
+            
+            console.log('[COMPLETE APPOINTMENT] Referral doctor email sent successfully!');
+          } catch (emailError) {
+            console.error('[COMPLETE APPOINTMENT] Error sending referral doctor email:', emailError?.message || emailError);
+          }
+        } else {
+          console.log('[COMPLETE APPOINTMENT] No email for referral doctor, skipping email');
+        }
+      }
+      console.log('========================================');
+    } catch (error) {
+      console.error('[COMPLETE APPOINTMENT] Error in referral doctor notifications:', error?.message || error);
+    }
 
     // Optionally create a reminder (from explicit body or follow-up info)
     try {

@@ -8,22 +8,56 @@ export const sendWhatsAppTemplate = async ({ toPhone, templateName, templatePara
       console.log('[WhatsApp] Skipping send (AISENSY_API_KEY not set)');
       return { skipped: true };
     }
+    // Format phone for WhatsApp (AiSensy needs + prefix)
+    const cleaned = String(toPhone).replace(/\D/g, '');
+    let destination;
+    if (toPhone.startsWith('+')) {
+      destination = toPhone; // Already has +
+    } else if (cleaned.startsWith('91') && cleaned.length === 12) {
+      destination = `+${cleaned}`; // Has 91 prefix, add +
+    } else if (cleaned.length === 10) {
+      destination = `+91${cleaned}`; // 10 digits, add +91
+    } else {
+      destination = `+${cleaned}`; // Default: add +
+    }
+    
+    // AiSensy API payload format - match exact structure from documentation
     const payload = {
       apiKey,
       campaignName: templateName || process.env.AISENSY_CAMPAIGN_ID,
-      destination: toPhone.startsWith('+') ? toPhone : `+91${String(toPhone).replace(/\D/g, '').slice(-10)}`,
+      destination,
       userName: 'Patient',
-      templateParams,
       source: 'api',
-      media: mediaUrl ? [{ url: mediaUrl }] : undefined,
+      templateParams,
     };
-    const resp = await fetch('https://backend.aisensy.com/apis/sendTemplateMessage', {
+    
+    // Add media only if provided (object format as per AiSensy docs)
+    if (mediaUrl) {
+      payload.media = { 
+        url: mediaUrl, 
+        filename: 'image.jpg' 
+      };
+    }
+    
+    console.log('[WhatsApp] Sending template...', { 
+      templateName: payload.campaignName, 
+      to: payload.destination,
+      paramsCount: templateParams.length,
+      hasMedia: !!mediaUrl,
+      params: templateParams
+    });
+    
+    const resp = await fetch('https://backend.aisensy.com/campaign/t1/api/v2', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
     const data = await resp.json().catch(() => ({}));
-    console.log('[WhatsApp] Sent', { to: payload.destination, status: resp.status, data });
+    console.log('[WhatsApp] Response:', { to: payload.destination, status: resp.status, data });
+    
+    if (resp.status !== 200) {
+      console.error('[WhatsApp] Error Details:', JSON.stringify({ payload: { ...payload, apiKey: 'HIDDEN' }, response: data }, null, 2));
+    }
     return { status: resp.status, data };
   } catch (e) {
     console.error('[WhatsApp] Failed', e?.message || e);
@@ -33,21 +67,60 @@ export const sendWhatsAppTemplate = async ({ toPhone, templateName, templatePara
 
 // Helpers to format standard templates
 export const templates = {
-  appointmentPatient: ({ name, service, date, time, branch, address }) => ({
-    templateName: process.env.AISENSY_APPT_PATIENT_TEMPLATE || process.env.AISENSY_CAMPAIGN_ID,
-    params: [name || 'Patient', service || 'Consultation', date, time, branch, address],
+  // Template: appointment_confirmation
+  // Hi [Name], this is a reminder for your appointment for [Service] on [Date] at [Time] at [Branch].
+  // Address: [Address]
+  // [Preparation/Duration]
+  appointmentPatient: ({ name, service, date, time, branch, address, preparation, duration }) => ({
+    templateName: 'appointment_confirmation',
+    params: [
+      name || 'Patient',
+      service || 'Consultation',
+      date,
+      time,
+      branch,
+      address,
+      `Preparation: ${preparation || 'None'}; Duration: ${duration || 'N/A'}`
+    ],
   }),
-  reminderPatient: ({ name, date, time, branch }) => ({
-    templateName: process.env.AISENSY_REMINDER_PATIENT_TEMPLATE || process.env.AISENSY_CAMPAIGN_ID,
-    params: [name || 'Patient', date, time, branch],
+  
+  // Template: appointment_reminder (same structure as confirmation)
+  // Hi [Name], this is a reminder for your appointment for [Service] on [Date] at [Time] at [Branch].
+  // Address: [Address]
+  // [Preparation/Duration]
+  reminderPatient: ({ name, service, date, time, branch, address, preparation, duration }) => ({
+    templateName: 'appointment_reminder',
+    params: [
+      name || 'Patient',
+      service || 'Consultation',
+      date,
+      time,
+      branch,
+      address,
+      `Preparation: ${preparation || 'None'}; Duration: ${duration || 'N/A'}`
+    ],
   }),
-  birthday: ({ name }) => ({
-    templateName: process.env.AISENSY_BIRTHDAY_TEMPLATE || process.env.AISENSY_CAMPAIGN_ID,
-    params: [name || 'Friend'],
-  }),
-  referralDoctor: ({ doctorName, patientName, date }) => ({
-    templateName: process.env.AISENSY_REFERRAL_TEMPLATE || process.env.AISENSY_CAMPAIGN_ID,
-    params: [doctorName || 'Doctor', patientName || 'Patient', date],
+  
+  // Birthday template - Not approved yet, commented out
+  // birthday: ({ name }) => ({
+  //   templateName: process.env.AISENSY_BIRTHDAY_TEMPLATE || process.env.AISENSY_CAMPAIGN_ID,
+  //   params: [name || 'Friend'],
+  // }),
+  
+  // Template: referral_doctor_thanks
+  // Thank you [Doctor Name] for referring [Patient Name] on [Date] to [Clinic Name].
+  // Service: [Service]
+  // Address: [Address]
+  referralDoctor: ({ doctorName, patientName, date, clinicName, service, address }) => ({
+    templateName: 'referral_doctor_thanks',
+    params: [
+      doctorName || 'Doctor',
+      patientName || 'Patient',
+      date,
+      clinicName || 'Aartiket Speech & Hearing Care',
+      service || 'Consultation',
+      address
+    ],
   }),
 };
 

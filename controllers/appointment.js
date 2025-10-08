@@ -9,6 +9,7 @@ import { sendAppointmentNotifications } from "../utils/services/notifications.js
 import { sendReminderNotifications } from "../utils/services/notifications.js";
 import { sendReferralDoctorWhatsapp } from "../utils/services/notifications.js";
 import { ReminderSettings } from "../models/reminder.js";
+import { referralDoctorThankYouEmail } from "../utils/emailTemplate/referralDoctorTemplates.js";
 
 export const getAvailability = async (req, res) => {
   try {
@@ -74,12 +75,28 @@ export const getAvailability = async (req, res) => {
 
     const bookedSlots = new Set(appointments.map(a => normalizeTime(a.timeSlot)));
     
-    // Mark slots as booked or available
-    const slotsWithStatus = availableSlots.map(slot => ({
-      time: slot,
-      isAvailable: !bookedSlots.has(slot),
-      isBooked: bookedSlots.has(slot)
-    }));
+    // Helper function to check if slot is at least 2 hours in future
+    const isSlotBookable = (slotTime, dateObj) => {
+      const now = new Date();
+      const [hours, minutes] = slotTime.split(':').map(Number);
+      const slotDateTime = new Date(dateObj);
+      slotDateTime.setHours(hours, minutes, 0, 0);
+      
+      // Calculate difference in hours
+      const diffInMs = slotDateTime - now;
+      const diffInHours = diffInMs / (1000 * 60 * 60);
+      
+      return diffInHours >= 2; // Must be at least 2 hours in future
+    };
+    
+    // Mark slots as booked or available (exclude slots less than 2 hours away)
+    const slotsWithStatus = availableSlots
+      .filter(slot => isSlotBookable(slot, requestedDate))
+      .map(slot => ({
+        time: slot,
+        isAvailable: !bookedSlots.has(slot),
+        isBooked: bookedSlots.has(slot)
+      }));
 
     return res.json({ 
       success: true, 
@@ -252,18 +269,35 @@ export const getMultipleDateAvailability = async (req, res) => {
       const bookedTimeSlots = appointments.map(apt => normalizeTime(apt.timeSlot));
       const bookedSlotsSet = new Set(bookedTimeSlots);
       
-      // Show ALL slots (both available and booked) with their status
-      const finalAvailableSlots = availableSlots.map(slot => ({
-        time: slot,
-        isAvailable: !bookedSlotsSet.has(normalizeTime(slot)),
-        isBooked: bookedSlotsSet.has(normalizeTime(slot))
-      }));
+      // Helper function to check if slot is at least 2 hours in future
+      const isSlotBookable = (slotTime, dateObj) => {
+        const now = new Date();
+        const [hours, minutes] = slotTime.split(':').map(Number);
+        const slotDateTime = new Date(dateObj);
+        slotDateTime.setHours(hours, minutes, 0, 0);
+        
+        // Calculate difference in hours
+        const diffInMs = slotDateTime - now;
+        const diffInHours = diffInMs / (1000 * 60 * 60);
+        
+        return diffInHours >= 2; // Must be at least 2 hours in future
+      };
+      
+      // Filter slots that are at least 2 hours in future and show their status
+      const finalAvailableSlots = availableSlots
+        .filter(slot => isSlotBookable(slot, currentDate))
+        .map(slot => ({
+          time: slot,
+          isAvailable: !bookedSlotsSet.has(normalizeTime(slot)),
+          isBooked: bookedSlotsSet.has(normalizeTime(slot))
+        }));
 
       results.push({
         date: `${currentDate.getFullYear()}-${String(currentDate.getMonth()+1).padStart(2,'0')}-${String(currentDate.getDate()).padStart(2,'0')}`,
         availableSlots: finalAvailableSlots,
         bookedTimeSlots,
-        isWorkingDay: true
+        isWorkingDay: true,
+        hasBookableSlots: finalAvailableSlots.length > 0
       });
     }
 
@@ -791,6 +825,12 @@ export const updateAppointmentStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
+    
+    console.log('========================================');
+    console.log('[APPOINTMENT STATUS UPDATE] Function called!');
+    console.log('[APPOINTMENT STATUS UPDATE] ID:', id);
+    console.log('[APPOINTMENT STATUS UPDATE] New status:', status);
+    console.log('========================================');
 
     if (!id || !status) {
       return res.status(400).json({ success: false, message: "Appointment ID and status are required" });
@@ -801,6 +841,8 @@ export const updateAppointmentStatus = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid status. Must be one of: booked, completed, cancelled" });
     }
 
+    console.log('[APPOINTMENT STATUS UPDATE] Fetching appointment from database...');
+    
     const appointment = await Appointment.findByIdAndUpdate(
       id,
       { status },
@@ -808,22 +850,104 @@ export const updateAppointmentStatus = async (req, res) => {
     ).populate('patientId', 'name age gender contact email plan')
      .populate('doctorId', 'name specialization')
      .populate('branchId', 'branchName address')
-     .populate('referredDoctorId', 'name clinicName');
+     .populate('referredDoctorId', 'name clinicName contact email');
+
+    console.log('[APPOINTMENT STATUS UPDATE] Appointment found:', !!appointment);
+    if (appointment) {
+      console.log('[APPOINTMENT STATUS UPDATE] Appointment details:', {
+        id: appointment._id,
+        status: appointment.status,
+        hasReferredDoctor: !!appointment.referredDoctorId,
+        referredDoctorData: appointment.referredDoctorId ? {
+          id: appointment.referredDoctorId._id,
+          name: appointment.referredDoctorId.name,
+          contact: appointment.referredDoctorId.contact,
+          email: appointment.referredDoctorId.email
+        } : null
+      });
+    }
 
     if (!appointment) {
       return res.status(404).json({ success: false, message: "Appointment not found" });
     }
 
-    // If completed and has referred doctor, send thank-you WhatsApp
+    // If completed and has referred doctor, send thank-you WhatsApp and Email
     try {
-      if (status === 'completed' && appointment?.referredDoctorId?.contact) {
+      console.log('[APPOINTMENT] Status update:', { 
+        status, 
+        hasReferredDoctor: !!appointment?.referredDoctorId, 
+        hasContact: !!appointment?.referredDoctorId?.contact,
+        hasEmail: !!appointment?.referredDoctorId?.email 
+      });
+      
+      if (status === 'completed' && appointment?.referredDoctorId) {
         const doctorPhone = appointment.referredDoctorId.contact;
+        const doctorEmail = appointment.referredDoctorId.email;
         const doctorName = appointment.referredDoctorId.name;
         const patientName = appointment.patientId?.name;
-        const dateStr = appointment.date ? new Date(appointment.date).toLocaleDateString('en-IN') : '';
-        await sendReferralDoctorWhatsapp({ doctorPhone, doctorName, patientName, date: dateStr });
+        const dateStr = appointment.date ? new Date(appointment.date).toLocaleDateString('en-IN', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        }) : '';
+        const branchName = appointment.branchId?.branchName || 'Aartiket Speech & Hearing Care';
+        const branchAddress = appointment.branchId?.address || '';
+        const serviceName = appointment.service || 'Consultation';
+        const clinicName = `Aartiket Speech & Hearing Care (${branchName})`;
+        
+        // Send WhatsApp if contact number exists
+        if (doctorPhone) {
+          console.log('[APPOINTMENT] Sending referral doctor thank you WhatsApp...', { doctorName, doctorPhone });
+          try {
+            await sendReferralDoctorWhatsapp({ 
+              doctorPhone, 
+              doctorName, 
+              patientName, 
+              date: dateStr,
+              clinicName,
+              service: serviceName,
+              address: branchAddress
+            });
+            console.log('[APPOINTMENT] Referral doctor WhatsApp sent successfully!');
+          } catch (whatsappError) {
+            console.error('[APPOINTMENT] Error sending referral doctor WhatsApp:', whatsappError?.message || whatsappError);
+          }
+        } else {
+          console.log('[APPOINTMENT] No contact number for referral doctor, skipping WhatsApp');
+        }
+        
+        // Send Email if email exists
+        if (doctorEmail) {
+          console.log('[APPOINTMENT] Sending referral doctor thank you email...', { doctorName, doctorEmail });
+          try {
+            const emailHtml = referralDoctorThankYouEmail({
+              doctorName,
+              patientName,
+              date: dateStr,
+              clinicName,
+              service: serviceName,
+              address: branchAddress,
+              headerImageUrl: process.env.EMAIL_HEADER_IMAGE_URL
+            });
+            
+            await sendEmail({
+              to: doctorEmail,
+              subject: `Thank You for Referring ${patientName} - ${clinicName}`,
+              html: emailHtml
+            });
+            
+            console.log('[APPOINTMENT] Referral doctor email sent successfully!');
+          } catch (emailError) {
+            console.error('[APPOINTMENT] Error sending referral doctor email:', emailError?.message || emailError);
+          }
+        } else {
+          console.log('[APPOINTMENT] No email for referral doctor, skipping email');
+        }
       }
-    } catch (_) {}
+    } catch (error) {
+      console.error('[APPOINTMENT] Error in referral doctor notifications:', error?.message || error);
+    }
 
     return res.json({
       success: true,

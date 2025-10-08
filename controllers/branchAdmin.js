@@ -3,6 +3,19 @@ import Branch from "../models/branch.js";
 import bcrypt from "bcryptjs";
 import { v2 as cloudinary } from "cloudinary";
 
+// Helper function to format phone number with 91 prefix (no +)
+const formatPhoneNumber = (phone) => {
+  if (!phone) return phone;
+  const cleaned = String(phone).replace(/\D/g, ''); // Remove non-digits
+  if (cleaned.startsWith('91') && cleaned.length === 12) {
+    return cleaned; // Already has 91
+  }
+  if (cleaned.length === 10) {
+    return `91${cleaned}`; // Add 91 prefix
+  }
+  return cleaned; // Return cleaned digits
+};
+
 export const createBranchAdmin = async (req, res) => {
   try {
     const { 
@@ -47,6 +60,9 @@ export const createBranchAdmin = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Format phone number with +91 prefix
+    const formattedPhone = phone ? formatPhoneNumber(phone) : "";
+
     // Handle file uploads
     let finalPhotoUrl = photoUrl || "";
     let finalPhotoUrlPublicId = "";
@@ -70,7 +86,7 @@ export const createBranchAdmin = async (req, res) => {
       password: hashedPassword,
       role: "branchAdmin",
       branch,
-      phone: phone || "",
+      phone: formattedPhone,
       photoUrl: finalPhotoUrl,
       photoUrlPublicId: finalPhotoUrlPublicId,
       bannerUrl: finalBannerUrl,
@@ -251,12 +267,15 @@ export const updateBranchAdmin = async (req, res) => {
       bannerUrlPublicId = req.files.bannerImage[0].filename;
     }
 
+    // Format phone number if provided
+    const formattedPhone = phone ? formatPhoneNumber(phone) : phone;
+
     // Update branchAdmin
     const updateData = {
       ...(name && { name }),
       ...(email && { email }),
       ...(branch && { branch }),
-      ...(phone !== undefined && { phone }),
+      ...(formattedPhone !== undefined && { phone: formattedPhone }),
       ...(status !== undefined && { status }),
       ...(bio !== undefined && { bio }),
       ...(dateOfBirth !== undefined && { dateOfBirth: new Date(dateOfBirth) }),
