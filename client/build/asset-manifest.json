@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.1f4a03e0.css",
-    "main.js": "/static/js/main.165a933d.js",
+    "main.js": "/static/js/main.6ec15c8b.js",
     "static/media/image1.jpg": "/static/media/image1.e7c099d87f449342804f.jpg",
     "static/media/image2.jpg": "/static/media/image2.04538bee9b58e2c69f8c.jpg",
     "static/media/about_4.jpg": "/static/media/about_4.70aaf36432d0445cf46a.jpg",
@@ -104,9 +104,9 @@
     "static/media/dropdown_icon.svg": "/static/media/dropdown_icon.114f3fc15e7da7668de93c7b8036a3c3.svg",
     "static/media/list_icon.svg": "/static/media/list_icon.d5ec544e1e53ff3e104c4710e9aaef29.svg",
     "static/media/home_icon.svg": "/static/media/home_icon.91d348786cc8791961e1ce5b19d6168c.svg",
+    "index.html": "/index.html",
     "static/media/chats_icon.svg": "/static/media/chats_icon.2a87be6788dc263f512582fce8ad3449.svg",
     "static/media/info_icon.svg": "/static/media/info_icon.eb8122f5420b89f424e0e8c23daf7ef3.svg",
-    "index.html": "/index.html",
     "static/media/add_icon.svg": "/static/media/add_icon.0eaccbd092ff24b689468e437f7be160.svg",
     "static/media/upload_area.svg": "/static/media/upload_area.fddb33ac1ff5f7dec2c7582f5e4f995c.svg",
     "static/media/menu_icon.svg": "/static/media/menu_icon.4db62edd8feddf138b9bddaf0b8d8034.svg",
@@ -114,6 +114,6 @@
   },
   "entrypoints": [
     "static/css/main.1f4a03e0.css",
-    "static/js/main.165a933d.js"
+    "static/js/main.6ec15c8b.js"
   ]
 }

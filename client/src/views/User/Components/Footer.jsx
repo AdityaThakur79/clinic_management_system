@@ -177,14 +177,14 @@ const Footer = () => {
                     </Text>
                     <VStack align="start" spacing={1}>
                       <Link 
-                        href="tel:7977483031" 
+                        href="tel:9867794003" 
                         color="#0C2F4D" 
                         fontWeight="semibold" 
                         fontSize="md"
                         _hover={{ color: "#2BA8D1" }}
                         transition="color 0.3s ease"
                       >
-                        7977483031
+                        9867794003
                       </Link>
                       
                     </VStack>

@@ -234,7 +234,7 @@ const About2 = () => {
               {/* CTA Button */}
               <Button
                 as="a"
-                href="/contact"
+                href="/book-an-appointment"
                 bg={accentColor}
                 color="white"
                 fontSize="lg"
@@ -261,7 +261,7 @@ const About2 = () => {
                 transition="all 0.8s ease-out"
                 transitionDelay="0.6s"
               >
-                Book a Free Consultation
+                Book  Consultation
               </Button>
             </VStack>
           </GridItem>

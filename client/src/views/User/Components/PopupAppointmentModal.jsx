@@ -48,6 +48,14 @@ export default function PopupAppointmentModal() {
   const [selectedDate, setSelectedDate] = React.useState("");
   const [availableTimeSlots, setAvailableTimeSlots] = React.useState([]);
 
+  // Auto-select first branch when branches load
+  React.useEffect(() => {
+    if (branchesData?.branches?.length > 0 && !form.branchId) {
+      const firstBranchId = branchesData.branches[0]._id;
+      setForm((p) => ({ ...p, branchId: firstBranchId }));
+    }
+  }, [branchesData, form.branchId]);
+
   const { data: availabilityData, isLoading: isAvailabilityLoading } = useGetMultipleDateAvailabilityQuery(
     {
       branchId: form.branchId,
@@ -69,6 +77,28 @@ export default function PopupAppointmentModal() {
         setAvailableTimeSlots(slots);
       } else {
         setAvailableTimeSlots([]);
+      }
+    }
+  }, [availabilityData, selectedDate]);
+
+  // Auto-select first available date and time slot
+  React.useEffect(() => {
+    if (availabilityData?.data && !selectedDate) {
+      const firstWorkingDay = availabilityData.data.find((day) => day.isWorkingDay);
+      if (firstWorkingDay) {
+        const firstDate = firstWorkingDay.date;
+        setSelectedDate(firstDate);
+        setForm((p) => ({ ...p, preferredDate: firstDate }));
+
+        // Auto-select first available time slot for that date
+        if (firstWorkingDay.availableSlots) {
+          const availableSlots = firstWorkingDay.availableSlots
+            .filter((s) => s.isAvailable)
+            .map((s) => s.time);
+          if (availableSlots.length > 0) {
+            setForm((p) => ({ ...p, preferredTime: availableSlots[0] }));
+          }
+        }
       }
     }
   }, [availabilityData, selectedDate]);
