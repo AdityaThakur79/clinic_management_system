@@ -613,7 +613,14 @@ const AllAppointments = () => {
                         </Td>
                         <Td>
                           <VStack align="start" spacing={1}>
-                            <Text fontSize="sm" fontWeight="medium">{formatDate(appointment.date)}</Text>
+                            <HStack spacing={2}>
+                              <Text fontSize="sm" fontWeight="medium">{formatDate(appointment.date)}</Text>
+                              {appointment.billId && (appointment.billId.paymentStatus === 'pending' || appointment.billId.paymentStatus === 'partial') && (
+                                <Badge colorScheme={appointment.billId.paymentStatus === 'pending' ? 'red' : 'orange'}>
+                                  {appointment.billId.paymentStatus === 'pending' ? 'Payment pending' : 'Payment partial'}
+                                </Badge>
+                              )}
+                            </HStack>
                             <Text fontSize="sm" color="gray.600">{formatTime(appointment.timeSlot)}</Text>
                           </VStack>
                         </Td>

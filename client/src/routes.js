@@ -214,41 +214,6 @@ const routes = [
       // },
     ],
   },
-
-   // Services Section
-   {
-    name: 'Services',
-    layout: '/admin',
-    path: '/services',
-    icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
-    component: <DataTables />,
-    roles: ['superAdmin'],
-    children: [
-      {
-        name: 'All Services',
-        layout: '/admin',
-        path: '/services/all',
-        component: <Services />,
-        roles: ['superAdmin'],
-      },
-      {
-        name: 'Add Service',
-        layout: '/admin',
-        path: '/service/add',
-        component: <AddService />,
-        roles: ['superAdmin'],
-      },
-      {
-        name: 'Update Service',
-        layout: '/admin',
-        path: '/service/update',
-        component: <UpdateService />,
-        roles: ['superAdmin'],
-        hidden: true,
-      },
-      
-    ],
-  },
   // Patients Section
   {
     name: 'Patients',
@@ -551,15 +516,50 @@ const routes = [
 
   // System Section
  
-  {
-    name: 'Settings',
-    layout: '/admin',
-    path: '/settings',
-    icon: <Icon as={SettingsIcon} width="20px" height="20px" color="inherit" />,
-    component: <Settings />,
-    roles: ['superAdmin'],
-  },
+  // {
+  //   name: 'Settings',
+  //   layout: '/admin',
+  //   path: '/settings',
+  //   icon: <Icon as={SettingsIcon} width="20px" height="20px" color="inherit" />,
+  //   component: <Settings />,
+  //   roles: ['superAdmin'],
+  // },
 
+    // Services Section
+    {
+      name: 'Services',
+      layout: '/admin',
+      path: '/services',
+      icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
+      component: <DataTables />,
+      roles: ['superAdmin'],
+      children: [
+        {
+          name: 'All Services',
+          layout: '/admin',
+          path: '/services/all',
+          component: <Services />,
+          roles: ['superAdmin'],
+        },
+        {
+          name: 'Add Service',
+          layout: '/admin',
+          path: '/service/add',
+          component: <AddService />,
+          roles: ['superAdmin'],
+        },
+        {
+          name: 'Update Service',
+          layout: '/admin',
+          path: '/service/update',
+          component: <UpdateService />,
+          roles: ['superAdmin'],
+          hidden: true,
+        },
+        
+      ],
+    },
+    
   // Profile Section
   {
     name: 'Profile',

@@ -599,6 +599,7 @@ export const getAllAppointments = async (req, res) => {
       .populate('doctorId', 'name email specialization')
       .populate('branchId', 'branchName address')
       .populate('referredDoctorId', 'name clinicName contact')
+      .populate('billId', 'paymentStatus remainingAmount totalAmount')
       .sort(sort)
       .skip(skip)
       .limit(parseInt(limit));
@@ -648,6 +649,7 @@ export const getTodayAppointments = async (req, res) => {
       .populate('doctorId', 'name specialization')
       .populate('branchId', 'branchName address')
       .populate('referredDoctorId', 'name clinicName')
+      .populate('billId', 'paymentStatus remainingAmount totalAmount')
       .sort({ timeSlot: 1 });
 
 

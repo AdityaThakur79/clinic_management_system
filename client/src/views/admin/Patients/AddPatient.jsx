@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box, Button, HStack, Input, Select, Text, useColorModeValue, Card, CardBody, CardHeader, VStack, FormControl, FormLabel, Textarea, useToast, FormErrorMessage
+  Box, Button, HStack, Input, Select, Text, useColorModeValue, Card, CardBody, CardHeader, VStack, FormControl, FormLabel, Textarea, useToast, FormErrorMessage, Checkbox, Divider
 } from '@chakra-ui/react';
 import { useCreatePatientMutation } from '../../../features/api/patientApi';
 import { useGetAllBranchesQuery, useGetBranchByIdMutation } from '../../../features/api/branchApi';
 import { useListReferredDoctorsQuery } from '../../../features/api/referredDoctors';
+import { useGetMultipleDateAvailabilityQuery } from '../../../features/api/appointments';
 import { MdPerson } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -31,6 +32,17 @@ const AddPatient = () => {
     }
   });
 
+  // Appointment state
+  const [createAppointmentWithPatient, setCreateAppointmentWithPatient] = useState(false);
+  const [appointmentData, setAppointmentData] = useState({
+    appointmentBranchId: '',
+    appointmentDate: '',
+    appointmentTimeSlot: '09:00',
+    service: 'General Consultation'
+  });
+  const [selectedDate, setSelectedDate] = useState('');
+  const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
+
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -45,8 +57,21 @@ const AddPatient = () => {
   const [getBranchById] = useGetBranchByIdMutation();
   const { data: referredDoctorsData } = useListReferredDoctorsQuery({ page: 1, limit: 100, search: '' });
 
+  // Get availability data for appointment
+  const { data: availabilityData, isLoading: isAvailabilityLoading } = useGetMultipleDateAvailabilityQuery(
+    {
+      branchId: appointmentData.appointmentBranchId,
+      startDate: new Date().toISOString().split('T')[0],
+      days: 7,
+    },
+    {
+      skip: !appointmentData.appointmentBranchId || !createAppointmentWithPatient,
+    }
+  );
+
   const cardBg = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const appointmentSectionBg = useColorModeValue('blue.50', 'gray.700');
 
   const [errors, setErrors] = useState({});
 
@@ -74,6 +99,7 @@ const AddPatient = () => {
   useEffect(() => {
     if (userRole === 'branchAdmin' || userRole === 'doctor') {
       setForm(prev => ({ ...prev, branchId: userBranchId }));
+      setAppointmentData(prev => ({ ...prev, appointmentBranchId: userBranchId }));
       (async () => {
         try {
           const res = await getBranchById({ id: userBranchId }).unwrap();
@@ -85,6 +111,51 @@ const AddPatient = () => {
     }
   }, [userRole, userBranchId, getBranchById]);
 
+  // Auto-select first branch for superAdmin
+  useEffect(() => {
+    if (userRole === 'superAdmin' && branchesData?.branches?.length > 0 && !appointmentData.appointmentBranchId && createAppointmentWithPatient) {
+      const firstBranchId = branchesData.branches[0]._id;
+      setAppointmentData(prev => ({ ...prev, appointmentBranchId: firstBranchId }));
+    }
+  }, [branchesData, appointmentData.appointmentBranchId, createAppointmentWithPatient, userRole]);
+
+  // Handle availability data and auto-select date and time
+  useEffect(() => {
+    if (availabilityData?.data && selectedDate) {
+      const dayAvailability = availabilityData.data.find((d) => d.date === selectedDate);
+      if (dayAvailability?.availableSlots) {
+        const slots = dayAvailability.availableSlots
+          .filter((s) => s.isAvailable)
+          .map((s) => s.time);
+        setAvailableTimeSlots(slots);
+      } else {
+        setAvailableTimeSlots([]);
+      }
+    }
+  }, [availabilityData, selectedDate]);
+
+  // Auto-select first available date and time slot
+  useEffect(() => {
+    if (availabilityData?.data && !selectedDate && createAppointmentWithPatient) {
+      const firstWorkingDay = availabilityData.data.find((day) => day.isWorkingDay);
+      if (firstWorkingDay) {
+        const firstDate = firstWorkingDay.date;
+        setSelectedDate(firstDate);
+        setAppointmentData(prev => ({ ...prev, appointmentDate: firstDate }));
+
+        // Auto-select first available time slot for that date
+        if (firstWorkingDay.availableSlots) {
+          const availableSlots = firstWorkingDay.availableSlots
+            .filter((s) => s.isAvailable)
+            .map((s) => s.time);
+          if (availableSlots.length > 0) {
+            setAppointmentData(prev => ({ ...prev, appointmentTimeSlot: availableSlots[0] }));
+          }
+        }
+      }
+    }
+  }, [availabilityData, selectedDate, createAppointmentWithPatient]);
+
   const [branchLabel, setBranchLabel] = useState('');
 
   const handleSubmit = async (e) => {
@@ -95,6 +166,14 @@ const AddPatient = () => {
     if (!validators.email(form.email)) fieldErrors.email = 'Enter a valid email address.';
     if (!validators.age(form.age)) fieldErrors.age = 'Enter a valid age (0-120).';
     if (!validators.branchId(form.branchId)) fieldErrors.branchId = 'Branch is required.';
+    
+    // Validate appointment fields if creating appointment
+    if (createAppointmentWithPatient) {
+      if (!appointmentData.appointmentBranchId) fieldErrors.appointmentBranchId = 'Appointment branch is required.';
+      if (!appointmentData.appointmentDate) fieldErrors.appointmentDate = 'Appointment date is required.';
+      if (!appointmentData.appointmentTimeSlot) fieldErrors.appointmentTimeSlot = 'Appointment time slot is required.';
+    }
+
     setErrors(fieldErrors);
     if (Object.keys(fieldErrors).length > 0) {
       toast({ title: 'Please fix validation errors', status: 'error', duration: 2500, isClosable: true });
@@ -109,10 +188,23 @@ const AddPatient = () => {
         branchId: form.branchId || undefined,
       });
 
+      // Add appointment data if creating appointment
+      if (createAppointmentWithPatient) {
+        patientData.createAppointment = true;
+        patientData.appointment = {
+          branchId: appointmentData.appointmentBranchId,
+          date: appointmentData.appointmentDate,
+          timeSlot: appointmentData.appointmentTimeSlot,
+          service: appointmentData.service || 'General Consultation',
+        };
+      }
+
       await createPatient(patientData).unwrap();
       toast({
-        title: 'Patient Created',
-        description: 'Patient has been created successfully.',
+        title: createAppointmentWithPatient ? 'Patient & Appointment Created' : 'Patient Created',
+        description: createAppointmentWithPatient 
+          ? 'Patient and appointment have been created successfully.' 
+          : 'Patient has been created successfully.',
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -131,6 +223,22 @@ const AddPatient = () => {
 
   const handleChange = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAppointmentChange = (field, value) => {
+    if (field === 'appointmentBranchId') {
+      // Reset date/time when branch changes
+      setSelectedDate('');
+      setAvailableTimeSlots([]);
+      setAppointmentData(prev => ({ ...prev, appointmentBranchId: value, appointmentDate: '', appointmentTimeSlot: '09:00' }));
+      return;
+    }
+    if (field === 'appointmentDate') {
+      setSelectedDate(value);
+      setAppointmentData(prev => ({ ...prev, appointmentDate: value }));
+      return;
+    }
+    setAppointmentData(prev => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -352,6 +460,120 @@ const AddPatient = () => {
                     Enter each medical condition on a new line
                   </Text>
                 </FormControl>
+
+                {/* Quick Appointment Section */}
+                <Divider my={4} />
+                <Checkbox
+                  isChecked={createAppointmentWithPatient}
+                  onChange={(e) => setCreateAppointmentWithPatient(e.target.checked)}
+                  colorScheme="blue"
+                  size="lg"
+                >
+                  <Text fontSize="lg" fontWeight="semibold" color="gray.700">
+                    Create Appointment with Patient
+                  </Text>
+                </Checkbox>
+
+                {createAppointmentWithPatient && (
+                  <VStack spacing={4} align="stretch" p={4} bg={appointmentSectionBg} borderRadius="lg">
+                    <Text fontSize="md" fontWeight="semibold" color="gray.700">
+                      Quick Appointment Details
+                    </Text>
+                    
+                    <HStack spacing={4}>
+                      {userRole === 'superAdmin' ? (
+                        <FormControl isRequired isInvalid={!!errors.appointmentBranchId}>
+                          <FormLabel fontSize="sm">Appointment Branch</FormLabel>
+                          <Select
+                            value={appointmentData.appointmentBranchId}
+                            onChange={(e) => handleAppointmentChange('appointmentBranchId', e.target.value)}
+                            placeholder="Select branch"
+                            borderRadius="lg"
+                          >
+                            {branchesData?.branches?.map(branch => (
+                              <option key={branch._id} value={branch._id}>{branch.branchName}</option>
+                            ))}
+                          </Select>
+                          {errors.appointmentBranchId && <FormErrorMessage>{errors.appointmentBranchId}</FormErrorMessage>}
+                        </FormControl>
+                      ) : (
+                        <FormControl>
+                          <FormLabel fontSize="sm">Appointment Branch</FormLabel>
+                          <Input value={branchLabel || user?.branch?.branchName || 'Current Branch'} isReadOnly borderRadius="lg" />
+                        </FormControl>
+                      )}
+
+                      <FormControl isRequired isInvalid={!!errors.appointmentDate}>
+                        <FormLabel fontSize="sm">Date</FormLabel>
+                        <Select
+                          value={appointmentData.appointmentDate}
+                          onChange={(e) => handleAppointmentChange('appointmentDate', e.target.value)}
+                          placeholder="Select date"
+                          borderRadius="lg"
+                          disabled={!appointmentData.appointmentBranchId}
+                        >
+                          {availabilityData?.data ? (
+                            availabilityData.data
+                              .filter((day) => day.isWorkingDay)
+                              .map((day) => {
+                                const d = new Date(day.date);
+                                const label = d.toLocaleDateString('en-US', {
+                                  weekday: 'short',
+                                  month: 'short',
+                                  day: 'numeric',
+                                });
+                                return (
+                                  <option key={day.date} value={day.date}>
+                                    {label}
+                                  </option>
+                                );
+                              })
+                          ) : (
+                            <option value="">{isAvailabilityLoading ? 'Loading dates...' : 'Select a branch first'}</option>
+                          )}
+                        </Select>
+                        {errors.appointmentDate && <FormErrorMessage>{errors.appointmentDate}</FormErrorMessage>}
+                      </FormControl>
+
+                      <FormControl isRequired isInvalid={!!errors.appointmentTimeSlot}>
+                        <FormLabel fontSize="sm">Time Slot</FormLabel>
+                        <Select
+                          value={appointmentData.appointmentTimeSlot}
+                          onChange={(e) => handleAppointmentChange('appointmentTimeSlot', e.target.value)}
+                          placeholder="Select time"
+                          borderRadius="lg"
+                          disabled={!selectedDate || availableTimeSlots.length === 0}
+                        >
+                          {availableTimeSlots.length > 0 ? (
+                            availableTimeSlots.map((slot) => (
+                              <option key={slot} value={slot}>
+                                {new Date(`2000-01-01T${slot}`).toLocaleTimeString('en-US', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  hour12: true,
+                                })}
+                              </option>
+                            ))
+                          ) : (
+                            <option value="09:00">09:00 AM (Default)</option>
+                          )}
+                        </Select>
+                        {errors.appointmentTimeSlot && <FormErrorMessage>{errors.appointmentTimeSlot}</FormErrorMessage>}
+                      </FormControl>
+                    </HStack>
+
+                    {!appointmentData.appointmentBranchId && (
+                      <Text fontSize="xs" color="gray.600">
+                        Please select a branch to view available dates and times
+                      </Text>
+                    )}
+                    {isAvailabilityLoading && appointmentData.appointmentBranchId && (
+                      <Text fontSize="xs" color="blue.600">
+                        Loading availability...
+                      </Text>
+                    )}
+                  </VStack>
+                )}
 
                 <HStack spacing={4} justify="flex-end">
                   <Button

@@ -497,9 +497,16 @@ const TodayAppointments = () => {
                           </Text>
                         </Td>
                         <Td>
-                          <Text fontSize="sm" fontWeight="medium">
-                            {formatTime(appointment.timeSlot)}
-                          </Text>
+                          <HStack spacing={2}>
+                            <Text fontSize="sm" fontWeight="medium">
+                              {formatTime(appointment.timeSlot)}
+                            </Text>
+                            {appointment.billId && (appointment.billId.paymentStatus === 'pending' || appointment.billId.paymentStatus === 'partial') && (
+                              <Badge colorScheme={appointment.billId.paymentStatus === 'pending' ? 'red' : 'orange'}>
+                                {appointment.billId.paymentStatus === 'pending' ? 'Payment pending' : 'Payment partial'}
+                              </Badge>
+                            )}
+                          </HStack>
                         </Td>
                         <Td>
                           <Select

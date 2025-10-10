@@ -70,25 +70,41 @@ export const getAllPatients = async (req, res) => {
 };
 
 export const createPatient = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  
   try {
-    const { name, age, gender, contact, email, address, dateOfBirth, medicalHistory, branchId, referredDoctorId, referralDate } = req.body;
+    const { 
+      name, age, gender, contact, email, address, dateOfBirth, medicalHistory, 
+      branchId, referredDoctorId, referralDate, createAppointment, appointment 
+    } = req.body;
+
+    console.log('=== CREATE PATIENT REQUEST ===');
+    console.log('Create appointment:', createAppointment);
+    console.log('Appointment data:', appointment);
 
     if (!name || !contact) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(400).json({ success: false, message: "Name and contact are required" });
     }
 
     // Validate branch if provided
     if (branchId) {
-      const branch = await Branch.findById(branchId);
+      const branch = await Branch.findById(branchId).session(session);
       if (!branch) {
+        await session.abortTransaction();
+        session.endSession();
         return res.status(404).json({ success: false, message: "Branch not found" });
       }
     }
 
     // Validate referred doctor if provided
     if (referredDoctorId) {
-      const refDoc = await ReferredDoctor.findById(referredDoctorId);
+      const refDoc = await ReferredDoctor.findById(referredDoctorId).session(session);
       if (!refDoc) {
+        await session.abortTransaction();
+        session.endSession();
         return res.status(404).json({ success: false, message: "Referred doctor not found" });
       }
     }
@@ -111,9 +127,11 @@ export const createPatient = async (req, res) => {
         ...(normalizedContact ? [{ contact: normalizedContact }] : []),
         ...(normalizedEmail ? [{ email: normalizedEmail }] : [])
       ]
-    });
+    }).session(session);
 
     if (existingPatient) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(409).json({ 
         success: false, 
         message: "Patient already exists with this contact number or email" 
@@ -121,32 +139,120 @@ export const createPatient = async (req, res) => {
     }
 
     // Create patient
-    const patient = await Patient.create({
+    const patientData = await Patient.create([{
       name,
-      age,
-      gender,
+      age: age ? parseInt(age) : undefined,
+      gender: gender || undefined, // Convert empty string to undefined to use default
       contact: normalizedContact,
-      email: normalizedEmail,
-      address,
+      email: normalizedEmail || undefined,
+      address: address || undefined,
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
       medicalHistory: medicalHistory || [],
       branchId: branchId || undefined,
       referredDoctorId: referredDoctorId || undefined,
-      referralDate: referralDate || undefined
-    });
+      referralDate: referralDate ? new Date(referralDate) : undefined
+    }], { session });
+
+    const patient = patientData[0];
+    console.log('Patient created successfully:', patient._id);
+
+    // Create appointment if requested
+    let appointmentDoc = null;
+    if (createAppointment && appointment) {
+      console.log('Creating appointment...');
+      const { branchId: appointmentBranchId, date, timeSlot, service } = appointment;
+      
+      if (!appointmentBranchId || !date || !timeSlot) {
+        console.error('Missing appointment fields:', { appointmentBranchId, date, timeSlot });
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({ 
+          success: false, 
+          message: "Appointment branch, date, and time slot are required" 
+        });
+      }
+
+      // Validate appointment branch
+      const appointmentBranch = await Branch.findById(appointmentBranchId).session(session);
+      if (!appointmentBranch) {
+        console.error('Appointment branch not found:', appointmentBranchId);
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(404).json({ success: false, message: "Appointment branch not found" });
+      }
+
+      console.log('Creating appointment document...');
+      // Create appointment
+      try {
+        const appointmentArray = await Appointment.create([{
+          patientId: patient._id,
+          branchId: appointmentBranchId,
+          date: new Date(date),
+          timeSlot: timeSlot,
+          service: service || 'General Consultation',
+          status: 'booked',
+          notes: 'Created with patient registration',
+          referredDoctorId: referredDoctorId || undefined,
+        }], { session });
+
+        appointmentDoc = appointmentArray[0];
+        console.log('Appointment created successfully:', appointmentDoc._id);
+
+        // Update patient with appointment reference
+        await Patient.findByIdAndUpdate(
+          patient._id,
+          { $push: { appointments: appointmentDoc._id } },
+          { session, new: true }
+        );
+        console.log('Patient updated with appointment reference');
+      } catch (appointmentError) {
+        console.error('Error creating appointment:', appointmentError);
+        console.error('Appointment error details:', {
+          message: appointmentError.message,
+          code: appointmentError.code,
+          keyPattern: appointmentError.keyPattern,
+          keyValue: appointmentError.keyValue
+        });
+        throw appointmentError; // Re-throw to be caught by outer catch
+      }
+    }
+
+    // Commit transaction
+    await session.commitTransaction();
+    session.endSession();
 
     // Populate branch and referred doctor data
     await patient.populate('branchId', 'branchName address');
     await patient.populate('referredDoctorId', 'name clinicName');
 
+    // Populate appointment if created
+    if (appointmentDoc) {
+      await appointmentDoc.populate('branchId', 'branchName address');
+    }
+
     return res.status(201).json({
       success: true,
       patient,
-      message: "Patient created successfully"
+      appointment: appointmentDoc,
+      message: appointmentDoc 
+        ? "Patient and appointment created successfully" 
+        : "Patient created successfully"
     });
   } catch (error) {
-
-    return res.status(500).json({ success: false, message: "Server error" });
+    await session.abortTransaction();
+    session.endSession();
+    console.error('Error creating patient:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', {
+      message: error.message,
+      name: error.name,
+      code: error.code
+    });
+    return res.status(500).json({ 
+      success: false, 
+      message: "Server error",
+      error: error.message 
+    });
   }
 };
 

@@ -482,10 +482,19 @@ export default function PatientDetail() {
                             </Badge>
                           </Td>
                           <Td>
-                            {appointment.billId ? 
-                              formatCurrency(appointment.billId.totalAmount) : 
-                              formatCurrency(appointment.charges || 0)
-                            }
+                            <HStack spacing={2}>
+                              <Text>
+                                {appointment.billId ? 
+                                  formatCurrency(appointment.billId.totalAmount) : 
+                                  formatCurrency(appointment.charges || 0)
+                                }
+                              </Text>
+                              {appointment.billId && (appointment.billId.paymentStatus === 'pending' || appointment.billId.paymentStatus === 'partial') && (
+                                <Badge colorScheme={appointment.billId.paymentStatus === 'pending' ? 'red' : 'orange'}>
+                                  {appointment.billId.paymentStatus === 'pending' ? 'Payment pending' : 'Payment partial'}
+                                </Badge>
+                              )}
+                            </HStack>
                           </Td>
                           <Td>
                             <HStack spacing={2}>
