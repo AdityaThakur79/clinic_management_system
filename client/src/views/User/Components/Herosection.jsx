@@ -329,7 +329,7 @@ const HeroSection = () => {
                       {[
                         'Multiple Locations',
                         '15+ Years Experience',
-                        'Free Consultation',
+                        'Book Consultation',
                       ].map((label, i) => (
                         <HStack
                           key={i}

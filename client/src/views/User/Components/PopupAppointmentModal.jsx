@@ -260,7 +260,7 @@ export default function PopupAppointmentModal() {
                     />
                   </FormControl>
                   
-                  <FormControl isRequired>
+                  <FormControl isRequired className="hidden">
                     <FormLabel fontSize="sm">Preferred branch</FormLabel>
                     <Select 
                       value={form.branchId} 
