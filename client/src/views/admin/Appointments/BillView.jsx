@@ -298,7 +298,7 @@ const BillView = () => {
                 </HStack>
                 <VStack align="start" spacing={1} color="white" opacity={0.9}>
                   <Text fontSize={{ base: 'sm', md: 'md' }}><Icon as={MdBusiness} mr={2} />{appointment.branchId?.address || 'Ghatkopar, Mumbai'}</Text>
-                  <Text fontSize={{ base: 'sm', md: 'md' }}><Icon as={MdPhone} mr={2} />79 7748 3031</Text>
+                  <Text fontSize={{ base: 'sm', md: 'md' }}><Icon as={MdPhone} mr={2} />98 6779 4003</Text>
                   <Text fontSize={{ base: 'sm', md: 'md' }}><Icon as={MdEmail} mr={2} />aartiketspeechandhearing@gmail.com</Text>
                 </VStack>
               </Box>
@@ -310,9 +310,6 @@ const BillView = () => {
                   <Text fontSize={{ base: 'sm', md: 'md' }}><strong>Bill No:</strong> {appointment.billId?.billNumber || `BILL-${appointment._id.slice(-8).toUpperCase()}`}</Text>
                   <Text fontSize={{ base: 'sm', md: 'md' }}><strong>Date:</strong> {formatDate(appointment.date)}</Text>
                   <Text fontSize={{ base: 'sm', md: 'md' }}><strong>Time:</strong> {formatTime(appointment.timeSlot)}</Text>
-                  <Badge colorScheme={appointment.status === 'completed' ? 'green' : 'yellow'} size={{ base: 'md', md: 'lg' }} px={3} py={1}>
-                    {appointment.status?.toUpperCase()}
-                  </Badge>
                 </VStack>
               </Box>
             </Flex>
@@ -322,68 +319,46 @@ const BillView = () => {
 
           {/* Patient & Doctor Info */}
           <Box p={{ base: 4, md: 8 }}>
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={{ base: 6, md: 8 }}>
+            <SimpleGrid columns={{ base: 1 }} spacing={{ base: 6, md: 8 }}>
               {/* Patient Details */}
               <Box>
                 <Heading size="md" color="#2BA8D1" mb={4} display="flex" alignItems="center">
                   <Icon as={MdPerson} mr={2} />
                   Patient Information
                 </Heading>
-                <VStack spacing={3} align="stretch">
+                <Box bg="white" border="1px solid" borderColor="gray.200" borderRadius="md" p={{ base: 3, md: 5 }} boxShadow="sm">
+                <VStack spacing={{ base: 2, md: 3 }} align="stretch">
                   <Flex justify="space-between">
                     <Text fontWeight="bold" color="gray.600">Name:</Text>
-                    <Text fontSize="lg" fontWeight="semibold">{appointment.patientId?.name}</Text>
+                    <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="semibold">{appointment.patientId?.name}</Text>
                   </Flex>
                   <Flex justify="space-between">
                     <Text fontWeight="bold" color="gray.600">Age:</Text>
-                    <Text>{appointment.patientId?.age} years</Text>
+                    <Text fontSize={{ base: 'sm', md: 'md' }}>{appointment.patientId?.age} years</Text>
                   </Flex>
                   <Flex justify="space-between">
                     <Text fontWeight="bold" color="gray.600">Gender:</Text>
-                    <Text>{appointment.patientId?.gender}</Text>
+                    <Text fontSize={{ base: 'sm', md: 'md' }}>{appointment.patientId?.gender}</Text>
                   </Flex>
                   <Flex justify="space-between">
                     <Text fontWeight="bold" color="gray.600">Contact:</Text>
-                    <Text>{appointment.patientId?.contact}</Text>
+                    <Text fontSize={{ base: 'sm', md: 'md' }}>{appointment.patientId?.contact}</Text>
                   </Flex>
                   <Flex justify="space-between">
                     <Text fontWeight="bold" color="gray.600">Email:</Text>
-                    <Text>{appointment.patientId?.email}</Text>
+                    <Text fontSize={{ base: 'sm', md: 'md' }}>{appointment.patientId?.email}</Text>
                   </Flex>
                   {appointment.patientId?.address && (
                     <Box>
                       <Text fontWeight="bold" color="gray.600" mb={1}>Address:</Text>
-                      <Text>{appointment.patientId.address}</Text>
+                      <Text fontSize={{ base: 'sm', md: 'md' }}>{appointment.patientId.address}</Text>
                     </Box>
                   )}
                 </VStack>
+                </Box>
               </Box>
 
-              {/* Doctor Details */}
-              <Box>
-                <Heading size="md" color="#2BA8D1" mb={4} display="flex" alignItems="center">
-                  <Icon as={MdAssignment} mr={2} />
-                  Doctor Information
-                </Heading>
-                <VStack spacing={3} align="stretch">
-                  <Flex justify="space-between">
-                    <Text fontWeight="bold" color="gray.600">Name:</Text>
-                    <Text fontSize="lg" fontWeight="semibold">{appointment.doctorId?.name}</Text>
-                  </Flex>
-                  <Flex justify="space-between">
-                    <Text fontWeight="bold" color="gray.600">Specialization:</Text>
-                    <Text>{appointment.doctorId?.specialization}</Text>
-                  </Flex>
-                  <Flex justify="space-between">
-                    <Text fontWeight="bold" color="gray.600">Email:</Text>
-                    <Text>{appointment.doctorId?.email}</Text>
-                  </Flex>
-                  <Box>
-                    <Text fontWeight="bold" color="gray.600" mb={1}>Branch:</Text>
-                    <Text>{appointment.branchId?.branchName} - {appointment.branchId?.address}</Text>
-                  </Box>
-                </VStack>
-              </Box>
+              {/* Doctor Details removed as requested */}
             </SimpleGrid>
           </Box>
 
@@ -645,7 +620,7 @@ const BillView = () => {
             <VStack spacing={2}>
               <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold" textAlign="center">Thank you for choosing Aartiket Speech & Hearing Care</Text>
               <Text fontSize={{ base: 'xs', md: 'sm' }} opacity={0.9} textAlign="center">
-                For any queries, please contact us at 79 7748 3031 or email aartiketspeechandhearing@gmail.com
+                For any queries, please contact us at 98 6779 4003 or email aartiketspeechandhearing@gmail.com
               </Text>
               <Text fontSize="xs" opacity={0.7} mt={2} textAlign="center">
                 Generated on {new Date().toLocaleDateString('en-IN')} at {new Date().toLocaleTimeString('en-IN')}

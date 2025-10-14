@@ -34,6 +34,7 @@ import {
   CheckIcon
 } from "@chakra-ui/icons";
 import { MdLocationOn as MapPinIcon } from 'react-icons/md';
+import { CONTACT_PHONE_E164, CONTACT_PHONE_RAW, CONTACT_WA_NUMBER } from "../../../utils/ContactInfo";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -120,7 +121,7 @@ const Contact = () => {
       });
 
       // Also provide WhatsApp option
-      const number = "918087766556";
+      const number = CONTACT_WA_NUMBER;
       const text = `Hi, I just submitted an enquiry. Name: ${formData.name}, Age: ${formData.age}, City: ${formData.city}. Please check your system for details.`;
       const url = `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
       
@@ -133,7 +134,7 @@ const Contact = () => {
     } catch (error) {
 
       // Fallback to WhatsApp if API fails
-      const number = "918087766556";
+      const number = CONTACT_WA_NUMBER;
       const text = `Contact Enquiry\nName: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nAge: ${formData.age}\nCity: ${formData.city}\nMessage: ${formData.message}`;
       const url = `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
       window.open(url, "_blank");
@@ -194,12 +195,12 @@ const Contact = () => {
                   </Text>
                   <VStack spacing={2}>
                     <Text fontSize="lg" fontWeight="semibold" color="#2BA8D1">
-                      +91 7977483031
+                      +91 {CONTACT_PHONE_RAW}
                     </Text>
                     <Text fontSize="sm" color={textColor}>
                       Mon - Sat: 9:00 AM - 7:00 PM
                     </Text>
-                    <Button as="a" href="tel:+917977483031" size="sm" bg="#2BA8D1" color="white" _hover={{ bg: '#1E88B8' }} rounded="full">
+                    <Button as="a" href={`tel:${CONTACT_PHONE_E164}`} size="sm" bg="#2BA8D1" color="white" _hover={{ bg: '#1E88B8' }} rounded="full">
                       Call Now
                     </Button>
                   </VStack>
@@ -314,7 +315,7 @@ const Contact = () => {
                   <HStack spacing={4} flexWrap="wrap" justify="center">
                     <Button
                       as="a"
-                      href={`https://wa.me/918087766556?text=${encodeURIComponent("Hi, I'd like to book an appointment. My locality is …")}`}
+                      href={`https://wa.me/${CONTACT_WA_NUMBER}?text=${encodeURIComponent("Hi, I'd like to book an appointment. My locality is …")}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       bg="white"

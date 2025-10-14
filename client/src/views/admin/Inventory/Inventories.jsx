@@ -728,7 +728,7 @@ const Inventories = () => {
                                         name: 'Aartiket Speech & Hearing Care',
                                         subtitle: 'Hearing Care Specialists',
                                         address: 'Your Clinic Address',
-                                        phone: '7977483031',
+                                        phone: '9867794003',
                                         email: 'aartiketspeechandhearing@gmail.com',
                                         website: 'aartiketspeechandhearingcare.in'
                                       }} 

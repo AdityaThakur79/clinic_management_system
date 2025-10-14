@@ -30,19 +30,10 @@ import {
   FaBlog
 } from "react-icons/fa";
 import { PhoneIcon } from "@chakra-ui/icons";
+import { CONTACT_PHONE_E164, CONTACT_PHONE_RAW, getWhatsAppLink } from "../../../utils/ContactInfo";
 
 const Footer = () => {
-  const getWhatsAppLink = () => {
-    const phoneNumber = "917977483031";
-    const message = encodeURIComponent("Hi Aartiket Speech & Hearing Care!");
-    const isMobile =
-      /iPhone|Android|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
-        navigator.userAgent
-      );
-    return isMobile
-      ? `https://wa.me/${phoneNumber}?text=${message}`
-      : `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${message}`;
-  };
+  const buildWhatsAppLink = () => getWhatsAppLink("Hi Aartiket Speech & Hearing Care!");
 
   return (
     <>
@@ -177,14 +168,14 @@ const Footer = () => {
                     </Text>
                     <VStack align="start" spacing={1}>
                       <Link 
-                        href="tel:9867794003" 
+                        href={`tel:${CONTACT_PHONE_E164}`} 
                         color="#0C2F4D" 
                         fontWeight="semibold" 
                         fontSize="md"
                         _hover={{ color: "#2BA8D1" }}
                         transition="color 0.3s ease"
                       >
-                        9867794003
+                        {CONTACT_PHONE_RAW}
                       </Link>
                       
                     </VStack>
@@ -439,7 +430,7 @@ const Footer = () => {
             }}
           />
           <Link
-            href="tel:+917977483031"
+            href={`tel:${CONTACT_PHONE_E164}`}
             bg="linear-gradient(135deg, #2BA8D1, #3AC0E7)"
             color="white"
             w="100%"
@@ -501,7 +492,7 @@ const Footer = () => {
             }}
           />
           <Link
-            href={getWhatsAppLink()}
+            href={buildWhatsAppLink()}
             target="_blank"
             rel="noopener noreferrer"
             bg="linear-gradient(135deg, #25D366, #128C7E)"

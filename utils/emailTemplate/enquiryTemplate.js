@@ -63,13 +63,13 @@ export const enquiryTemplate = ({ enquiry, recipientType, adminName, customerNam
             
             <p>In the meantime, feel free to contact us directly:</p>
             <ul>
-              <li>Phone: <a href="tel:+917977483031" style="color:#2BA8D1;text-decoration:none">+91 79774 83031</a></li>
+              <li>Phone: <a href="tel:+919867794003" style="color:#2BA8D1;text-decoration:none">+91 98677 94003</a></li>
               <li>Email: <a href="mailto:aartiketspeechandhearing@gmail.com" style="color:#2BA8D1;text-decoration:none">aartiketspeechandhearing@gmail.com</a></li>
-              <li>WhatsApp: <a href="https://wa.me/917977483031" style="color:#2BA8D1;text-decoration:none">Click here to chat</a></li>
+              <li>WhatsApp: <a href="https://wa.me/919867794003" style="color:#2BA8D1;text-decoration:none">Click here to chat</a></li>
             </ul>
             
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://wa.me/917977483031" class="button">Chat on WhatsApp</a>
+              <a href="https://wa.me/919867794003" class="button">Chat on WhatsApp</a>
             </div>
           </div>
           
@@ -143,7 +143,7 @@ export const enquiryTemplate = ({ enquiry, recipientType, adminName, customerNam
         
         <div class="footer">
           <p>This is an automated notification from Aartiket Speech & Hearing Care System</p>
-          <p>Direct contact: <a href="tel:+917977483031" style="color:#2BA8D1;text-decoration:none">+91 79774 83031</a> · <a href="mailto:aartiketspeechandhearing@gmail.com" style="color:#2BA8D1;text-decoration:none">aartiketspeechandhearing@gmail.com</a></p>
+          <p>Direct contact: <a href="tel:+919867794003" style="color:#2BA8D1;text-decoration:none">+91 98677 94003</a> · <a href="mailto:aartiketspeechandhearing@gmail.com" style="color:#2BA8D1;text-decoration:none">aartiketspeechandhearing@gmail.com</a></p>
         </div>
       </div>
     </body>

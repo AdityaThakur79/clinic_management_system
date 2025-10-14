@@ -464,7 +464,7 @@ const InventoryPDF = ({ inventory, clinicInfo }) => {
         {/* Footer */}
         {/* <View style={styles.footer}>
           <Text style={styles.footerText}>
-            For support: 7977483031 | aartiketspeechandhearing@gmail.com | aartiketspeechandhearingcare.in
+            For support: 9867794003 | aartiketspeechandhearing@gmail.com | aartiketspeechandhearingcare.in
           </Text>
         </View> */}
       </Page>

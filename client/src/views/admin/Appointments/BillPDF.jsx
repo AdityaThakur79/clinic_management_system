@@ -52,9 +52,10 @@ const styles = StyleSheet.create({
   },
   invoiceDetails: { alignItems: 'flex-end' },
   invoiceTitle: {
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: 'bold',
     color: 'white',
+    letterSpacing: 1,
     marginBottom: 12,
   },
   invoiceInfo: {
@@ -76,6 +77,12 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 12,
   },
+  boxed: {
+    border: '1px solid #E5E7EB',
+    borderRadius: 6,
+    padding: 10,
+    backgroundColor: '#FFFFFF',
+  },
   sectionTitle: {
     fontSize: 11,
     fontWeight: 'bold',
@@ -90,7 +97,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   infoColumn: {
-    width: '48%',
+    width: '100%',
   },
   infoRow: {
     flexDirection: 'row',
@@ -98,16 +105,16 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   infoLabel: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: 'bold',
     color: '#666',
   },
   infoValue: {
-    fontSize: 9,
+    fontSize: 11,
     color: '#333',
   },
   infoValueBold: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: 'bold',
     color: '#333',
   },
@@ -352,7 +359,7 @@ const BillPDF = ({ appointment }) => {
                 <Text style={styles.clinicName}>Aartiket Speech & Hearing Care</Text>
                 <Text style={styles.clinicSubtitle}>Hearing test, hearing aid trial and fitting, speech therapy</Text>
                 <Text style={styles.clinicAddress}>{appointment.branchId?.address || 'Ghatkopar, Mumbai'}</Text>
-                <Text style={styles.clinicAddress}>79 7748 3031</Text>
+                <Text style={styles.clinicAddress}>98 6779 4003</Text>
                 <Text style={styles.clinicAddress}>aartiketspeechandhearing@gmail.com</Text>
               </View>
             </View>
@@ -361,9 +368,7 @@ const BillPDF = ({ appointment }) => {
               <Text style={styles.invoiceInfo}>Bill No: {appointment.billId?.billNumber || `BILL-${appointment._id.slice(-8).toUpperCase()}`}</Text>
               <Text style={styles.invoiceInfo}>Date: {formatDate(appointment.date)}</Text>
               <Text style={styles.invoiceInfo}>Time: {formatTime(appointment.timeSlot)}</Text>
-              <View style={styles.statusBadge}>
-                <Text>{appointment.status?.toUpperCase()}</Text>
-              </View>
+              {/* Status badge removed as requested */}
             </View>
           </View>
         </View>
@@ -373,7 +378,7 @@ const BillPDF = ({ appointment }) => {
           {/* Patient & Doctor Information */}
           <View style={styles.section}>
             <View style={styles.infoGrid}>
-              <View style={styles.infoColumn}>
+              <View style={[styles.infoColumn, styles.boxed]}>
                 <Text style={styles.sectionTitle}>Patient Information</Text>
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>Name:</Text>
@@ -402,22 +407,7 @@ const BillPDF = ({ appointment }) => {
                   </View>
                 )}
               </View>
-              <View style={styles.infoColumn}>
-                <Text style={styles.sectionTitle}>Doctor Information</Text>
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Name:</Text>
-                  <Text style={styles.infoValueBold}>{appointment.doctorId?.name}</Text>
-                </View>
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Specialization:</Text>
-                  <Text style={styles.infoValue}>{appointment.doctorId?.specialization}</Text>
-                </View>
-                {/* Removed doctor email from the bill as requested */}
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Branch:</Text>
-                  <Text style={styles.infoValue}>{appointment.branchId?.branchName} - {appointment.branchId?.address}</Text>
-                </View>
-              </View>
+              {/* Doctor information removed as requested */}
             </View>
           </View>
 
@@ -622,7 +612,7 @@ const BillPDF = ({ appointment }) => {
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>Thank you for choosing Aartiket Speech & Hearing Care</Text>
-          <Text style={styles.footerSubtext}>For any queries, please contact us at 79 7748 3031 or email aartiketspeechandhearing@gmail.com</Text>
+          <Text style={styles.footerSubtext}>For any queries, please contact us at 98 6779 4003 or email aartiketspeechandhearing@gmail.com</Text>
           <Text style={styles.footerTimestamp}>
             Generated on {new Date().toLocaleDateString('en-IN')} at {new Date().toLocaleTimeString('en-IN')}
           </Text>

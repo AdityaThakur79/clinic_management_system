@@ -23,7 +23,7 @@ const settingsSchema = new mongoose.Schema({
   contactInfo: {
     phone: {
       type: String,
-      default: '7977483031',
+      default: '9867794003',
       trim: true
     },
     email: {
