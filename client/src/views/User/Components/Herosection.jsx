@@ -302,8 +302,6 @@ const HeroSection = () => {
 
                     {/* CTA Button */}
                     <Button
-                      as={Link}
-                      to="/book-an-appointment"
                       size={{ base: 'md', md: 'lg' }}
                       bg={`linear-gradient(135deg, ${item.primaryColor} 0%, ${item.secondaryColor} 100%)`}
                       color="white"
@@ -314,6 +312,15 @@ const HeroSection = () => {
                       borderRadius="2xl"
                       border={`2px solid ${item.primaryColor}`}
                       shadow="0 10px 30px rgba(43, 168, 209, 0.4)"
+                      onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          if (typeof window.openQuickAppointmentModal === 'function') {
+                            window.openQuickAppointmentModal();
+                          } else {
+                            window.dispatchEvent(new Event('open-quick-appointment'));
+                          }
+                        }
+                      }}
                     >
                       Book Consultation Now
                     </Button>

@@ -4,8 +4,18 @@
 export const sendWhatsAppTemplate = async ({ toPhone, templateName, templateParams = [], mediaUrl }) => {
   try {
     const apiKey = process.env.AISENSY_API_KEY;
+    const enabled = process.env.WHATSAPP_ENABLED !== 'false';
+    if (!enabled) {
+      console.log('[WhatsApp] Skipping send (WHATSAPP_ENABLED=false)');
+      return { skipped: true };
+    }
     if (!apiKey) {
       console.log('[WhatsApp] Skipping send (AISENSY_API_KEY not set)');
+      return { skipped: true };
+    }
+    const campaign = templateName || process.env.AISENSY_CAMPAIGN_ID;
+    if (!campaign) {
+      console.log('[WhatsApp] Skipping send (no template/campaign configured)');
       return { skipped: true };
     }
     // Format phone for WhatsApp (AiSensy needs + prefix)
@@ -24,7 +34,7 @@ export const sendWhatsAppTemplate = async ({ toPhone, templateName, templatePara
     // AiSensy API payload format - match exact structure from documentation
     const payload = {
       apiKey,
-      campaignName: templateName || process.env.AISENSY_CAMPAIGN_ID,
+      campaignName: campaign,
       destination,
       userName: 'Patient',
       source: 'api',
@@ -72,7 +82,7 @@ export const templates = {
   // Address: [Address]
   // [Preparation/Duration]
   appointmentPatient: ({ name, service, date, time, branch, address, preparation, duration }) => ({
-    templateName: 'appointment_confirmation',
+    templateName: process.env.AISENSY_TEMPLATE_APPOINTMENT_CONFIRMATION,
     params: [
       name || 'Patient',
       service || 'Consultation',
@@ -89,7 +99,7 @@ export const templates = {
   // Address: [Address]
   // [Preparation/Duration]
   reminderPatient: ({ name, service, date, time, branch, address, preparation, duration }) => ({
-    templateName: 'appointment_reminder',
+    templateName: process.env.AISENSY_TEMPLATE_APPOINTMENT_REMINDER,
     params: [
       name || 'Patient',
       service || 'Consultation',
@@ -112,7 +122,7 @@ export const templates = {
   // Service: [Service]
   // Address: [Address]
   referralDoctor: ({ doctorName, patientName, date, clinicName, service, address }) => ({
-    templateName: 'referral_doctor_thanks',
+    templateName: process.env.AISENSY_TEMPLATE_REFERRAL_THANKS,
     params: [
       doctorName || 'Doctor',
       patientName || 'Patient',
